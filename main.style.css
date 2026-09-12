@@ -20,6 +20,48 @@
    ========================================================================== */
 
 
+/* 0. FONT ================================================================= */
+/* Archivo — SIL Open Font License, ücretsiz. Lisans metni font/OFL.txt.
+
+   Google'dan bağlamak yerine repoda duruyor: ziyaretçinin tarayıcısı üçüncü
+   bir sunucuya istek atmıyor (video kapağındaki kararın aynısı), sayfa bir
+   DNS+bağlantı turu az yapıyor, Google'ın servisine bağımlı kalmıyoruz.
+
+   Değişken font: tek dosya 100-900 ağırlık ve %62-125 genişlik taşıyor.
+   Ayrı "Expanded" dosyası indirmeye gerek yok — font-stretch ile açılıyor.
+
+   İKİ alt küme birden yükleniyor, Türkçe için şart:
+     latin      → ı ç ö ü  (U+0131, U+00E7, U+00F6, U+00FC)
+     latin-ext  → ş ğ İ    (U+015F, U+011F, U+0130)
+   Sadece latin alsak ş/ğ/İ yedek fonta düşer ve satır ortasında harf
+   değişir. */
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;      /* font inene kadar metin görünür kalsın */
+  src: url('font/archivo-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+                 U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+                 U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+                 U+FFFD;
+}
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('font/archivo-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+                 U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+                 U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+                 U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* 1. TOKEN'LAR ============================================================ */
 /* Bir değeri değiştirmek istersen SADECE burayı değiştir. Aşağıdaki hiçbir
    kuralda çıplak renk/boyut yazmıyoruz — hepsi var() ile buraya bağlı.
@@ -52,7 +94,7 @@
 
   /* Tipografi — şemadaki dil grotesk sans. Tek aile kullanıyoruz; ayrım
      puntodan, ağırlıktan ve harf aralığından geliyor, font değiştirerek değil. */
-  --font:         'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  --font:         'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-ui:      var(--font);
 
   /* Tip ölçeği — akışkan, clamp ile. Sayfalar bunları kullanır, kendi
@@ -112,6 +154,7 @@ h1 {
   font-size: var(--size-h1);
   letter-spacing: -0.03em;
   margin-bottom: var(--space-md);
+  font-stretch: 115%;          /* Archivo Expanded — değişken eksenden */
 }
 h2 { font-size: var(--size-h2); margin: var(--space-lg) 0 var(--space-sm); }
 h3 { font-size: var(--size-h3); margin: var(--space-md) 0 var(--space-xs); }
@@ -233,7 +276,13 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 }
 
 /* Etiketler (Excel'deki keyword/tag sütunlarından gelecek) */
-.tags { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-xs); }
+.tags {
+  list-style: none;      /* <ul> olduğu için madde işareti çıkıyordu */
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+}
 
 .tag {
   font-family: var(--font-ui);
@@ -610,6 +659,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   font-weight: 700;
   line-height: var(--leading-tight);
   letter-spacing: -0.02em;
+  font-stretch: 115%;                /* başlıkla aynı genişlikte dursun */
   color: var(--text-faint);          /* ikinci ton */
   transition: color 0.2s;
 }
