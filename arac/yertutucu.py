@@ -29,8 +29,8 @@ ISARET = (206, 203, 198)
 
 # (dosya, genişlik, yükseklik, üzerine yazılacak not)
 ISTENENLER = [
-    ("kolektif.webp", 1600, 1000, "kolektif fotoğrafı"),
-    ("sorular.webp", 1600, 1000, "sorular bölümü fotoğrafı"),
+    ("kolektif.webp", 1600, 900, "kolektif fotoğrafı"),
+    ("sorular.webp", 1600, 900, "sorular bölümü fotoğrafı"),
 ]
 
 # ikon.svg ile aynı koordinatlar — yer tutucu bile siteye ait görünsün.

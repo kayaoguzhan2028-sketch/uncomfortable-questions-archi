@@ -77,7 +77,11 @@
   --text:         #0c0c0c;
   --text-soft:    #4a4a4a;
   --text-faint:   #9b9792;
-  --accent:       #d8431c;
+  /* Vurgu rengi. Turuncu (#d8431c) beyaz üstünde 4.43 kontrast veriyordu,
+     WCAG AA eşiği 4.5 — yani metin olarak kullanıldığı yerlerde sınırın
+     altındaydı. Bu koyu kırmızı 7.23 veriyor.
+     Lacivert isteyen olursa tek satır: #1f3a8a (10.34). */
+  --accent:       #a8202a;
   --border:       rgba(12, 12, 12, 0.18);
 
   /* Tipografi — şemadaki dil grotesk sans. Tek aile kullanıyoruz; ayrım
@@ -800,64 +804,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
                       font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 
-/* NETWORK LİSTESİ --------------------------------------------------------
-   Şemada kurum adları 90° döndürülmüş, aşağıdan yukarı okunuyor; solunda
-   küçük ülke adı. writing-mode ile yapılıyor — transform: rotate() ile
-   yapsak kutu hâlâ yatay yer kaplar ve satırlar üst üste biner. */
-
-.network-grup { margin-bottom: var(--space-lg); }
-
-.network-baslik {
-  font-size: var(--tip-h3);
-  font-weight: 700;
-  line-height: var(--leading-tight);
-  margin-bottom: var(--space-xs);
-}
-
-.network-aciklama {
-  font-size: var(--tip-govde);
-  color: var(--text-soft);
-  max-width: 22rem;
-  margin-bottom: var(--space-md);
-}
-
-.network-liste {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-sm);
-  list-style: none;
-  overflow-x: auto;
-  padding-bottom: var(--space-xs);
-}
-
-.network-liste li {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: flex-end;
-  gap: 0.35em;
-}
-
-.network-ulke,
-.network-ad {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);        /* aşağıdan yukarı okunsun */
-}
-
-.network-ulke {
-  font-size: var(--tip-ref);
-  color: var(--text-faint);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.network-ad {
-  font-size: var(--tip-govde);
-  font-weight: 700;
-  line-height: 1.1;
-  max-height: 22rem;
-}
-
-
 /* LATEST / NEXT KART IZGARASI --------------------------------------------
    Şemadaki mozaik: değişken genişlikte görseller, altında başlık ve ok. */
 
@@ -1086,6 +1032,16 @@ body:has(.gorunum:target) .ana-akis { display: none; }
 }
 .gorunum-kapat:hover { color: var(--accent); }
 
+/* "Buraya görsel gelecek" notu — taslak sunumunda eksiğin görünmesi için.
+   Görsel gelince bu satır tamamen kalkar. */
+.gorsel-notu {
+  border: 1px dashed var(--border);
+  padding: var(--space-md) var(--space-sm);
+  text-align: center;
+  font-size: var(--tip-ref);
+  color: var(--text-faint);
+}
+
 /* Ana akış içindeki çapalar (#about, #sorular) için: yapışkan nav hedefi
    örtmesin. */
 main > .ana-akis > section,
@@ -1144,12 +1100,21 @@ main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
   font-stretch: 125%;
   letter-spacing: -0.035em;
   line-height: 0.92;
-  margin-bottom: var(--space-md);
+  /* Fotoğrafla arası açıktı, isim sayfanın tepesinde tek başına kalıyordu */
+  margin-bottom: var(--space-sm);
 }
 
-/* Açılış fotoğrafı içerik kolonunun tamamını kullanır */
+/* Açılış fotoğrafı. Yüksekliği sınırlı: 16:9'a kırpılıyor ve ekranın
+   yarısını geçmiyor — yoksa tek başına bir ekran dolduruyor ve altındaki
+   metne inmek için kaydırmak gerekiyor. */
 .hero-foto { width: 100%; margin-bottom: var(--space-md); }
-.hero-foto img { width: 100%; height: auto; display: block; }
+.hero-foto img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 46vh;
+  object-fit: cover;
+  display: block;
+}
 
 
 /* GİRİŞ METNİ ------------------------------------------------------------ */
@@ -1593,7 +1558,16 @@ main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
 .yan-kucuk h3 { font-size: var(--tip-govde); margin: 0 0 var(--space-xs); }
 
 /* AĞ LİSTESİ — yatay: solda küçük ülke, sağda kalın kurum adı ------------ */
-.ag-liste { list-style: none; padding: var(--space-sm) var(--wrap-ic) var(--space-md); }
+/* Ağ listesi. Önce adlar 90° döndürülmüş dikey yazıydı ve liste yatay
+   kaydırılıyordu — sağdaki kurumlar ekran dışında kalıyordu. Artık
+   sarmalayan düz bir ızgara: kaydırma yok, hepsi tek bakışta. */
+.ag-liste {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.15em var(--space-md);
+  padding: var(--space-sm) var(--wrap-ic) var(--space-md);
+}
 
 .ag-satir {
   display: grid;

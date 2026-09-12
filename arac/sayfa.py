@@ -30,6 +30,13 @@ SITE_ADI = {
     "tr": "Mimarlıkta Rahatsız Edici Sorular",
     "en": "Uncomfortable Questions in Architecture",
 }
+
+# Açılıştaki iri başlığın satır kırılması. Tarayıcıya bırakırsak kolon
+# genişliğine göre rastgele yerden kırıyor; ad iki parça olarak okunmalı.
+SITE_SATIR = {
+    "tr": ["Mimarlıkta", "Rahatsız Edici Sorular"],
+    "en": ["Uncomfortable Questions", "in Architecture"],
+}
 SITE_AD = SITE_ADI["tr"]
 
 # SAYFALAR — dil başına dört tane. manifesto ve temalar ayrı sayfa değil,
@@ -48,12 +55,14 @@ SEKME_ACILIS = "about"
 # Nav'daki sekmeler. Her biri ana sayfada bir GÖRÜNÜM açıyor: ana akış
 # gizleniyor, o görünüm tek başına kalıyor. Yeni sayfa yüklenmiyor,
 # sayfa aşağı da kaymıyor.
+# (metin anahtarı, çapa). Etiket burada YAZILI DEĞİL: iki dilde de aynı
+# olsun diye METIN sözlüğünden geliyor.
 SEKMELER = [
-    ("themes", "temalar"),
-    ("manifesto", "manifesto"),
-    ("activity", "activity"),
-    ("network", "network"),
-    ("archive", "archive"),
+    ("n_temalar", "temalar"),
+    ("n_manifesto", "manifesto"),
+    ("n_activity", "activity"),
+    ("n_network", "network"),
+    ("n_archive", "archive"),
 ]
 
 # kayit/ içindeki bölüm adı -> yayındaki klasör adı
@@ -128,6 +137,17 @@ METIN = {
         "b_archive": "arşiv",
         "geri": "← kapat",
         "siniflanmamis": "sınıflandırılmamış",
+        "n_home": "ana sayfa",
+        "n_temalar": "temalar",
+        "n_manifesto": "manifesto",
+        "n_activity": "etkinlikler",
+        "n_network": "ağ",
+        "n_archive": "arşiv",
+        "n_sorular": "sorular",
+        "n_contact": "iletişim",
+        "n_menu": "menü",
+        "n_sartlar": "Koşullar",
+        "ag_gorsel_notu": "Buraya ağ diyagramı görseli gelecek.",
         "tema_hepsi": "Temaların tamamı →",
         "ag_yerel": "yerel ağ",
         "ag_yerel_not": "Türkiye'de birlikte çalıştığımız yapılar:",
@@ -200,6 +220,17 @@ METIN = {
         "b_archive": "archive",
         "geri": "← close",
         "siniflanmamis": "unclassified",
+        "n_home": "home",
+        "n_temalar": "themes",
+        "n_manifesto": "manifesto",
+        "n_activity": "activity",
+        "n_network": "network",
+        "n_archive": "archive",
+        "n_sorular": "questions",
+        "n_contact": "connect",
+        "n_menu": "menu",
+        "n_sartlar": "Terms &amp; Conditions",
+        "ag_gorsel_notu": "The network diagram image goes here.",
         "tema_hepsi": "All themes →",
         "ag_yerel": "local network",
         "ag_yerel_not": "The structures we work alongside in Turkey:",
@@ -271,18 +302,18 @@ IKON = ('<svg class="site-ikon" viewBox="0 0 24 32" aria-hidden="true" focusable
 # kendisi küçük yazılı (büyük harfe çevirmek Türkçe'de i/İ'yi bozuyor).
 # İlk ikisi ve sonuncusu ana sayfadaki bölüme iniyor, ayrı sayfa yok.
 # İlk dördü ana sayfadaki sekme, beşincisi gerçek sayfa.
-NAV = [(ad, f"index.html#{capa}", capa) for ad, capa in SEKMELER]
+NAV = [(anahtar, f"index.html#{capa}", capa) for anahtar, capa in SEKMELER]
 
 # Sağ üstteki "menu" panelinde duranlar — nav'a sığmayan her şey.
 MENU = [
-    ("home", "index.html"),
-    ("themes", "index.html#temalar"),
-    ("questions", "index.html#sorular"),
-    ("manifesto", "index.html#manifesto"),
-    ("activity", "index.html#activity"),
-    ("network", "index.html#network"),
-    ("archive", "index.html#archive"),
-    ("contact", SAYFA_ILETISIM),
+    ("n_home", "index.html"),
+    ("n_temalar", "index.html#temalar"),
+    ("n_sorular", "index.html#sorular"),
+    ("n_manifesto", "index.html#manifesto"),
+    ("n_activity", "index.html#activity"),
+    ("n_network", "index.html#network"),
+    ("n_archive", "index.html#archive"),
+    ("n_contact", SAYFA_ILETISIM),
 ]
 
 TEMALAR = [
@@ -437,11 +468,12 @@ def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
         return f"{k}{dil}/{hedef_yol}"
 
     baglar = []
-    for etiket_, hedef_yol, kimlik in NAV:
+    for anahtar, hedef_yol, kimlik in NAV:
         simdi = ' aria-current="page"' if kimlik == aktif else ""
-        baglar.append(f'<a href="{hedefle(hedef_yol)}"{simdi}>{etiket_}</a>')
+        baglar.append(f'<a href="{hedefle(hedef_yol)}"{simdi}>'
+                      f'{S(dil, anahtar)}</a>')
 
-    menu = [f'      <a href="{hedefle(h)}">{e}</a>' for e, h in MENU]
+    menu = [f'      <a href="{hedefle(h)}">{S(dil, e)}</a>' for e, h in MENU]
 
     return f"""<header class="ust kutu">
   <a class="ust-ikon" href="{k}{dil}/" aria-label="{SITE_ADI[dil]}">{IKON}</a>
@@ -449,7 +481,7 @@ def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
     {(chr(10) + '    ').join(baglar)}
   </nav>
   <details class="menu">
-    <summary>menu</summary>
+    <summary>{S(dil, "n_menu")}</summary>
     <div class="menu-panel">
 {chr(10).join(menu)}
       <hr>
@@ -477,11 +509,11 @@ def alt(dil: str, derinlik: int) -> str:
       <a href="{k}{dil}/{SAYFA_ILETISIM}">{S(dil, "alt_iletisim")} →</a>
     </div>
     <div class="alt-baglar">
-      <a href="{k}{dil}/index.html#temalar">themes</a>
-      <a href="{k}{dil}/index.html#manifesto">manifesto</a>
-      <a href="{k}{dil}/index.html#archive">archive</a>
-      <a href="{k}{dil}/index.html#network">network</a>
-      <a href="{k}{dil}/index.html#activity">activity</a>
+      <a href="{k}{dil}/index.html#temalar">{S(dil, "n_temalar")}</a>
+      <a href="{k}{dil}/index.html#manifesto">{S(dil, "n_manifesto")}</a>
+      <a href="{k}{dil}/index.html#archive">{S(dil, "n_archive")}</a>
+      <a href="{k}{dil}/index.html#network">{S(dil, "n_network")}</a>
+      <a href="{k}{dil}/index.html#activity">{S(dil, "n_activity")}</a>
       <span class="bosluk"></span>
       <a href="https://www.instagram.com/">instagram</a>
       <a href="mailto:merhaba@uqinarchi.com">email</a>
@@ -492,7 +524,7 @@ def alt(dil: str, derinlik: int) -> str:
   <p class="alt-metin">{alt_metin(dil)}</p>
   <div class="alt-kunye">
     <span>©2026 All Rights Reserved</span>
-    <a href="{k}{dil}/{SAYFA_ILETISIM}">Terms &amp; Conditions</a>
+    <a href="{k}{dil}/{SAYFA_ILETISIM}">{S(dil, "n_sartlar")}</a>
   </div>
 </footer>
 
@@ -591,7 +623,7 @@ def arsiv_sayfasi(dil, ev, pr, derinlik=1):
 
 def iletisim_sayfasi(dil, derinlik=1):
     yol = SAYFA_ILETISIM
-    return bas(dil, "Connect", S(dil, "il_form"), derinlik, yol) \
+    return bas(dil, S(dil, "n_contact"), S(dil, "il_form"), derinlik, yol) \
         + ust(dil, "iletisim", derinlik, yol) + f"""<main class="kutu">
   <div class="blok">
     <p class="blok-etiket">connect</p>
@@ -787,27 +819,33 @@ MANIFESTO_KAPANIS = (
 )
 
 
-def ag_grubu(baslik, not_, kurumlar) -> str:
-    """Tek ağ grubu. Adlar dikey yazılı: writing-mode ile döndürülüyor,
-    transform: rotate() ile değil — rotate kutuyu yatay bırakır ve adlar
-    üst üste biner."""
-    satir = "\n".join(
-        f'      <li><span class="network-ulke">{html.escape(u)}</span>'
-        f'<span class="network-ad">{html.escape(a)}</span></li>'
-        for u, a in kurumlar)
+def ag_grubu(baslik, not_, kurumlar, kirp=46) -> str:
+    """Tek ağ grubu.
+
+    Adlar önce 90° döndürülmüş dikey yazıydı; o hâl yatay kaydırma çubuğu
+    getiriyordu ve listenin sağı ekran dışında kalıyordu. Artık sarmalayan
+    düz bir liste: kaydırma yok, hepsi tek bakışta görünüyor."""
+    satir = []
+    for u, a in kurumlar:
+        kisa = a if len(a) <= kirp else a[:kirp - 1].rstrip() + "…"
+        satir.append(
+            f'      <li><span class="ag-ulke">{html.escape(u)}</span>'
+            f'<span class="ag-ad" title="{html.escape(a)}">'
+            f'{html.escape(kisa)}</span></li>')
     return f"""  <div class="blok">
     <div>
       <h2 class="blok-etiket">{baslik}</h2>
       <p class="blok-not">{not_}</p>
     </div>
-    <ul class="network-liste">
-{satir}
+    <ul class="ag-liste">
+{chr(10).join(satir)}
     </ul>
   </div>"""
 
 
 def ag_listesi(dil) -> str:
-    p = [ag_grubu(S(dil, "ag_uluslararasi"), S(dil, "ag_not"), AG)]
+    p = [gorsel_notu(S(dil, "ag_gorsel_notu")),
+         ag_grubu(S(dil, "ag_uluslararasi"), S(dil, "ag_not"), AG)]
     if AG_YEREL:
         p.append(ag_grubu(S(dil, "ag_yerel"), S(dil, "ag_yerel_not"), AG_YEREL))
     return "\n".join(p)
@@ -915,6 +953,13 @@ def ozet_bagi(dil, capa, anahtar) -> str:
             f'<p><a class="daha" href="#{capa}">{S(dil, anahtar)}</a></p></div>')
 
 
+def gorsel_notu(metin) -> str:
+    """'Buraya görsel gelecek' notu. Taslak sunumunda neyin eksik olduğu
+    belli olsun diye; görsel gelince bu satır silinir."""
+    return ('  <div class="blok"><div></div>'
+            f'<p class="gorsel-notu">{metin}</p></div>')
+
+
 def ana_sayfa(dil, ev, pr, derinlik=1):
     """Ana sayfa.
 
@@ -931,7 +976,8 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     p.append('  <div class="blok">')
     p.append(f'    <p class="blok-etiket">{S(dil, "kunye")}</p>')
     p.append('    <div>')
-    p.append(f'      <h1 class="hero-baslik">{SITE_ADI[dil]}</h1>')
+    p.append('      <h1 class="hero-baslik">'
+             + "<br>".join(SITE_SATIR[dil]) + '</h1>')
     p.append(gorsel_yeri("kolektif.webp", k, S(dil, "foto_bekliyor")))
     p.append('    </div>')
     p.append('  </div>')
