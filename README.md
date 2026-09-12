@@ -22,12 +22,18 @@ durmasın diye.
 index.html                 dil seçer, tr/ ya da en/'e yönlendirir
 main.style.css             sitenin TEK stil dosyası
 main.js                    sitenin TEK script dosyası
+ikon.svg                   soru işareti — favicon
+favicon.ico                SVG okumayan tarayıcılar için yedek (üretilir)
+apple-touch-icon.png       iOS ana ekran ikonu (üretilir)
 
-tr/                        Türkçe sayfa ağacı   ┐ üretilir,
-  index.html                                    │ elle düzenlenmez
-  manifesto/  temalar/  iletisim/               │
-  etkinlikler/  uretimler/                      │
-en/                        İngilizce sayfa ağacı ┘
+tr/                        Türkçe sayfa ağacı    ┐
+  index.html               ana sayfa             │ ÜRETİLİR,
+  activity.html            etkinlik arşivi       │ elle düzenlenmez
+  archive.html             üretim arşivi         │
+  contact.html             iletişim              │
+  activity/<slug>.html     tek etkinlik sayfası  │
+  archive/<slug>.html      tek üretim sayfası    │
+en/                        aynısının İngilizcesi ┘
 
 kayit/                     kayıtların malzemesi (dilden bağımsız)
   etkinlikler/
@@ -40,6 +46,14 @@ kayit/                     kayıtların malzemesi (dilden bağımsız)
 
 arac/                      yerel araçlar (siteye dahil değil)
 ```
+
+Yayındaki dosya adları İngilizce, nav'daki sekmelerle aynı kelimeler.
+`index.html` adı **sadece ana sayfada** zorunlu: sunucu bir klasör istendiğinde
+onu servis ediyor. Diğerleri kendi adını taşıyor — bir editörde on tane
+`index.html` açıkken hangisinin ne olduğu okunmuyordu.
+
+Manifesto ve temalar ayrı sayfa **değil**, ana sayfanın bölümleri; nav onlara
+çapa (`index.html#manifesto`) ile iniyor.
 
 `tr/` ve `en/` altındaki her şey `arac/sayfa.py` çıktısıdır. Oradaki bir
 dosyayı elle düzenleme — bir dahaki üretimde silinir. Metni değiştirmek için
@@ -126,6 +140,7 @@ Galeri sırası dosya adına göre. Sırayı garantilemek için ham dosyaları
 | `arac/veri.py` | Excel'i okur ve temizler. Diğer araçlar Excel'e değil buraya bakar. |
 | `arac/iskele.py` | Eksik kayıt klasörlerini açar. Var olan `yazi.md`'yi **ezmez**. |
 | `arac/webp.py` | `ham/` içindeki fotoğrafları webp'e çevirir. |
+| `arac/favicon.py` | `ikon.svg`'den `favicon.ico` ve `apple-touch-icon.png` üretir. İkon değişirse tekrar çalıştır. |
 
 `veri.py` Excel'in dağınıklığını tek yerde topluyor: tarihler beş ayrı
 formatta yazılmış (`17.05.2024`, `2025-04-02`, `2025-06`, tarih aralıkları,

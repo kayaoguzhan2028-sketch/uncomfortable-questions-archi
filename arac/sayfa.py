@@ -34,9 +34,22 @@ SITE_AD = SITE_ADI["tr"]
 
 # SAYFALAR — dil başına dört tane. manifesto ve temalar ayrı sayfa değil,
 # ana sayfanın bölümleri; nav onlara çapa (#) ile iniyor.
-SAYFA_ETKINLIK = "etkinlikler.html"
-SAYFA_URETIM = "uretimler.html"
-SAYFA_ILETISIM = "iletisim.html"
+# Yayındaki dosya adları İngilizce — nav'daki sekmelerle aynı kelimeler.
+# Kaynak ağacı (kayit/) Türkçe kalıyor: orası depo, yayın değil.
+# index.html SADECE ana sayfa; sunucu bir klasör istendiğinde onu servis
+# ettiği için adı zorunlu, diğerlerinin değil.
+SAYFA_ETKINLIK = "activity.html"
+SAYFA_URETIM = "archive.html"
+SAYFA_ILETISIM = "contact.html"
+
+# kayit/ içindeki bölüm adı -> yayındaki klasör adı
+BOLUM_YOL = {"etkinlikler": "activity", "uretimler": "archive"}
+
+
+def sayfa_yolu(kayit) -> str:
+    """activity/2026-1-mayis-tandogan.html — kaydın yayındaki adresi."""
+    bolum, ad = kayit.klasor.parts
+    return f"{BOLUM_YOL[bolum]}/{ad}.html"
 
 # Site iki dilde üretiliyor: tr/ ve en/. İlk dil varsayılan.
 DILLER = ("tr", "en")
@@ -356,6 +369,8 @@ def bas(dil: str, baslik: str, aciklama: str, derinlik: int, yol: str) -> str:
 <title>{html.escape(baslik)} — {SITE_ADI[dil]}</title>
 <meta name="description" content="{html.escape(aciklama)}">
 <link rel="icon" href="{k}ikon.svg" type="image/svg+xml">
+<link rel="icon" href="{k}favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="{k}apple-touch-icon.png">
 <link rel="alternate" hreflang="{dil}" href="{k}{dil}/{yol}">
 <link rel="alternate" hreflang="{ot}" href="{k}{ot}/{yol}">
 <link rel="stylesheet" href="{k}main.style.css">
@@ -444,7 +459,7 @@ def kart(dil, kayit, derinlik: int) -> str:
     Sayfa tr/ ya da en/ altında, FOTOĞRAF kayit/ altında: fotoğraf iki dilde
     de aynı, repoda tek kopya duruyor."""
     k = kac(derinlik)
-    sayfa = f"{k}{dil}/{kayit.klasor.as_posix()}.html"
+    sayfa = f"{k}{dil}/{sayfa_yolu(kayit)}"
     gorsel = KOK / kayit.kaynak / "kapak.webp"
     ic = (f'<img src="{k}{kayit.kaynak.as_posix()}/kapak.webp" alt="" loading="lazy">'
           if gorsel.exists() else IKON)
@@ -481,7 +496,7 @@ def tema_akordeonu(dil, ev, pr, derinlik):
         if hepsi:
             p.append('            <ul>')
             for x in hepsi:
-                p.append(f'              <li><a href="{k}{dil}/{x.klasor.as_posix()}.html">'
+                p.append(f'              <li><a href="{k}{dil}/{sayfa_yolu(x)}">'
                          f'{html.escape(x.tarih.yazi())} — '
                          f'{html.escape(x.baslik[:70])}</a></li>')
             p.append('            </ul>')
@@ -857,6 +872,8 @@ def kok_sayfasi() -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{SITE_ADI["tr"]} / {SITE_ADI["en"]}</title>
 <link rel="icon" href="ikon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="alternate" hreflang="tr" href="tr/">
 <link rel="alternate" hreflang="en" href="en/">
 <link rel="alternate" hreflang="x-default" href="tr/">
