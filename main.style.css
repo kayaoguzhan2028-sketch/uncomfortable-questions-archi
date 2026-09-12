@@ -1024,6 +1024,27 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .menu-panel hr { margin: var(--space-xs) 0; }
 
 
+/* SEKMELER --------------------------------------------------------------
+   Ana sayfadaki panolar. themes / manifesto / activity / network AYRI SAYFA
+   DEĞİL, aynı index.html içinde pano.
+
+   :target ile açılıyor, JavaScript'le değil. Kazancı: adres çubuğunda
+   #manifesto kalıyor, geri düğmesi çalışıyor, bağlantı paylaşılabiliyor ve
+   JS kapalıyken de bir şeyler görünüyor. */
+.pano { display: none; }
+.pano:target { display: block; }
+
+/* Adreste çapa yoksa açılış panosu görünür. */
+body:not(:has(.pano:target)) .pano--acilis { display: block; }
+
+/* :has() desteklemeyen eski tarayıcıda hiçbir pano açılmazdı. Orada
+   hepsini gösteriyoruz — sekme gider, uzun bir sayfa kalır ama içerik
+   kaybolmaz. */
+@supports not selector(:has(*)) {
+  .pano { display: block; }
+}
+
+
 /* BLOK — şemanın temel ritmi: solda etiket/not, sağda içerik ------------- */
 .blok {
   display: grid;

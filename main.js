@@ -56,3 +56,25 @@
     } catch (e) { /* saklayamadık; yönlendirme yine de çalışır */ }
   });
 })();
+
+/* AKTİF SEKME --------------------------------------------------------------
+   Panoyu açıp kapatan şey CSS (:target). Buradaki JS sadece nav'da hangi
+   sekmede olduğunu işaretliyor. Kapalıysa sekmeler yine çalışır, sadece
+   nav'da vurgu olmaz. */
+(function () {
+  var nav = document.querySelector(".ust-nav");
+  if (!nav) return;
+
+  function isaretle() {
+    var simdi = location.hash || "#about";
+    var baglar = nav.querySelectorAll("a[href*='#']");
+    for (var i = 0; i < baglar.length; i++) {
+      var capa = "#" + baglar[i].getAttribute("href").split("#")[1];
+      if (capa === simdi) baglar[i].setAttribute("aria-current", "page");
+      else baglar[i].removeAttribute("aria-current");
+    }
+  }
+
+  isaretle();
+  window.addEventListener("hashchange", isaretle);
+})();
