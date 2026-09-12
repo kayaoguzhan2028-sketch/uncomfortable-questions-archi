@@ -324,6 +324,18 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 
 /* 7. TEKİL SAYFA ========================================================== */
+/* ÖLÇÜ STANDARDI — 128 sayfanın hepsi için geçerli:
+
+   Sayfadaki her şey varsayılan olarak OKUMA KOLONUNA hizalanır. Kolon
+   genişliği tek yerden gelir: --wrap-width (680px) eksi .wrap'ın yan boşluğu
+   = ~616px. Video, metin, etiketler, künye — hepsi aynı sol ve sağ kenarda
+   başlar ve biter. Videoyu sayfa genişliğine yaymak metni 616px'de bırakıp
+   oynatıcıyı 1100px yapıyordu; ikisi aynı sayfada tutarsız duruyordu.
+
+   Bilerek taşan tek şey galeri şeridi (.gallery): farklı oranlı fotoğrafları
+   yan yana gösterebilmek için sayfa genişliğini kullanıyor. Onu da kolona
+   çekmek istersen .gallery'deki taşma satırlarını (width / margin-left /
+   padding-inline) silmek yeterli. */
 /* 128 kayıt sayfası (62 etkinlik + 66 üretim) bu bileşenleri kullanır.
    Sayfaların kendi <style>'ı YOK; bir şey değişecekse burada değişir. */
 
@@ -506,9 +518,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
         altındaki "YouTube'da izle" bağlantısı her koşulda çalışır. */
 
 .video {
-  width: min(var(--wrap-wide), 100vw - 2 * var(--space-md));
-  margin: var(--space-md) 0 var(--space-xs) 50%;
-  transform: translateX(-50%);
+  width: 100%;                 /* kapsayıcı ne kadarsa o — metinle aynı hiza */
+  margin: var(--space-md) 0 var(--space-xs);
   aspect-ratio: 16 / 9;
   background: #000;
   position: relative;
@@ -587,7 +598,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .video-not a:hover { color: var(--accent); }
 
 @media (max-width: 640px) {
-  .video { width: calc(100vw - 2 * var(--space-sm)); }
   .video-play { width: 58px; height: 58px; }
   .video-play::after { border-left-width: 18px; border-top-width: 11px; border-bottom-width: 11px; }
 }
@@ -819,7 +829,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .kart-izgara {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
   gap: var(--space-sm);
   list-style: none;
   margin-bottom: var(--space-lg);
