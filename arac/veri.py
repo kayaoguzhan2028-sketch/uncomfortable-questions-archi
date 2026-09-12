@@ -57,6 +57,24 @@ def slug(metin: str, sinir: int = SLUG_SINIR) -> str:
     return metin.strip("-") or "isimsiz"
 
 
+def kisa_ad(baslik: str, sinir: int = 42) -> str:
+    """
+    Başlıktan klasör adı üretir. Excel'deki başlıklar uzun ve tekrarlı:
+      "Ankara, 10 Ekim, 15 Temmuz: Yas, Hafıza ve Mekan | ... Cevaplar #2"
+    Bunu "yas-hafiza-ve-mekan"a indiriyoruz. Kural:
+      - "|" sonrası seri adıdır, atılır
+      - ":" varsa asıl konu sonrasındadır, o alınır
+      - podcast bölümleri ayrı: bölüm numarası kaybolmasın
+    """
+    m = re.search(r"Podcast[iı]?\s*[-–]\s*(\d+)\s*[-–]\s*([^:]*)", baslik, re.I)
+    if m:
+        return f"podcast-{int(m.group(1)):02d}-{slug(m.group(2).strip(), 30)}"
+
+    t = baslik.split("|")[0].strip()
+    t = re.sub(r"^.*?:\s*", "", t, count=1)
+    return slug(t, sinir)
+
+
 def _parcala(deger: str) -> list[str]:
     """Virgülle ayrılmış çoklu alanı listeye çevirir."""
     return [p.strip() for p in (deger or "").split(",") if p.strip()]
@@ -207,13 +225,13 @@ class Kayit:
 
     @property
     def klasor(self) -> Path:
-        """etkinlikler/2024/05-17-baslik/  |  uretimler/tarihsiz/baslik/"""
+        """etkinlikler/2026-1-mayis-tandogan/  |  uretimler/tarihsiz-md-1927-sunumu/
+
+        Tek seviye. Sıralama klasör adından değil, Excel'deki tarihten
+        yapılıyor; o yüzden ada ay-gün koymaya gerek yok."""
         kok = "etkinlikler" if self.tur == "etkinlik" else "uretimler"
-        if not self.tarih.var_mi:
-            return Path(kok) / "tarihsiz" / self.slug
-        onek = self.tarih.klasor()
-        ad = f"{onek}-{self.slug}" if onek else self.slug
-        return Path(kok) / str(self.tarih.yil) / ad
+        yil = self.tarih.yil if self.tarih.var_mi else "tarihsiz"
+        return Path(kok) / f"{yil}-{self.slug}"
 
     @property
     def url(self) -> str:
@@ -310,7 +328,7 @@ def _slug_ata(kayitlar: list[Kayit]) -> None:
     """Slug üretir; aynı klasöre düşen iki kayıt olursa sonuna -2, -3 ekler."""
     kullanilan: set[str] = set()
     for k in kayitlar:
-        temel = slug(k.baslik)
+        temel = kisa_ad(k.baslik)
         aday, n = temel, 2
         while True:
             k.slug = aday
