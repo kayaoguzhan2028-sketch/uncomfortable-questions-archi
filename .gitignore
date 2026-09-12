@@ -1,5 +1,3 @@
-
-
 # İşletim sistemi
 .DS_Store
 Thumbs.db
@@ -15,5 +13,11 @@ desktop.ini
 ~$*
 *.bak
 
-# Ham kaynaklar (siteye girmeyecek büyük dosyalar buraya taşınırsa)
-kaynak/
+
+# Ham veri kaynağı — ASLA pushlanmayacak, yerelde kalır
+*.xlsx
+*.xls
+*.csv
+
+# Ham fotoğraflar — her kaydın kendi ham/ klasörü. Sadece webp çıktısı repoya girer.
+ham/

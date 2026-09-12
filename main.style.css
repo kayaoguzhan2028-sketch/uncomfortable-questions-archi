@@ -25,14 +25,18 @@
    kuralda çıplak renk/boyut yazmıyoruz — hepsi var() ile buraya bağlı.
    Renkler ve font şu an nötr yer tutucu; yön belli olunca buradan değişecek. */
 :root {
-  /* Renk */
-  --bg:           #faf9f7;
-  --bg-alt:       #f0eeea;
-  --text:         #1a1a1a;
-  --text-soft:    #5a5a5a;
-  --text-faint:   #8a8a8a;
-  --accent:       #b23a1f;
-  --border:       rgba(26, 26, 26, 0.14);
+  color-scheme: dark;
+
+  /* Renk — siyah zemin, beyaz metin.
+     Tam siyah (#000) yerine çok koyu gri: tam siyahta beyaz metnin kenarları
+     titrer (halation), uzun metin okumayı yorar. */
+  --bg:           #0c0c0c;
+  --bg-alt:       #17171a;
+  --text:         #f2f0ec;
+  --text-soft:    #b4afa8;
+  --text-faint:   #837e77;
+  --accent:       #ef5a30;   /* koyu zeminde okunsun diye açıldı */
+  --border:       rgba(242, 240, 236, 0.16);
 
   /* Tipografi */
   --font:         Georgia, 'Times New Roman', serif;
@@ -244,4 +248,274 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 @media print {
   .site-nav, .site-footer { display: none; }
   body { background: #fff; color: #000; }
+}
+
+
+/* 7. TEKİL SAYFA ========================================================== */
+/* 128 kayıt sayfası (62 etkinlik + 66 üretim) bu bileşenleri kullanır.
+   Sayfaların kendi <style>'ı YOK; bir şey değişecekse burada değişir. */
+
+.post-head {
+  margin-bottom: var(--space-md);
+}
+
+/* Tür göstergesi birden fazla olabilir: bir etkinlik hem "Konferans" hem
+   "Atölye" olabiliyor. Excel'de virgüllü geldiği için liste olarak basıyoruz. */
+.post-head .label { margin-bottom: var(--space-xs); }
+
+/* Künye: tarih · şehir · mekan. Tarih aralık da olabilir (19–20 Eylül 2026). */
+.post-head .meta-line { margin-bottom: 0; }
+
+
+/* GALERİ ------------------------------------------------------------------
+   Yatay kaydırmalı şerit. Fotoğraflar aynı YÜKSEKLİKTE, genişlikleri kendi
+   oranlarına göre. Böylece afiş, bez, fanzin kapağı gibi farklı oranlı
+   görseller kırpılmadan yan yana durur.
+
+   Şerit okuma kolonundan taşıp sayfa genişliğini kullanır: metin dar kalsın,
+   görsel geniş olsun. Sağdaki fotoğrafın kenarı görünür — kaydırılacağı
+   böylece belli olur, ayrıca ok düğmesi gerekmez. */
+
+.gallery {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  margin: var(--space-md) 0;
+
+  /* okuma kolonundan taşır */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding-inline: var(--gallery-gutter);
+  scroll-padding-inline: var(--gallery-gutter);
+
+  scrollbar-width: thin;
+}
+
+:root {
+  /* Şeridin kenar boşluğu — metin kolonuyla hizalansın diye hesaplanıyor */
+  --gallery-gutter: max(var(--space-md), calc(50vw - var(--wrap-width) / 2));
+}
+
+.gallery figure {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  max-width: 90vw;
+}
+
+.gallery img {
+  height: min(65vh, 560px);
+  width: auto;
+  max-width: none;          /* reset'teki max-width:100% şeridi bozardı */
+  object-fit: contain;
+}
+
+.gallery figcaption {
+  font-family: var(--font-ui);
+  font-size: var(--size-small);
+  color: var(--text-faint);
+  margin-top: var(--space-xs);
+  max-width: 42ch;
+}
+
+/* Tek fotoğraf varsa şerit gibi davranmasına gerek yok */
+.gallery:has(figure:only-child) { scroll-snap-type: none; }
+
+
+/* GÖVDE METNİ -------------------------------------------------------------
+   yazi.md'den gelen kısım. Sayfanın okunan yeri burası. */
+
+.prose { max-width: var(--wrap-width); }
+
+.prose > *:first-child { margin-top: 0; }
+.prose h2 { margin-top: var(--space-lg); }
+.prose h3 { margin-top: var(--space-md); }
+
+.prose ul, .prose ol { margin: 0 0 var(--space-sm) 1.4em; }
+.prose li { margin-bottom: 0.3em; }
+
+.prose a { text-decoration: underline; text-underline-offset: 0.2em; }
+.prose a:hover { color: var(--accent); }
+
+/* Metin henüz girilmemiş kayıtlar için. yazi.md doldurulunca kaybolur. */
+.prose-bos {
+  border: 1px dashed var(--border);
+  padding: var(--space-sm);
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+  font-size: var(--size-small);
+}
+
+
+/* ÜRETİM KÜNYESİ ----------------------------------------------------------
+   Sadece üretim sayfalarında: yazar, dil, dosya türü. Etkinlikte bunlar yok. */
+
+.credits {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-xs) var(--space-sm);
+  margin: var(--space-md) 0;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: var(--size-small);
+}
+
+.credits dt {
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--size-label);
+  padding-top: 0.15em;
+}
+
+.credits dd { margin: 0; }
+
+/* Dış kaynağa (Drive vb.) giden bağlantı. Dışarı çıktığını belli etsin. */
+.source-link {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: var(--size-small);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 0.5em 1em;
+  transition: border-color 0.2s, color 0.2s;
+}
+.source-link:hover { border-color: var(--accent); color: var(--accent); }
+.source-link::after { content: " ↗"; color: var(--text-faint); }
+
+
+/* SAYFA ALTI GEZİNME ------------------------------------------------------ */
+
+.post-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: var(--size-small);
+}
+
+.post-nav a { text-decoration: none; color: var(--text-soft); max-width: 45%; }
+.post-nav a:hover { color: var(--accent); }
+.post-nav .yon {
+  display: block;
+  font-size: var(--size-label);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.2em;
+}
+.post-nav .sonraki { text-align: right; margin-left: auto; }
+
+
+/* MOBİL — tekil sayfa ----------------------------------------------------- */
+@media (max-width: 640px) {
+  :root { --gallery-gutter: var(--space-sm); }
+  .gallery img { height: 50vh; }
+  .credits { grid-template-columns: 1fr; gap: 0.1em; }
+  .credits dd { margin-bottom: var(--space-xs); }
+}
+
+
+/* VİDEO -------------------------------------------------------------------
+   Sadece videosu olan sayfalar bu işaretlemeyi yazar; olmayan hiç yazmaz.
+   CSS'in sayfada video olup olmadığını bilmesi gerekmez — kural sadece var
+   olan elemana uygulanır.
+
+   Oynatıcı sayfa açılırken YÜKLENMEZ. Önce yerel kapak görseli durur;
+   ziyaretçi tıklayınca iframe yerine geçer. Üç faydası var:
+     1. Sayfa hızlı açılır (YouTube'un ~1 MB script'i hiç inmez).
+     2. Tıklanana kadar YouTube'a hiçbir istek gitmez — izleme yok.
+     3. Gömülü oynatıcı herhangi bir sebeple engellenirse sayfa boş kalmaz;
+        altındaki "YouTube'da izle" bağlantısı her koşulda çalışır. */
+
+.video {
+  width: min(var(--wrap-wide), 100vw - 2 * var(--space-md));
+  margin: var(--space-md) 0 var(--space-xs) 50%;
+  transform: translateX(-50%);
+  aspect-ratio: 16 / 9;
+  background: #000;
+  position: relative;
+}
+
+.video iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Kapak — tıklanabilir olduğu için <button>, <div> değil: klavyeyle de
+   seçilebilsin, ekran okuyucu düğme olduğunu söylesin. */
+.video-ac {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.video-ac img {
+  width: 100%;
+  height: 100%;
+  max-width: none;          /* reset'teki max-width:100% burada işe yaramaz */
+  object-fit: cover;
+  display: block;
+}
+
+/* Oynat düğmesi: daire + üçgen. Görsel süs olduğu için aria-hidden. */
+.video-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(12, 12, 12, 0.72);
+  border: 2px solid rgba(242, 240, 236, 0.9);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.video-play::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0;
+  height: 0;
+  border-left: 24px solid var(--text);
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  transform: translateX(4px);   /* üçgenin görsel ağırlığı sola kaçıyor */
+}
+
+.video-ac:hover .video-play,
+.video-ac:focus-visible .video-play {
+  background: var(--accent);
+  transform: scale(1.06);
+}
+
+.video-ac:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* Videonun altındaki bağlantı satırı */
+.video-not {
+  font-family: var(--font-ui);
+  font-size: var(--size-small);
+  color: var(--text-faint);
+  margin-bottom: var(--space-md);
+}
+.video-not a { color: var(--text-soft); text-decoration: none; }
+.video-not a:hover { color: var(--accent); }
+
+@media (max-width: 640px) {
+  .video { width: calc(100vw - 2 * var(--space-sm)); }
+  .video-play { width: 58px; height: 58px; }
+  .video-play::after { border-left-width: 18px; border-top-width: 11px; border-bottom-width: 11px; }
 }
