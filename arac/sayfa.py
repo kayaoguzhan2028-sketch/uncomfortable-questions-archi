@@ -134,7 +134,13 @@ def ust(aktif: str, derinlik: int) -> str:
 
 def alt(derinlik: int) -> str:
     k = kac(derinlik)
-    return f"""<footer class="alt kutu">
+    # Şemadaki footer üstü şerit görsel. Dosya yoksa etiket hiç yazılmıyor —
+    # kırık görsel ya da boş yer tutucu bırakmıyoruz. alt-gorsel.webp'i köke
+    # koyman yeterli, bir dahaki üretimde bütün sayfalarda belirir.
+    serit = (f'<div class="alt-gorsel kutu"><img src="{k}alt-gorsel.webp" alt=""></div>'
+             if (KOK / "alt-gorsel.webp").exists() else "")
+    return serit + f"""
+<footer class="alt kutu">
   <div class="ust-satir">
     <a class="ust-ikon" href="{k}" aria-label="Ana sayfa">{IKON}</a>
     <span class="ust-ad">Sen de bir soru sor</span>
@@ -192,6 +198,37 @@ def kart(kayit, derinlik: int) -> str:
       </li>"""
 
 
+def tema_akordeonu(kayitlar, derinlik, baslik="Temalara göre"):
+    """Şema 2'nin son bölümü: solda başlık, sağda açılır tema satırları.
+
+    Satırlar gerçek kayıtlara açılıyor. '?tema=' gibi çalışmayan bir filtre
+    bağlantısı kullanmıyoruz — site JavaScript'siz de tam çalışsın diye."""
+    k = kac(derinlik)
+    p = ['  <div class="akordeon-blok">', f'    <h2>{baslik}</h2>',
+         '    <div class="akordeon">']
+    for ad, _slug in TEMALAR:
+        icinde = [x for x in kayitlar if ad in x.temalar]
+        p.append('      <details>')
+        p.append(f'        <summary><span>{html.escape(ad)}</span></summary>')
+        p.append('        <div class="akordeon-govde">')
+        if icinde:
+            p.append('          <ul>')
+            for x in icinde[:8]:
+                p.append(f'            <li><a href="{k}{x.klasor.as_posix()}/">'
+                         f'{html.escape(x.tarih.yazi())} — '
+                         f'{html.escape(x.baslik[:70])}</a></li>')
+            p.append('          </ul>')
+            if len(icinde) > 8:
+                p.append(f'          <p class="metin-ikincil">… ve {len(icinde) - 8} tane '
+                         f'daha (toplam {len(icinde)}).</p>')
+        else:
+            p.append('          <p class="metin-ikincil">Bu temada henüz kayıt yok.</p>')
+        p.append('        </div>')
+        p.append('      </details>')
+    p += ['    </div>', '  </div>']
+    return "\n".join(p)
+
+
 def liste_sayfasi(ad, aktif, baslik, kayitlar, derinlik):
     ilk, kalan = kayitlar[:3], kayitlar[3:]
     p = [bas(baslik, GIRIS[:150], derinlik), ust(aktif, derinlik), '<main class="kutu">']
@@ -208,6 +245,8 @@ def liste_sayfasi(ad, aktif, baslik, kayitlar, derinlik):
     p.append('  <ul class="izgara izgara--sik">')
     p += [kart(x, derinlik) for x in kalan]
     p.append('  </ul>')
+
+    p.append(tema_akordeonu(kayitlar, derinlik))
 
     p.append('</main>')
     p.append(alt(derinlik))
