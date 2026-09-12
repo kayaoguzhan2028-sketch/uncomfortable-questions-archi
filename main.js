@@ -39,3 +39,20 @@
     oynat(dugme.parentNode);
   });
 })();
+
+/* DİL SEÇİMİ ---------------------------------------------------------------
+   Nav'daki TR/EN düğmesine basıldığında tercihi saklıyoruz. Kökteki
+   index.html bir dahaki sefere önce buraya bakıyor, tarayıcı diline değil:
+   ziyaretçinin açık seçimi tahminden üstün.
+
+   localStorage kapalı olabilir (gizli sekme, site verisi engelli), o yüzden
+   try/catch — hata sayfayı durdurmasın, bağlantı yine de çalışır. */
+(function () {
+  document.addEventListener("click", function (olay) {
+    var bag = olay.target.closest("[data-dil]");
+    if (!bag) return;
+    try {
+      localStorage.setItem("uqa-dil", bag.getAttribute("data-dil"));
+    } catch (e) { /* saklayamadık; yönlendirme yine de çalışır */ }
+  });
+})();

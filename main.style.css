@@ -989,6 +989,20 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .ust-sag  { text-align: right; }
 .ust-genis{ grid-column: 1 / 3; }
 
+/* Sağ üst: dil düğmesi + Connect aynı hücrede */
+.ust-grup { display: flex; gap: 0.9em; justify-content: flex-end; }
+.ust-grup > a { padding: 0; }
+
+/* TR / EN düğmesi — bağlantı gibi değil, düğme gibi dursun */
+.ust-dil {
+  border: 1px solid var(--border);
+  padding: 0.05em 0.5em !important;
+  border-radius: 2px;
+  color: var(--text) !important;
+  letter-spacing: 0.06em;
+}
+.ust-dil:hover { background: var(--text); color: var(--bg) !important; }
+
 .ust-ikon { padding-block: 0.35em; }
 .ust-ikon .site-ikon { height: 18px; }
 
@@ -1149,6 +1163,19 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   .izgara--orta { grid-template-columns: repeat(2, 1fr); }
   .izgara--sik  { grid-template-columns: repeat(3, 1fr); }
   .akordeon-blok { grid-template-columns: 1fr; }
+}
+
+
+/* ÇEVİRİ NOTU — İngilizce sayfada henüz çevrilmemiş Türkçe bloğun üstünde.
+   Ziyaretçi neden Türkçe metin gördüğünü bilsin diye; sessizce Türkçe
+   bırakmak ya da makine çevirisi basmak yerine açıkça söylüyoruz. */
+.ceviri-notu {
+  font-size: var(--size-label);
+  line-height: 1.45;
+  color: var(--text-soft);
+  border-left: 2px solid var(--accent);
+  padding: 0.2em 0 0.2em 0.7em;
+  margin: 0 var(--wrap-ic) var(--space-xs);
 }
 
 

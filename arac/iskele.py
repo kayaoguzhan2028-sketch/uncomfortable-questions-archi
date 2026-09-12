@@ -58,7 +58,7 @@ def kunye(k: Kayit) -> str:
 def kur(kayitlar: list[Kayit], listele: bool) -> tuple[int, int]:
     yeni = mevcut = 0
     for k in kayitlar:
-        dizin = KOK / k.klasor
+        dizin = KOK / k.kaynak
         yazi = dizin / "yazi.md"
 
         if yazi.exists():
@@ -67,7 +67,7 @@ def kur(kayitlar: list[Kayit], listele: bool) -> tuple[int, int]:
 
         yeni += 1
         if listele:
-            print(f"  + {k.klasor}")
+            print(f"  + {k.kaynak}")
             continue
 
         (dizin / "ham").mkdir(parents=True, exist_ok=True)

@@ -48,7 +48,8 @@ except ImportError:
     sys.exit("Pillow kurulu değil. Kur:  python -m pip install Pillow")
 
 KOK = Path(__file__).resolve().parent.parent
-BOLUMLER = ("etkinlikler", "uretimler")
+# Kayıt malzemesi kayit/ altında, dilden bağımsız (bkz. veri.py Kayit.kaynak)
+BOLUMLER = ("kayit/etkinlikler", "kayit/uretimler")
 HAM = "ham"
 
 UZANTILAR = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".gif", ".webp"}

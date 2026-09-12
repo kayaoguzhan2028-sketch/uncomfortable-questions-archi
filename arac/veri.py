@@ -17,6 +17,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 KOK = Path(__file__).resolve().parent.parent
+
+# Kayıtların malzeme kökü. Sayfalar tr/ ve en/ altında üretilir;
+# metin, ham fotoğraf ve webp burada tek kopya durur.
+KAYNAK_KOK = "kayit"
 EXCEL = KOK / "Activity List.xlsx"
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
@@ -232,6 +236,16 @@ class Kayit:
         kok = "etkinlikler" if self.tur == "etkinlik" else "uretimler"
         yil = self.tarih.yil if self.tarih.var_mi else "tarihsiz"
         return Path(kok) / f"{yil}-{self.slug}"
+
+    @property
+    def kaynak(self) -> Path:
+        """kayit/etkinlikler/2026-1-mayis-tandogan/
+
+        Kaydın MALZEMESİ: yazi.md, ham/ ve webp çıktıları. Dilden bağımsız,
+        çünkü fotoğraf iki dilde de aynı — tr/ ve en/ altına kopyalanırsa
+        her fotoğraf repoda iki kere durur. Üretilen HTML tr/ ve en/ altına,
+        malzeme buraya."""
+        return Path(KAYNAK_KOK) / self.klasor
 
     @property
     def url(self) -> str:

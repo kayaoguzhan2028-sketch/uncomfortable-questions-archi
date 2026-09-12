@@ -14,23 +14,36 @@ Statik site — derleme adımı, bağımlılık, sunucu yok. GitHub Pages doğru
 
 Her kaydın malzemesi tek klasörde: metni, fotoğrafları ve sayfası bir arada.
 
+Site iki dilde: `tr/` ve `en/`. Kayıtların **malzemesi** ise dilden bağımsız,
+tek kopya, `kayit/` altında — fotoğraf iki dilde de aynı, repoda iki kere
+durmasın diye.
+
 ```
-index.html                 ana sayfa
+index.html                 dil seçer, tr/ ya da en/'e yönlendirir
 main.style.css             sitenin TEK stil dosyası
 main.js                    sitenin TEK script dosyası
 
-etkinlikler/
-  2026-1-mayis-tandogan/
-    ├── index.html         sayfa
-    ├── yazi.md            sayfanın metni (kaynak)
-    ├── 01.webp            siteye giren fotoğraflar
-    └── ham/               ⛔ repoya girmez — ham fotoğraflar
-uretimler/
-  2026-yas-hafiza-ve-mekan/
-  tarihsiz-md-1927-sunumu/
+tr/                        Türkçe sayfa ağacı   ┐ üretilir,
+  index.html                                    │ elle düzenlenmez
+  manifesto/  temalar/  iletisim/               │
+  etkinlikler/  uretimler/                      │
+en/                        İngilizce sayfa ağacı ┘
+
+kayit/                     kayıtların malzemesi (dilden bağımsız)
+  etkinlikler/
+    2026-1-mayis-tandogan/
+      ├── yazi.md          sayfanın metni (kaynak)
+      ├── kapak.webp       siteye giren fotoğraflar
+      └── ham/             ⛔ repoya girmez — ham fotoğraflar
+  uretimler/
+    2026-yas-hafiza-ve-mekan/
 
 arac/                      yerel araçlar (siteye dahil değil)
 ```
+
+`tr/` ve `en/` altındaki her şey `arac/sayfa.py` çıktısıdır. Oradaki bir
+dosyayı elle düzenleme — bir dahaki üretimde silinir. Metni değiştirmek için
+`arac/sayfa.py` içindeki `METIN` sözlüğüne ya da `kayit/.../yazi.md`'ye bak.
 
 Klasör adı `<yıl>-<kısaltılmış başlık>`. Sıralama klasör adından değil,
 Excel'deki tarihten yapılıyor; o yüzden ada ay/gün yazmıyoruz.
@@ -54,9 +67,37 @@ araçlarını (dosya oluşturma, üzerine yazma, silme, izin değiştirme) engel
 
 ---
 
+## Dil
+
+Kökteki `index.html` ziyaretçiyi yönlendirir. **IP'ye bakmıyor** — GitHub Pages
+statik bir sunucu, ziyaretçinin nereden geldiğini bilmez ve bunu değiştiremeyiz.
+Bakılan şey sırasıyla:
+
+1. Daha önce TR/EN düğmesiyle yapılmış seçim (`localStorage`).
+2. Tarayıcının dil ayarı (`navigator.language`). IP'den daha doğru: Berlin'deki
+   Türk öğrenci Türkçe, Ankara'daki Erasmus öğrencisi İngilizce görür.
+3. Hiçbiri yoksa Türkçe.
+
+JavaScript kapalıysa kökte iki bağlantı görünür, site çalışmaya devam eder.
+
+### Ne çevrildi, ne çevrilmedi
+
+| ne | durum |
+|---|---|
+| Arayüz (nav, bölüm adları, form, footer) | Çevrildi — `METIN` sözlüğü |
+| Giriş ve footer tanıtım paragrafı | Çevrildi, **kolektifin onayından geçmedi** |
+| Manifesto, tema metinleri, 32 soru | **Çevrilmedi.** İngilizce sayfada Türkçe aslı, üstünde çeviri notuyla duruyor |
+| Kayıt sayfaları (128 kayıt) | Çevrilmedi |
+
+Manifesto ve sorular bilerek çevrilmedi: kolektifin kendi politik beyanı, bir
+makine çevirisi kolektifin adı altında yayınlanmaz. İngilizcesi geldiğinde
+`sayfa.py`'ye eklenecek.
+
+---
+
 ## Fotoğraf eklemek
 
-Ham fotoğrafı kaydın `ham/` klasörüne at, sonra:
+Ham fotoğrafı kaydın `kayit/.../ham/` klasörüne at, sonra:
 
 ```bash
 python arac/webp.py           # yeni gelenleri çevir
