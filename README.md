@@ -166,7 +166,25 @@ ve `yazi.md` + Excel verisi + klasördeki webp'lerden `index.html` üretecek.
 **yok**; bir şey birden fazla sayfada görünüyorsa oraya yazılır.
 
 Renk ve tipografi dosyanın başındaki `:root` bloğunda token olarak duruyor;
-altındaki hiçbir kuralda çıplak renk yok. Siteyi beyaz zemine çevirmek yedi
+altındaki hiçbir kuralda çıplak renk **ve çıplak punto** yok.
+
+### Tipografi — beş rol, başkası yok
+
+| rol | token | nerede |
+|---|---|---|
+| dev | `--tip-dev` | sayfa başlığı. Sayfada bir tane olur. |
+| başlık | `--tip-baslik` | tema satırları, bölüm başlıkları, footer çağrısı |
+| alt başlık | `--tip-alt` | küçük kalın etiket: "about", "latest", kart başlığı |
+| düz yazı | `--tip-govde` | paragraflar, form, bağlantı listeleri |
+| referans | `--tip-ref` | tablo, tarih, künye, kenar notu |
+
+Önceden 6 token vardı ama 14 ayrı kural kendi `clamp()`'ini yazıyordu —
+sayfada 20 farklı punto dolaşıyordu. Şimdi `font-size:` yazan her kural bu
+beşinden birini kullanıyor, istisna yok.
+
+Yeni bir punto gerektiğini düşünüyorsan önce var olan bir rolün yerine
+geçip geçemeyeceğine bak. Altıncıyı eklemek ölçeği çözer; ayrımı çoğu
+yerde punto değil **ağırlık** yapıyor. Siteyi beyaz zemine çevirmek yedi
 satırlık bir değişiklik — nasıl yapılacağı o bloğun üstünde yazıyor.
 
 Başlıklar CSS'te büyük harfe çevrilmiyor: `text-transform: uppercase`

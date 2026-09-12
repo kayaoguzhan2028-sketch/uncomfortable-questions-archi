@@ -85,14 +85,24 @@
   --font:         'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-ui:      var(--font);
 
-  /* Tip ölçeği — akışkan, clamp ile. Sayfalar bunları kullanır, kendi
-     font-size'ını uydurmaz. */
-  --size-h1:      clamp(2.6rem, 7.5vw, 6.4rem);
-  --size-h2:      clamp(1.4rem, 2.8vw, 2rem);
-  --size-h3:      1.15rem;
-  --size-body:    1rem;
-  --size-small:   0.85rem;
-  --size-label:   0.7rem;
+  /* TİP ÖLÇEĞİ — BEŞ ROL, BAŞKA PUNTO YOK.
+     Aşağıdaki hiçbir kuralda çıplak font-size yazmıyor; hepsi bu beşinden
+     birini kullanıyor. Yeni bir punto gerektiğini düşünüyorsan muhtemelen
+     var olan bir rolün yerine geçmeli — yenisini eklemek ölçeği çözer.
+
+       dev     sayfa başlığı. Sayfada BİR tane olur.
+       baslik  tema satırları, bölüm başlıkları, footer çağrısı
+       alt     küçük kalın etiket: "about", "latest", kart başlığı
+       govde   düz yazı — paragraflar, form, bağlantı listeleri
+       ref     referans: tablo, tarih, künye, kenar notu, etiket
+
+     clamp(en küçük, ekrana göre, en büyük): dar ekranda küçülür, geniş
+     ekranda bir yerde durur. Ortadaki vw değeri geçişin hızı. */
+  --tip-dev:      clamp(2.2rem, 6.5vw, 4.4rem);
+  --tip-baslik:   clamp(1.5rem, 3.4vw, 2.4rem);
+  --tip-alt:      1rem;
+  --tip-govde:    0.9rem;
+  --tip-ref:      0.72rem;
 
   /* Şemadaki başlıklar neredeyse üst üste biniyor — 0.95 onu veriyor */
   --leading-tight: 0.95;
@@ -132,7 +142,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: var(--size-body);
+  font-size: var(--tip-govde);
   line-height: var(--leading-body);
   min-height: 100vh;
 }
@@ -149,20 +159,20 @@ h1, h2, h3, h4 { font-weight: 700; line-height: var(--leading-tight); }
    büyük harfe çevirmek Türkçe'de i/İ sorunu çıkarır ve ekran okuyucu
    bazı motorlarda harf harf okur. Metin neyse o basılıyor. */
 h1 {
-  font-size: var(--size-h1);
+  font-size: var(--tip-dev);
   letter-spacing: -0.03em;
   margin-bottom: var(--space-md);
   font-stretch: 115%;          /* Archivo Expanded — değişken eksenden */
 }
-h2 { font-size: var(--size-h2); margin: var(--space-lg) 0 var(--space-sm); }
-h3 { font-size: var(--size-h3); margin: var(--space-md) 0 var(--space-xs); }
+h2 { font-size: var(--tip-baslik); margin: var(--space-lg) 0 var(--space-sm); }
+h3 { font-size: var(--tip-alt); margin: var(--space-md) 0 var(--space-xs); }
 
 p { margin-bottom: var(--space-sm); }
 p:last-child { margin-bottom: 0; }
 
 /* Başlık altı açıklama — her içerik türünde aynı görünsün diye tek kural */
 .subtitle {
-  font-size: var(--size-body);
+  font-size: var(--tip-govde);
   font-style: italic;
   color: var(--text-soft);
   margin-bottom: var(--space-md);
@@ -171,7 +181,7 @@ p:last-child { margin-bottom: 0; }
 /* Üst etiket: "BULUŞMA", "FANZİN", "YAZI" gibi tür göstergesi */
 .label {
   font-family: var(--font-ui);
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--accent);
@@ -182,7 +192,7 @@ p:last-child { margin-bottom: 0; }
 /* Tarih, yazar, yer gibi künye satırı */
 .meta-line {
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-faint);
   margin-bottom: var(--space-md);
 }
@@ -229,7 +239,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .site-nav a {
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   letter-spacing: 0;
   text-decoration: none;
   opacity: 0.65;
@@ -245,7 +255,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   border-top: 1px solid var(--border);
   padding: var(--space-md);
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-faint);
   display: flex;
   justify-content: space-between;
@@ -268,14 +278,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .entry a:hover .entry-title { color: var(--accent); }
 
 .entry-title {
-  font-size: var(--size-h3);
+  font-size: var(--tip-alt);
   line-height: var(--leading-tight);
   transition: color 0.2s;
 }
 
 .entry-excerpt {
   color: var(--text-soft);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   margin-top: var(--space-xs);
 }
 
@@ -290,7 +300,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .tag {
   font-family: var(--font-ui);
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   letter-spacing: 0.06em;
   color: var(--text-faint);
   border: 1px solid var(--border);
@@ -401,7 +411,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .gallery figcaption {
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-faint);
   margin-top: var(--space-xs);
   max-width: 42ch;
@@ -431,7 +441,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   padding: var(--space-sm);
   color: var(--text-faint);
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
 }
 
 
@@ -446,14 +456,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   padding-top: var(--space-sm);
   border-top: 1px solid var(--border);
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
 }
 
 .credits dt {
   color: var(--text-faint);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   padding-top: 0.15em;
 }
 
@@ -463,7 +473,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .source-link {
   display: inline-block;
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   text-decoration: none;
   border: 1px solid var(--border);
   padding: 0.5em 1em;
@@ -483,14 +493,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   padding-top: var(--space-md);
   border-top: 1px solid var(--border);
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
 }
 
 .post-nav a { text-decoration: none; color: var(--text-soft); max-width: 45%; }
 .post-nav a:hover { color: var(--accent); }
 .post-nav .yon {
   display: block;
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--text-faint);
@@ -593,7 +603,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 /* Videonun altındaki bağlantı satırı */
 .video-not {
   font-family: var(--font-ui);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-faint);
   margin-bottom: var(--space-md);
 }
@@ -624,14 +634,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .iki-kolon > .etiket-kolon {
   font-weight: 700;
-  font-size: var(--size-h3);
+  font-size: var(--tip-alt);
   line-height: var(--leading-tight);
   letter-spacing: -0.01em;
 }
 
 /* İkincil, daha küçük ve soluk paragraf — şemada ana metnin altındaki blok */
 .metin-ikincil {
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-soft);
   margin-top: var(--space-sm);
 }
@@ -664,14 +674,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 }
 
 .tema-no {
-  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-size: var(--tip-baslik);
   font-weight: 700;
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
 
 .tema-ad {
-  font-size: clamp(1.2rem, 5vw, 2.1rem);
+  font-size: var(--tip-baslik);
   font-weight: 700;
   line-height: var(--leading-tight);
   letter-spacing: -0.02em;
@@ -684,7 +694,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .tema-ad b { font-weight: inherit; color: var(--text); }
 
 .tema-ok {
-  font-size: var(--size-h3);
+  font-size: var(--tip-alt);
   color: var(--text-faint);
   transition: transform 0.2s, color 0.2s;
 }
@@ -701,7 +711,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 /* Şemadaki en küçük, en soluk kenar notu */
 .kenar-not {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   line-height: 1.4;
   color: var(--text-faint);
   max-width: 20rem;
@@ -745,7 +755,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   width: 100%;
   min-width: 22rem;   /* çok dar telefonda sütunlar ezilmesin */
   border-collapse: collapse;
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   line-height: 1.5;
 }
 
@@ -788,14 +798,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .network-grup { margin-bottom: var(--space-lg); }
 
 .network-baslik {
-  font-size: var(--size-h3);
+  font-size: var(--tip-alt);
   font-weight: 700;
   line-height: var(--leading-tight);
   margin-bottom: var(--space-xs);
 }
 
 .network-aciklama {
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-soft);
   max-width: 22rem;
   margin-bottom: var(--space-md);
@@ -824,14 +834,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 }
 
 .network-ulke {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   color: var(--text-faint);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .network-ad {
-  font-size: var(--size-body);
+  font-size: var(--tip-govde);
   font-weight: 700;
   line-height: 1.1;
   max-height: 22rem;
@@ -864,7 +874,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   justify-content: space-between;
   align-items: baseline;
   gap: var(--space-xs);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   font-weight: 700;
   border-top: 1px solid var(--border);
   padding-top: var(--space-xs);
@@ -873,7 +883,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .kart:hover .kart-alt .ok { color: var(--accent); transform: translateX(5px); }
 .kart:hover .kart-alt { color: var(--accent); }
 
-.kart-tarih { font-weight: 400; color: var(--text-faint); font-size: var(--size-label); }
+.kart-tarih { font-weight: 400; color: var(--text-faint); font-size: var(--tip-ref); }
 
 
 /* GENİŞ FOOTER -----------------------------------------------------------
@@ -890,7 +900,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .footer-cagri a {
   display: block;
-  font-size: clamp(1.3rem, 3vw, 2.1rem);
+  font-size: var(--tip-baslik);
   font-weight: 700;
   letter-spacing: -0.02em;
   text-decoration: none;
@@ -904,7 +914,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .footer-kolonlar ul { list-style: none; }
 .footer-kolonlar li { margin-bottom: 0.35em; }
 .footer-kolonlar a {
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   text-decoration: none;
   opacity: 0.7;
   transition: opacity 0.2s, color 0.2s;
@@ -918,7 +928,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   flex-wrap: wrap;
   border-top: 1px solid var(--border);
   padding: var(--space-sm) 0;
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   color: var(--text-faint);
 }
 .footer-alt a { color: inherit; text-decoration: none; }
@@ -928,7 +938,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 @media (max-width: 760px) {
   .footer-genis { grid-template-columns: 1fr; gap: var(--space-md); }
   .footer-kolonlar { gap: var(--space-md); flex-wrap: wrap; }
-  .network-ad { max-height: 15rem; font-size: var(--size-small); }
+  .network-ad { max-height: 15rem; font-size: var(--tip-govde); }
 }
 
 
@@ -981,7 +991,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   padding-left: calc(var(--etiket-kolon) - 20px - var(--space-md));
 }
 .ust-nav a {
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   text-decoration: none;
   color: var(--text-soft);
   transition: color 0.15s;
@@ -993,7 +1003,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
    sayfa JS olmadan da tam çalışıyor. */
 .menu { position: relative; }
 .menu > summary {
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-soft);
   cursor: pointer;
   list-style: none;
@@ -1016,7 +1026,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   z-index: 200;
 }
 .menu-panel a {
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   text-decoration: none;
   color: var(--text-soft);
 }
@@ -1040,7 +1050,8 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 /* Bölüm içi başlık — şemadaki "2024 yılında sorduğumuz rahatsız edici
    sorular" satırı. */
 .bolum-baslik {
-  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+  margin: 0 0 var(--space-sm);
+  font-size: var(--tip-baslik);
   font-weight: 700;
   font-stretch: 100%;
   margin-bottom: var(--space-sm);
@@ -1049,7 +1060,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 /* Sol kolondaki küçük bağlantı listesi ("latest", "next" altındakiler) */
 .yan-liste { list-style: none; display: grid; gap: 0.15em; margin-top: var(--space-xs); }
 .yan-liste a {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   color: var(--text-faint);
   text-decoration: none;
   line-height: 1.4;
@@ -1068,14 +1079,16 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 /* Sol kolondaki küçük kalın etiket: "about", "latest", "themes" */
 .blok-etiket {
-  font-size: var(--size-h3);
+  margin: 0;                 /* taban h2 boşluğu sol kolondaki etiketi kaydırıyordu */
+  font-size: var(--tip-alt);
+  letter-spacing: -0.01em;
   font-weight: 700;
   line-height: var(--leading-tight);
 }
 
 /* Sol kolondaki soluk açıklama notu */
 .blok-not {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   line-height: 1.5;
   color: var(--text-faint);
   margin-top: var(--space-xs);
@@ -1083,7 +1096,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 /* Şemadaki büyük açılış başlığı — sayfanın en iri elemanı */
 .hero-baslik {
-  font-size: clamp(2.2rem, 7vw, 5.2rem);
+  font-size: var(--tip-dev);
   font-stretch: 125%;
   letter-spacing: -0.035em;
   line-height: 0.92;
@@ -1098,7 +1111,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 /* GİRİŞ METNİ ------------------------------------------------------------ */
 .giris {
   padding: var(--space-sm) var(--wrap-ic) var(--space-md);
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   line-height: 1.45;
 }
 
@@ -1120,11 +1133,11 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 }
 .bolum-ust h2 {
   margin: 0;
-  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  font-size: var(--tip-baslik);
   font-stretch: 100%;
 }
 .daha {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1164,14 +1177,14 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 /* Fotoğrafı olmayan kayıtta kutunun ortasındaki soluk işaret */
 .oge-gorsel .site-ikon { height: 26px; color: var(--border); }
 
-.oge-tarih { font-size: var(--size-label); font-weight: 700; font-variant-numeric: tabular-nums; }
-.oge-tip   { font-size: var(--size-label); font-weight: 700;
+.oge-tarih { font-size: var(--tip-ref); font-weight: 700; font-variant-numeric: tabular-nums; }
+.oge-tip   { font-size: var(--tip-ref); font-weight: 700;
              display: flex; justify-content: space-between; gap: 0.5em;
              border-top: 1px solid var(--border); padding-top: 0.35em; }
 .oge-ok    { color: var(--text-faint); transition: transform 0.2s; }
 .oge:hover .oge-ok { transform: translateX(4px); color: var(--accent); }
 .oge-metin {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   line-height: 1.35;
   overflow-wrap: anywhere;   /* sık ızgarada sütun ~90px; uzun kelime taşmasın */
   color: var(--text-soft);
@@ -1199,7 +1212,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 }
 .akordeon-blok h2 {
   margin: 0;
-  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  font-size: var(--tip-baslik);
   font-stretch: 100%;
 }
 .akordeon-blok .akordeon { padding: 0; margin: 0; }
@@ -1214,7 +1227,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
   gap: var(--space-sm);
   padding: 0.7em 0;
   cursor: pointer;
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   font-weight: 700;
   list-style: none;
 }
@@ -1225,7 +1238,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 .akordeon-govde { padding: 0 0 var(--wrap-ic); }
 .akordeon-govde ul { list-style: none; }
-.akordeon-govde li { padding: 0.25em 0; font-size: var(--size-small); }
+.akordeon-govde li { padding: 0.25em 0; font-size: var(--tip-govde); }
 .akordeon-govde a { text-decoration: none; color: var(--text-soft); }
 .akordeon-govde a:hover { color: var(--accent); }
 
@@ -1251,7 +1264,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 .alt-cagri { text-align: right; }
 .alt-cagri a {
   display: block;
-  font-size: clamp(1.3rem, 3vw, 2.2rem);
+  font-size: var(--tip-baslik);
   font-weight: 700;
   line-height: var(--leading-tight);
   letter-spacing: -0.02em;
@@ -1262,7 +1275,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 .alt-baglar { display: grid; gap: 0.3em; align-content: start; }
 .alt-baglar a {
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-soft);
   text-decoration: none;
 }
@@ -1276,13 +1289,13 @@ main > .blok { scroll-margin-top: var(--space-lg); }
   gap: var(--space-sm);
   border-top: 1px solid var(--border);
   padding-top: var(--space-xs);
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   color: var(--text-faint);
 }
 .alt-kunye a { text-decoration: none; }
 
 .alt-metin {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   line-height: 1.5;
   color: var(--text-soft);
   max-width: 46rem;
@@ -1318,7 +1331,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
    Ziyaretçi neden Türkçe metin gördüğünü bilsin diye; sessizce Türkçe
    bırakmak ya da makine çevirisi basmak yerine açıkça söylüyoruz. */
 .ceviri-notu {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   line-height: 1.45;
   color: var(--text-soft);
   border-left: 2px solid var(--accent);
@@ -1343,7 +1356,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 }
 .m-baslik h2 {
   margin: 0;
-  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+  font-size: var(--tip-alt);
   font-stretch: 100%;
   letter-spacing: -0.01em;
 }
@@ -1353,7 +1366,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 /* Küçük, soluk — bağlam cümlesi */
 .m-kucuk {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   line-height: 1.5;
   color: var(--text-soft);
   max-width: 80ch;
@@ -1362,7 +1375,8 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 /* Büyük, koyu — manifestonun asıl iddiası */
 .m-buyuk {
-  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-size: var(--tip-alt);
+  font-weight: 700;
   line-height: 1.35;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -1372,7 +1386,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 /* Açılış ve kapanış — en büyük punto, çerçevesiz */
 .m-vurgu {
-  font-size: clamp(1.2rem, 2.6vw, 1.8rem);
+  font-size: var(--tip-baslik);
   line-height: 1.3;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -1388,7 +1402,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 /* 12. İLETİŞİM =========================================================== */
 
 .iletisim-baslik {
-  font-size: clamp(1.4rem, 3.4vw, 2.4rem);
+  font-size: var(--tip-baslik);
   margin-bottom: 0;
 }
 
@@ -1402,23 +1416,23 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 
 .iletisim-bilgi dl { display: grid; grid-template-columns: auto; gap: 0; }
 .iletisim-bilgi dt {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-faint);
   margin-top: var(--space-sm);
 }
-.iletisim-bilgi dd { margin: 0; font-size: var(--size-small); font-weight: 700; }
+.iletisim-bilgi dd { margin: 0; font-size: var(--tip-govde); font-weight: 700; }
 .iletisim-bilgi a { text-decoration: underline; text-underline-offset: 0.2em; }
 .iletisim-bilgi a:hover { color: var(--accent); }
 
-.iletisim-form h2 { margin-top: 0; font-size: var(--size-h3); }
+.iletisim-form h2 { margin-top: 0; font-size: var(--tip-alt); }
 
 /* Form — etiketler input'u SARIYOR, ayrı for/id eşleşmesi gerekmiyor;
    tıklanınca alan odaklanır, ekran okuyucu doğru okur. */
 .iletisim-form label {
   display: block;
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-faint);
@@ -1436,7 +1450,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
   margin-top: 0.35em;
   padding: 0.5em 0;
   font: inherit;
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   text-transform: none;
   letter-spacing: 0;
   color: var(--text);
@@ -1457,14 +1471,14 @@ main > .blok { scroll-margin-top: var(--space-lg); }
   gap: 0.5em;
   text-transform: none;
   letter-spacing: 0;
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   color: var(--text-soft);
 }
 .form-onay input { margin-top: 0.25em; }
 
 .iletisim-form button {
   font: inherit;
-  font-size: var(--size-small);
+  font-size: var(--tip-govde);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1478,7 +1492,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 .iletisim-form button:hover { background: var(--accent); }
 
 .form-not {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   color: var(--text-faint);
   margin-top: var(--space-sm);
 }
@@ -1502,7 +1516,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: var(--bg-alt);
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--text-soft);
@@ -1513,7 +1527,7 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 /* Açılış paragrafı — giriş'ten daha iri, manifestoya köprü */
 .acilis {
   padding: var(--space-sm) var(--wrap-ic) var(--space-md);
-  font-size: clamp(0.95rem, 1.6vw, 1.12rem);
+  font-size: var(--tip-govde);
   font-weight: 700;
   line-height: 1.4;
   max-width: 88ch;
@@ -1531,8 +1545,8 @@ main > .blok { scroll-margin-top: var(--space-lg); }
 }
 .yan-yana > * { padding: var(--space-sm) var(--wrap-ic); }
 .yan-yana > :last-child { border-left: 1px solid var(--border); }
-.yan-kucuk { font-size: var(--size-label); line-height: 1.45; color: var(--text-soft); }
-.yan-kucuk h3 { font-size: var(--size-small); margin: 0 0 var(--space-xs); }
+.yan-kucuk { font-size: var(--tip-ref); line-height: 1.45; color: var(--text-soft); }
+.yan-kucuk h3 { font-size: var(--tip-govde); margin: 0 0 var(--space-xs); }
 
 /* AĞ LİSTESİ — yatay: solda küçük ülke, sağda kalın kurum adı ------------ */
 .ag-liste { list-style: none; padding: var(--space-sm) var(--wrap-ic) var(--space-md); }
@@ -1545,14 +1559,14 @@ main > .blok { scroll-margin-top: var(--space-lg); }
   padding: 0.1em 0;
 }
 .ag-ulke {
-  font-size: var(--size-label);
+  font-size: var(--tip-ref);
   color: var(--text-faint);
   text-align: right;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .ag-ad {
-  font-size: clamp(0.95rem, 1.5vw, 1.12rem);
+  font-size: var(--tip-govde);
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.25;
