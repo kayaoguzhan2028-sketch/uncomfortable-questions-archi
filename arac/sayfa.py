@@ -38,18 +38,22 @@ SITE_AD = SITE_ADI["tr"]
 # Kaynak ağacı (kayit/) Türkçe kalıyor: orası depo, yayın değil.
 # index.html SADECE ana sayfa; sunucu bir klasör istendiğinde onu servis
 # ettiği için adı zorunlu, diğerlerinin değil.
-SAYFA_URETIM = "archive.html"
-SAYFA_ILETISIM = "contact.html"
+SAYFA_ILETISIM = "contact.html"   # tek gerçek ayrı sayfa
 
 # Ana sayfadaki sekmelerin çapaları. Sekme = ayrı sayfa DEĞİL: aynı
 # index.html içindeki pano, :target ile açılıyor. JavaScript gerekmiyor,
 # adres çubuğunda kalıyor, geri düğmesi ve paylaşma çalışıyor.
 SEKME_ACILIS = "about"
+
+# Nav'daki sekmeler. Her biri ana sayfada bir GÖRÜNÜM açıyor: ana akış
+# gizleniyor, o görünüm tek başına kalıyor. Yeni sayfa yüklenmiyor,
+# sayfa aşağı da kaymıyor.
 SEKMELER = [
     ("themes", "temalar"),
     ("manifesto", "manifesto"),
     ("activity", "activity"),
     ("network", "network"),
+    ("archive", "archive"),
 ]
 
 # kayit/ içindeki bölüm adı -> yayındaki klasör adı
@@ -120,6 +124,11 @@ METIN = {
         "b_latest": "latest",
         "b_next": "next",
         "soru_baslik": "2024 yılında sorduğumuz rahatsız edici sorular",
+        "b_activity": "etkinlikler",
+        "b_archive": "arşiv",
+        "geri": "← kapat",
+        "siniflanmamis": "sınıflandırılmamış",
+        "tema_hepsi": "Temaların tamamı →",
         "ag_yerel": "yerel ağ",
         "ag_yerel_not": "Türkiye'de birlikte çalıştığımız yapılar:",
         "b_uretimler": "üretimler",
@@ -187,6 +196,11 @@ METIN = {
         "b_latest": "latest",
         "b_next": "next",
         "soru_baslik": "The uncomfortable questions we asked in 2024",
+        "b_activity": "activities",
+        "b_archive": "archive",
+        "geri": "← close",
+        "siniflanmamis": "unclassified",
+        "tema_hepsi": "All themes →",
         "ag_yerel": "local network",
         "ag_yerel_not": "The structures we work alongside in Turkey:",
         "b_uretimler": "works",
@@ -257,18 +271,17 @@ IKON = ('<svg class="site-ikon" viewBox="0 0 24 32" aria-hidden="true" focusable
 # kendisi küçük yazılı (büyük harfe çevirmek Türkçe'de i/İ'yi bozuyor).
 # İlk ikisi ve sonuncusu ana sayfadaki bölüme iniyor, ayrı sayfa yok.
 # İlk dördü ana sayfadaki sekme, beşincisi gerçek sayfa.
-NAV = ([(ad, f"index.html#{capa}", capa) for ad, capa in SEKMELER]
-       + [("archive", SAYFA_URETIM, "uretimler")])
+NAV = [(ad, f"index.html#{capa}", capa) for ad, capa in SEKMELER]
 
 # Sağ üstteki "menu" panelinde duranlar — nav'a sığmayan her şey.
 MENU = [
-    ("about", f"index.html#{SEKME_ACILIS}"),
+    ("home", "index.html"),
     ("themes", "index.html#temalar"),
     ("questions", "index.html#sorular"),
     ("manifesto", "index.html#manifesto"),
     ("activity", "index.html#activity"),
     ("network", "index.html#network"),
-    ("archive", SAYFA_URETIM),
+    ("archive", "index.html#archive"),
     ("contact", SAYFA_ILETISIM),
 ]
 
@@ -466,7 +479,7 @@ def alt(dil: str, derinlik: int) -> str:
     <div class="alt-baglar">
       <a href="{k}{dil}/index.html#temalar">themes</a>
       <a href="{k}{dil}/index.html#manifesto">manifesto</a>
-      <a href="{k}{dil}/{SAYFA_URETIM}">archive</a>
+      <a href="{k}{dil}/index.html#archive">archive</a>
       <a href="{k}{dil}/index.html#network">network</a>
       <a href="{k}{dil}/index.html#activity">activity</a>
       <span class="bosluk"></span>
@@ -854,17 +867,67 @@ def gorsel_yeri(ad, k, bekleme_metni, girinti="      ") -> str:
             f'{bekleme_metni} <code>{ad}</code></p></div>')
 
 
-def ana_sayfa(dil, ev, pr, derinlik=1):
-    """Ana sayfa — şemadaki tek uzun akış.
+def gorunum(capa, baslik, icerik, dil, k) -> str:
+    """Tek başına açılan görünüm.
 
-    themes / manifesto / activity / network AYRI SAYFA DEĞİL ve pano da
-    değil: hepsi bu sayfanın bölümü. Nav'daki sekmeler o bölüme kaydırıyor.
-    Bölümler gerçek id taşıdığı için adresi paylaşılabiliyor."""
+    :target ile açılıyor: adres çubuğunda kalıyor, geri düğmesi çalışıyor,
+    bağlantısı paylaşılabiliyor ve JavaScript gerekmiyor."""
+    return "\n".join([
+        f'  <section class="gorunum" id="{capa}">',
+        '    <div class="gorunum-ust">',
+        f'      <h1>{baslik}</h1>',
+        f'      <a class="gorunum-kapat" href="#">{S(dil, "geri")}</a>',
+        '    </div>',
+        icerik,
+        '  </section>',
+    ])
+
+
+def taksonomi(dil, kayitlar, derinlik, anahtar):
+    """Kayıtları bir ölçüte göre gruplar ve her grubu kendi ızgarasında verir.
+
+    anahtar: kayıttan etiket listesi çıkaran fonksiyon. Bir kayıt birden
+    fazla gruba girebilir (bir etkinlik hem 'Konferans' hem 'Atölye'
+    olabiliyor) — kopyalamıyoruz, gerçekten ikisinde de duruyor."""
+    gruplar = collections.defaultdict(list)
+    for x in kayitlar:
+        # Tipi boş kayıtlar da bir gruba girmeli, yoksa listeden düşerler.
+        # Excel'de 13 kayıt henüz sınıflandırılmamış durumda.
+        for e in (anahtar(x) or [S(dil, "siniflanmamis")]):
+            gruplar[e].append(x)
+
+    p = []
+    for ad in sorted(gruplar, key=lambda a: (-len(gruplar[a]), a)):
+        icinde = gruplar[ad]
+        p.append('    <div class="blok">')
+        p.append(f'      <div><h2 class="blok-etiket">{html.escape(ad)}</h2>'
+                 f'<p class="blok-not">{len(icinde)} {S(dil, "kayit")}</p></div>')
+        p.append('      <ul class="izgara izgara--sik">')
+        p += [kart(dil, x, derinlik) for x in icinde]
+        p.append('      </ul>')
+        p.append('    </div>')
+    return "\n".join(p)
+
+
+def ozet_bagi(dil, capa, anahtar) -> str:
+    """Ana akıştaki özetin altındaki 'tamamı' bağlantısı — görünümü açar."""
+    return ('  <div class="blok"><div></div>'
+            f'<p><a class="daha" href="#{capa}">{S(dil, anahtar)}</a></p></div>')
+
+
+def ana_sayfa(dil, ev, pr, derinlik=1):
+    """Ana sayfa.
+
+    Varsayılan hali: uzun akış, her bölüm ÖZET. Nav'daki bir sekmeye
+    basılınca bu akış gizleniyor ve o sekmenin tam görünümü tek başına
+    açılıyor — yeni sayfa yüklenmiyor, sayfa aşağı da kaymıyor."""
     k = kac(derinlik)
     p = [bas(dil, SITE_ADI[dil], giris(dil)[:150], derinlik, ""),
          ust(dil, "", derinlik, ""), '<main class="kutu">']
 
-    # 1 — KİMLİK: iri başlık + kolektif fotoğrafı
+    # ===================== ANA AKIŞ (varsayılan) =====================
+    p.append('<div class="ana-akis">')
+
     p.append('  <div class="blok">')
     p.append(f'    <p class="blok-etiket">{S(dil, "kunye")}</p>')
     p.append('    <div>')
@@ -873,7 +936,6 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     p.append('    </div>')
     p.append('  </div>')
 
-    # 2 — ABOUT
     p.append(f'  <section class="blok" id="{SEKME_ACILIS}">')
     p.append('    <h2 class="blok-etiket">about</h2>')
     p.append('    <div>')
@@ -882,67 +944,72 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     p.append('    </div>')
     p.append('  </section>')
 
-    # 3 — TEMALAR
-    p.append('  <section id="temalar">')
+    # Temalar — 5 satır, devamı görünümde
     p.append(tema_listesi(dil, derinlik))
-    p.append('    <div class="blok">')
-    p.append('      <div></div>')
-    p.append('      <div>')
-    p.append(tema_akordeonu(dil, ev, pr, derinlik))
-    p.append('      </div>')
-    p.append('    </div>')
-    p.append('  </section>')
+    p.append(ozet_bagi(dil, "temalar", "tema_hepsi"))
 
-    # 4 — FOTOĞRAF + SORULAR
-    p.append('  <section id="sorular">')
-    p.append('    <div class="blok">')
-    p.append('      <div></div>')
-    p.append(gorsel_yeri("sorular.webp", k, S(dil, "foto_bekliyor"), "      "))
-    p.append('    </div>')
-    p.append('    <div class="blok">')
-    p.append(f'      <h2 class="blok-etiket">{S(dil, "soru_bolum", n=len(SORULAR))}</h2>')
-    p.append('      <div>')
-    p.append(f'        <h3 class="bolum-baslik">{S(dil, "soru_baslik")}</h3>')
-    p.append(soru_tablosu(dil))
-    p.append('      </div>')
-    p.append('    </div>')
-    p.append('  </section>')
-
-    # 5 — MANİFESTO
-    p.append('  <section id="manifesto">')
-    p.append(manifesto_bolumu(dil))
-    p.append('  </section>')
-
-    # 6 — AĞ
-    p.append('  <section id="network">')
-    p.append(ag_listesi(dil))
-    p.append('  </section>')
-
-    # 7 — SON İŞLER: solda latest/next, sağda kart ızgarası
-    p.append('  <section class="blok" id="activity">')
+    # Sorular
+    p.append('  <div class="blok">')
+    p.append('    <div></div>')
+    p.append(gorsel_yeri("sorular.webp", k, S(dil, "foto_bekliyor"), "    "))
+    p.append('  </div>')
+    p.append('  <div class="blok" id="sorular">')
+    p.append(f'    <h2 class="blok-etiket">{S(dil, "soru_bolum", n=len(SORULAR))}</h2>')
     p.append('    <div>')
-    p.append(f'      <h2 class="blok-etiket">{S(dil, "b_latest")}</h2>')
-    p.append('      <ul class="yan-liste">')
-    for x in ev[:4]:
-        p.append(f'        <li><a href="{k}{dil}/{sayfa_yolu(x)}">'
-                 f'{html.escape(x.baslik[:38])}</a></li>')
-    p.append('      </ul>')
-    p.append(f'      <h2 class="blok-etiket" style="margin-top:var(--space-lg)">'
-             f'{S(dil, "b_next")}</h2>')
-    p.append('      <ul class="yan-liste">')
-    for x in pr[:3]:
-        p.append(f'        <li><a href="{k}{dil}/{sayfa_yolu(x)}">'
-                 f'{html.escape(x.baslik[:38])}</a></li>')
-    p.append('      </ul>')
+    p.append(f'      <h3 class="bolum-baslik">{S(dil, "soru_baslik")}</h3>')
+    p.append(soru_tablosu(dil))
     p.append('    </div>')
+    p.append('  </div>')
+
+    # Manifesto — açılış paragrafı, tamamı görünümde
+    p.append('  <div class="blok">')
+    p.append(f'    <div><h2 class="blok-etiket">{S(dil, "b_manifesto")}</h2>'
+             f'<p class="blok-not">{S(dil, "manifesto_not")}</p></div>')
+    p.append('    <div>')
+    p.append(notlu(dil, f'      <p class="m-vurgu">{MANIFESTO_ACILIS}</p>'))
+    p.append('    </div>')
+    p.append('  </div>')
+    p.append(ozet_bagi(dil, "manifesto", "manifesto_tamami"))
+
+    # Ağ
+    p.append(ag_listesi(dil))
+
+    # Son işler
+    p.append('  <div class="blok">')
+    p.append(f'    <div><h2 class="blok-etiket">{S(dil, "b_latest")}</h2>'
+             f'<p class="blok-not">{S(dil, "son_not")}</p></div>')
     p.append('    <div>')
     p.append('      <ul class="izgara izgara--iri">')
     p += [kart(dil, x, derinlik) for x in ev[:8]]
     p.append('      </ul>')
-    p.append(f'      <p><a class="daha" href="{k}{dil}/{SAYFA_URETIM}">'
-             f'{S(dil, "hepsi_ok")}</a></p>')
     p.append('    </div>')
-    p.append('  </section>')
+    p.append('  </div>')
+    p.append(ozet_bagi(dil, "activity", "hepsi_ok"))
+
+    p.append('</div>')
+
+    # ===================== GÖRÜNÜMLER =====================
+    tema_ic = "\n".join([
+        tema_listesi(dil, derinlik),
+        '    <div class="blok">', '      <div></div>', '      <div>',
+        tema_akordeonu(dil, ev, pr, derinlik),
+        '      </div>', '    </div>',
+    ])
+    p.append(gorunum("temalar", S(dil, "b_temalar"), tema_ic, dil, k))
+
+    p.append(gorunum("manifesto", S(dil, "b_manifesto"),
+                     manifesto_bolumu(dil), dil, k))
+
+    p.append(gorunum("activity", S(dil, "b_activity"),
+                     taksonomi(dil, ev, derinlik, lambda x: x.tipler), dil, k))
+
+    p.append(gorunum("network", S(dil, "ag_uluslararasi"),
+                     ag_listesi(dil), dil, k))
+
+    arsiv_ic = "\n".join([
+        taksonomi(dil, pr, derinlik, lambda x: x.tipler),
+    ])
+    p.append(gorunum("archive", S(dil, "b_archive"), arsiv_ic, dil, k))
 
     p.append('</main>')
     p.append(alt(dil, derinlik))
@@ -1022,7 +1089,6 @@ def main():
     for dil in DILLER:
         isler += [
             (f"{dil}/index.html", ana_sayfa(dil, ev, pr)),
-            (f"{dil}/{SAYFA_URETIM}", arsiv_sayfasi(dil, ev, pr)),
             (f"{dil}/{SAYFA_ILETISIM}", iletisim_sayfasi(dil)),
         ]
 

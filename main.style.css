@@ -1047,18 +1047,49 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .menu-panel hr { margin: var(--space-xs) 0; }
 
 
-/* SEKMELER --------------------------------------------------------------
-   Ana sayfa TEK uzun akış. themes / manifesto / activity / network ayrı
-   sayfa değil, bu sayfanın bölümleri. Hiçbiri gizlenmiyor.
+/* GÖRÜNÜMLER -------------------------------------------------------------
+   Nav'daki sekmeye basınca ana akış gizleniyor ve o sekmenin tam görünümü
+   TEK BAŞINA açılıyor. Yeni sayfa yüklenmiyor.
 
-   :target ile açılıyor, JavaScript'le değil. Kazancı: adres çubuğunda
-   #manifesto kalıyor, geri düğmesi çalışıyor, bağlantı paylaşılabiliyor ve
-   JS kapalıyken de bir şeyler görünüyor. */
-/* Bölümler GİZLENMİYOR. Ana sayfa tek uzun akış; nav'daki sekmeler o
-   bölüme kaydıran çapalar. Tek gereken, üstteki yapışkan nav'ın hedefi
-   örtmemesi. */
-main > section,
-main > .blok { scroll-margin-top: var(--space-lg); }
+   :target ile, JavaScript'siz. Kazancı: adres çubuğunda #activity kalıyor,
+   geri düğmesi ana akışa döndürüyor, sekmenin bağlantısı paylaşılabiliyor.
+
+   SAYFA NİYE KAYMIYOR: görünüm açıldığında ana akış display:none oluyor,
+   yani hedef zaten sayfanın en üstünde kalıyor. Tarayıcının kaydıracak
+   yeri olmuyor. */
+.gorunum { display: none; }
+.gorunum:target { display: block; }
+body:has(.gorunum:target) .ana-akis { display: none; }
+
+/* :has() yoksa ana akış gizlenemez; görünüm yine açılır, altında akış
+   kalır. Sekme hissi gider, içerik kaybolmaz. */
+@supports not selector(:has(*)) {
+  .gorunum:target { display: block; }
+}
+
+.gorunum-ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--text);
+}
+.gorunum-ust h1 { margin: 0; font-size: var(--tip-h2); font-stretch: 115%; }
+
+.gorunum-kapat {
+  font-size: var(--tip-govde);
+  text-decoration: none;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+.gorunum-kapat:hover { color: var(--accent); }
+
+/* Ana akış içindeki çapalar (#about, #sorular) için: yapışkan nav hedefi
+   örtmesin. */
+main > .ana-akis > section,
+main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
 
 /* Bölüm içi başlık — şemadaki "2024 yılında sorduğumuz rahatsız edici
    sorular" satırı. */
