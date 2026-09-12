@@ -410,12 +410,25 @@ def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
     k = kac(derinlik)
     ot, ot_ad = S(dil, "oteki"), S(dil, "oteki_ad")
 
+    bu_sayfa = yol or "index.html"
+
+    def hedefle(hedef_yol):
+        """Hedef zaten bulunduğumuz sayfaysa SADECE çapa yaz.
+
+        '../tr/index.html#temalar' yazarsak tarayıcı bunu yeni bir adres
+        sayıp sayfayı baştan yüklüyor: tıklayınca sayfa kaydırmak yerine
+        sıfırlanıyor ve bir an ham HTML görünüyor."""
+        dosya, _, capa = hedef_yol.partition("#")
+        if (dosya or "index.html") == bu_sayfa:
+            return f"#{capa}" if capa else "#"
+        return f"{k}{dil}/{hedef_yol}"
+
     baglar = []
     for etiket_, hedef_yol, kimlik in NAV:
         simdi = ' aria-current="page"' if kimlik == aktif else ""
-        baglar.append(f'<a href="{k}{dil}/{hedef_yol}"{simdi}>{etiket_}</a>')
+        baglar.append(f'<a href="{hedefle(hedef_yol)}"{simdi}>{etiket_}</a>')
 
-    menu = [f'      <a href="{k}{dil}/{h}">{e}</a>' for e, h in MENU]
+    menu = [f'      <a href="{hedefle(h)}">{e}</a>' for e, h in MENU]
 
     return f"""<header class="ust kutu">
   <a class="ust-ikon" href="{k}{dil}/" aria-label="{SITE_ADI[dil]}">{IKON}</a>
@@ -958,7 +971,9 @@ def kok_sayfasi() -> str:
 <link rel="alternate" hreflang="tr" href="tr/">
 <link rel="alternate" hreflang="en" href="en/">
 <link rel="alternate" hreflang="x-default" href="tr/">
-<link rel="stylesheet" href="main.style.css">
+<!-- Yönlendirme stil dosyasından ÖNCE: bir <script>, kendisinden önceki
+     <link rel="stylesheet"> inene kadar çalışmaz. Aşağıda dursaydı
+     yönlendirme 41 KB'lık stilin inmesini beklerdi. -->
 <script>
 (function () {{
   var d = "{DILLER[0]}";
@@ -975,6 +990,7 @@ def kok_sayfasi() -> str:
   location.replace(d + "/");
 }})();
 </script>
+<link rel="stylesheet" href="main.style.css">
 </head>
 <body>
 <main class="kutu" style="padding:2rem 14px">

@@ -987,7 +987,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-sm) 0 var(--space-xl);
+  /* Altta --space-xl (6rem) vardı: nav bandı gereksiz yere yüksekti ve
+     sayfa açılışta boş görünüyordu. İçerik aradaki boşlukla değil,
+     bloklarla ayrılıyor. */
+  padding: var(--space-sm) 0 var(--space-md);
   background: var(--bg);
 }
 
