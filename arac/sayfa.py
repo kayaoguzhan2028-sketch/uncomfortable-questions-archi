@@ -46,6 +46,66 @@ TEMALAR = [
     ("Toplumsal Cinsiyet", "toplumsal-cinsiyet"),
 ]
 
+# 2024 listesindeki rahatsız edici sorular. Beş tema sabit bir döngüyle
+# tekrar ediyor (01 Pedagoji, 02 Stüdyo, 03 Müfredat, 04 Sınıf, 05 Cinsiyet,
+# 06 Pedagoji...), her satır bu döngüye uyuyor — çeviri kendi yapısıyla
+# doğrulanmış oluyor. Numara listedeki sıradan geliyor, elle yazılmıyor.
+SORULAR = [
+    ('Mimarlık ve Pedagoji', '"Mimar" kimdir? Mimarların ve mimarlığın rolü nedir?'),
+    ('Stüdyo Kültürü', 'Mimarlar hep inşa mı eder?'),
+    ('Müfredat Teşhiri', 'Mimarlık tasarım stüdyolarında tasarım sürecini, ya da yapmama/inşa etmeme seçeneklerini konuşuyor muyuz?'),
+    ('Sınıf ve Emek', 'Bilgi üretmenin ya da aktarmanın bazı biçimlerinin doğru olmadığını biliyor olduğunuzda ne yaparsınız?'),
+    ('Toplumsal Cinsiyet', 'Mimarlık üretimi ve eğitimi sırasında doğru olmadığını düşündüğünüz yöntemler var mı? Varsa bunlara karşı ne yapılabileceğini düşünüyorsunuz?'),
+    ('Mimarlık ve Pedagoji', 'Ne kadar maaş alıyorsunuz? Hak ettiğiniz ücreti aldığınızı düşünüyor musunuz?'),
+    ('Stüdyo Kültürü', 'Günde kaç saat mesai yapıyorsunuz? Ne sıklıkla fazla mesaiye kalıyorsunuz?'),
+    ('Müfredat Teşhiri', 'Çalışma süreniz ve iş tanımınızdan emin misiniz?'),
+    ('Sınıf ve Emek', 'Bursiyer ile asistan pozisyonları arasında ne fark vardır? İş tanımları eşitlenebilir mi?'),
+    ('Toplumsal Cinsiyet', 'Araştırma asistanı ile eğitim asistanı arasında ne fark vardır? İş tanımları eşitlenebilir mi?'),
+    ('Mimarlık ve Pedagoji', 'Üniversitelerde akademik personelin büyük kısmını yarı zamanlı öğretim üyelerinden oluşturmak yönünde bir politika uygulandığını düşünüyor musunuz?'),
+    ('Stüdyo Kültürü', 'Akademik araştırma yürütmek için gerekli zaman ve gelire sahip misiniz?'),
+    ('Müfredat Teşhiri', 'Çalışma yaşantınızda görülmeyen ve ücretsiz emeğe ne oranda tanık oldunuz?'),
+    ('Sınıf ve Emek', 'Çalışma yaşantınızla ilgili kararlar konusunda otoritenin size ait olduğuna inanıyor musunuz? Otoritenizin sınırları nerede başlayıp bitiyor?'),
+    ('Toplumsal Cinsiyet', 'Prekaryanın sizin için anlamı nedir?'),
+    ('Mimarlık ve Pedagoji', 'Yaratıcılığın sizin için anlamı nedir?'),
+    ('Stüdyo Kültürü', 'Çalıştığınız yer maaş, ikramiye ve terfi konularında transparan mı?'),
+    ('Müfredat Teşhiri', 'Mimarlık eğitiminde ya da çalışma hayatında travmatik tecrübeleriniz var mı?'),
+    ('Sınıf ve Emek', 'Çalıştığınız yerde bir meseleyle ilgili toplum içinde konuşmaktan misilleme ya da şantaj korkusuyla kaçındığınız oldu mu?'),
+    ('Toplumsal Cinsiyet', 'Çalışma alanınızda konuşma ve ifade özgürlüğü olduğunu düşünüyor musunuz?'),
+    ('Mimarlık ve Pedagoji', 'Çalıştığınız yerde örgütlenme konusunda gerekli bilgi ve platformların erişilebilir olduğunu düşünüyor musunuz?'),
+    ('Stüdyo Kültürü', 'Sizce kiminle ve nasıl örgütlenebiliriz?'),
+    ('Müfredat Teşhiri', 'Mimarlıkta işleyen tasarım süreçleri, etik ve çalışma koşulları üzerinde nasıl söz sahibi olabiliriz?'),
+    ('Sınıf ve Emek', 'Materyaller için belirlediğimiz gerekli koşulları neden emek için de tanımlamıyoruz?'),
+    ('Toplumsal Cinsiyet', 'Profesyonel pratik ve akademik alan birbirinden bağımsız mıdır?'),
+    ('Mimarlık ve Pedagoji', 'Mekan üretimine odaklanan ekonomik sistem mimarlık pratiğini nasıl etkiliyor?'),
+    ('Stüdyo Kültürü', 'Mevcut sistem ile mimarlık eğitim müfredatı arasındaki ilişki nedir?'),
+    ('Müfredat Teşhiri', 'Mevcut mimarlık müfredatının üretim süreçlerini, inşa emeğini ve şantiye alanlarını da dikkate aldığını düşünüyor musunuz?'),
+    ('Sınıf ve Emek', 'Mimarlık pedagojisinin değişmesi, mimarlığın üretim biçimlerini nasıl değiştirirdi?'),
+    ('Toplumsal Cinsiyet', 'Derslik ve stüdyoları kamuya açık eleştirel mekanlara dönüştürebilir miyiz?'),
+    ('Mimarlık ve Pedagoji', 'Mekanla, kendimizle ve birbirimizle olan bağlarımızı nasıl görünür kılabiliriz?'),
+    ('Stüdyo Kültürü', 'Eğer emek, yapma biçimleri, bilgi birikimi ve inşa sürecinin kendisi merkeze alınırsa, mimarlık ve tasarım alanlarının bilgisi ve pratikleri nasıl dönüşür?'),
+]
+
+
+def soru_tablosu(sinir=None, sayili=True):
+    """Soru tablosu. sinir verilirse ilk o kadarını yazar.
+
+    Gerçek <table>: bu veri tablo, <div> ızgarası değil. Ekran okuyucu
+    'tema sütunu, soru sütunu' diye gezebiliyor."""
+    goster = SORULAR[:sinir] if sinir else SORULAR
+    p = ['  <div class="tablo-kaydir">', '    <table class="soru-tablo">',
+         '      <thead>',
+         '        <tr><th>Tema</th><th>Soru</th><th class="s-no">No</th></tr>',
+         '      </thead>', '      <tbody>']
+    for i, (tema, soru) in enumerate(goster, start=1):
+        p.append('        <tr>')
+        p.append(f'          <td class="s-tema">{html.escape(tema)}</td>')
+        p.append(f'          <td>{html.escape(soru)}</td>')
+        p.append(f'          <td class="s-no">{i:02d}</td>')
+        p.append('        </tr>')
+    p += ['      </tbody>', '    </table>', '  </div>']
+    return "\n".join(p)
+
+
 TEMA_METIN = {
     "Mimarlık ve Pedagoji":
         "Mimarlıkta Rahatsız Edici Sorular (UQA), mimarlığın sterilleştirilmiş "
@@ -526,6 +586,11 @@ def manifesto_sayfasi(derinlik=1):
         p.append('  </section>')
 
     p.append(f'  <p class="m-vurgu">{MANIFESTO_KAPANIS}</p>')
+
+    # Ana sayfadaki 'Soruların tamamı →' bağlantısı buraya iniyor.
+    p.append(f'  <div class="bolum-etiket" id="sorular"><span class="no">08</span>'
+             f'<span>{len(SORULAR)} rahatsız edici soru</span></div>')
+    p.append(soru_tablosu())
     p.append('</main>')
     p.append(alt(derinlik))
     return "\n".join(p)
@@ -554,23 +619,21 @@ def ana_sayfa(ev, pr, derinlik=0):
     p.append(f'  <p class="giris"><a class="daha" href="{kac(derinlik)}manifesto/">'
              'Manifestonun tamamı →</a></p>')
 
-    p.append('  <div class="tema-blok">')
-    p.append('    <div class="yan-kucuk"><p>Çalışmalarımız beş ana tema etrafında '
-             'şekilleniyor. Her tema, disiplinin sessiz kaldığı bir noktaya açılan '
-             'tartışma kapısıdır.</p></div>')
-    p.append('    <div>')
+    # Tema listesi kolonun tamamını kullanıyor: yanında açıklama kolonu ve
+    # çerçeve yok, satırlar sıkışmasın diye.
     p.append(tema_listesi(derinlik))
-    p.append('    </div>')
-    p.append('  </div>')
 
     p.append(etiket("04", "Latest activities"))
     p.append('  <ul class="izgara izgara--iri">')
     p += [kart(x, derinlik) for x in ev[:3]]
     p.append('  </ul>')
 
-    p.append(etiket("05", "80+ rahatsız edici soru"))
-    p.append(f'  <p class="giris"><a class="daha" href="{kac(derinlik)}manifesto/#sorular">'
-             'Soruların tamamı →</a></p>')
+    p.append(etiket("05", f"{len(SORULAR)} rahatsız edici soru"))
+    p.append(soru_tablosu(sinir=30))
+    kalan_soru = len(SORULAR) - 30
+    p.append(f'  <p class="giris">Listedeki ilk 30 soru. '
+             f'<a class="daha" href="{kac(derinlik)}manifesto/#sorular">'
+             f'Kalan {kalan_soru} soru ve tamamı →</a></p>')
 
     p.append(etiket("06", "Our network"))
     p.append(ag_listesi())

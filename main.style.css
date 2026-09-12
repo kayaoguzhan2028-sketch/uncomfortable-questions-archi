@@ -642,7 +642,10 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
    İki ton <span> ile değil, iç içe iki elemanla yapılıyor: başlığın tamamı
    okunabilir metin olarak duruyor, renk sadece görsel vurgu. */
 
-.tema-liste { list-style: none; }
+/* Kolonun tamamını kullanır — yanında açıklama kolonu yok, satırlar
+   sıkışmasın diye. */
+.tema-liste { list-style: none; padding: 0 var(--wrap-ic) var(--space-lg);
+              border-top: 1px solid var(--border); }
 
 .tema-satir {
   display: grid;
@@ -666,7 +669,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 }
 
 .tema-ad {
-  font-size: clamp(1.6rem, 4.5vw, 3.2rem);
+  font-size: clamp(1.2rem, 5vw, 2.1rem);
   font-weight: 700;
   line-height: var(--leading-tight);
   letter-spacing: -0.02em;
@@ -732,12 +735,16 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .tablo-kaydir {
   overflow-x: auto;
-  margin: var(--space-md) 0 var(--space-lg);
+  margin: 0 0 var(--space-lg);
+  padding: 0 var(--wrap-ic);   /* sayfanın sol kenar çizgisiyle aynı hizada */
 }
 
 .soru-tablo {
   width: 100%;
-  min-width: 44rem;
+  /* 44rem idi: 620px kolonda tablo hep yana kayıyordu, yani sorular
+     görünmüyordu. Artık kolona sığıyor, uzun soru satır atlıyor.
+     22rem sadece çok dar telefonda sütunların ezilmemesi için taban. */
+  min-width: 22rem;
   border-collapse: collapse;
   font-size: var(--size-label);
   line-height: 1.5;
@@ -762,7 +769,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .soru-tablo tbody tr:nth-child(odd) { background: var(--bg-alt); }
 
-.soru-tablo .s-tema { color: var(--text-soft); white-space: nowrap; }
+.soru-tablo .s-tema { color: var(--text-soft); white-space: nowrap;
+                      width: 1%; }   /* kendi içeriği kadar, kalanı soruya */
 .soru-tablo .s-no   { text-align: right; color: var(--text-faint);
                       font-variant-numeric: tabular-nums; white-space: nowrap; }
 
@@ -1351,13 +1359,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .yan-kucuk { font-size: var(--size-label); line-height: 1.45; color: var(--text-soft); }
 .yan-kucuk h3 { font-size: var(--size-small); margin: 0 0 var(--space-xs); }
 
-/* Tema listesinin ana sayfadaki hali — solunda küçük not kolonu */
-.tema-blok { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
-             border-top: 1px solid var(--border); }
-.tema-blok > :first-child { padding: var(--space-sm) var(--wrap-ic); }
-.tema-blok > :last-child { border-left: 1px solid var(--border); padding: 0 var(--wrap-ic); }
-
-
 /* AĞ LİSTESİ — yatay: solda küçük ülke, sağda kalın kurum adı ------------ */
 .ag-liste { list-style: none; padding: var(--space-sm) var(--wrap-ic) var(--space-md); }
 
@@ -1383,9 +1384,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 }
 
 @media (max-width: 760px) {
-  .yan-yana, .tema-blok { grid-template-columns: 1fr; }
+  .yan-yana { grid-template-columns: 1fr; }
   .yan-yana > :last-child,
-  .tema-blok > :last-child { border-left: 0; border-top: 1px solid var(--border); }
   .ag-satir { grid-template-columns: 1fr; gap: 0; padding: 0.35em 0; }
   .ag-ulke { text-align: left; }
 }
