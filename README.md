@@ -168,22 +168,28 @@ ve `yazi.md` + Excel verisi + klasördeki webp'lerden `index.html` üretecek.
 Renk ve tipografi dosyanın başındaki `:root` bloğunda token olarak duruyor;
 altındaki hiçbir kuralda çıplak renk **ve çıplak punto** yok.
 
-### Tipografi — beş rol, başkası yok
+### Tipografi — altı rol, başkası yok
 
-| rol | token | nerede |
-|---|---|---|
-| dev | `--tip-dev` | sayfa başlığı. Sayfada bir tane olur. |
-| başlık | `--tip-baslik` | tema satırları, bölüm başlıkları, footer çağrısı |
-| alt başlık | `--tip-alt` | küçük kalın etiket: "about", "latest", kart başlığı |
-| düz yazı | `--tip-govde` | paragraflar, form, bağlantı listeleri |
-| referans | `--tip-ref` | tablo, tarih, künye, kenar notu |
+| rol | token | HTML | nerede |
+|---|---|---|---|
+| ana başlık | `--tip-h1` | `<h1>` | sayfa başlığı. Sayfada bir tane olur. |
+| alt başlık | `--tip-h2` | `<h2>` | tema satırları, bölüm başlıkları, footer çağrısı |
+| sub başlık | `--tip-h3` | `<h3>` | "about", "latest", kart başlığı |
+| düz yazı | `--tip-govde` | `<p>` | paragraflar, form, bağlantı listeleri |
+| author | `--tip-author` | — | künye satırı: yazar, konuşmacı, tarih |
+| referans | `--tip-ref` | — | tablo, kenar notu, etiket, resim altı |
+
+Adlar HTML'in kendi başlık hiyerarşisine bağlı. `<h2>` yazmak yeterli —
+punto kendiliğinden gelir, ayrıca sınıf vermeye gerek yok. Ekran okuyucu ve
+arama motoru sayfayı zaten bu hiyerarşiden okuduğu için punto ile anlam aynı
+yerden geliyor; biri değişince öteki geride kalmıyor.
 
 Önceden 6 token vardı ama 14 ayrı kural kendi `clamp()`'ini yazıyordu —
 sayfada 20 farklı punto dolaşıyordu. Şimdi `font-size:` yazan her kural bu
-beşinden birini kullanıyor, istisna yok.
+altıdan birini kullanıyor, istisna yok.
 
 Yeni bir punto gerektiğini düşünüyorsan önce var olan bir rolün yerine
-geçip geçemeyeceğine bak. Altıncıyı eklemek ölçeği çözer; ayrımı çoğu
+geçip geçemeyeceğine bak. Yedincisini eklemek ölçeği çözer; ayrımı çoğu
 yerde punto değil **ağırlık** yapıyor. Siteyi beyaz zemine çevirmek yedi
 satırlık bir değişiklik — nasıl yapılacağı o bloğun üstünde yazıyor.
 
