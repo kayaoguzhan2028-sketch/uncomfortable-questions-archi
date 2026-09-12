@@ -1025,24 +1025,36 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 
 /* SEKMELER --------------------------------------------------------------
-   Ana sayfadaki panolar. themes / manifesto / activity / network AYRI SAYFA
-   DEĞİL, aynı index.html içinde pano.
+   Ana sayfa TEK uzun akış. themes / manifesto / activity / network ayrı
+   sayfa değil, bu sayfanın bölümleri. Hiçbiri gizlenmiyor.
 
    :target ile açılıyor, JavaScript'le değil. Kazancı: adres çubuğunda
    #manifesto kalıyor, geri düğmesi çalışıyor, bağlantı paylaşılabiliyor ve
    JS kapalıyken de bir şeyler görünüyor. */
-.pano { display: none; }
-.pano:target { display: block; }
+/* Bölümler GİZLENMİYOR. Ana sayfa tek uzun akış; nav'daki sekmeler o
+   bölüme kaydıran çapalar. Tek gereken, üstteki yapışkan nav'ın hedefi
+   örtmemesi. */
+main > section,
+main > .blok { scroll-margin-top: var(--space-lg); }
 
-/* Adreste çapa yoksa açılış panosu görünür. */
-body:not(:has(.pano:target)) .pano--acilis { display: block; }
-
-/* :has() desteklemeyen eski tarayıcıda hiçbir pano açılmazdı. Orada
-   hepsini gösteriyoruz — sekme gider, uzun bir sayfa kalır ama içerik
-   kaybolmaz. */
-@supports not selector(:has(*)) {
-  .pano { display: block; }
+/* Bölüm içi başlık — şemadaki "2024 yılında sorduğumuz rahatsız edici
+   sorular" satırı. */
+.bolum-baslik {
+  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+  font-weight: 700;
+  font-stretch: 100%;
+  margin-bottom: var(--space-sm);
 }
+
+/* Sol kolondaki küçük bağlantı listesi ("latest", "next" altındakiler) */
+.yan-liste { list-style: none; display: grid; gap: 0.15em; margin-top: var(--space-xs); }
+.yan-liste a {
+  font-size: var(--size-label);
+  color: var(--text-faint);
+  text-decoration: none;
+  line-height: 1.4;
+}
+.yan-liste a:hover { color: var(--accent); }
 
 
 /* BLOK — şemanın temel ritmi: solda etiket/not, sağda içerik ------------- */
@@ -1223,8 +1235,8 @@ body:not(:has(.pano:target)) .pano--acilis { display: block; }
    en altta ince bir çizgi ve iki uçta künye. */
 .alt {
   margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border);
+  padding: var(--space-lg) var(--space-md) var(--space-xs);
+  background: var(--bg-alt);   /* şemada footer zemini gri */
 }
 
 .alt-gorsel img { width: 100%; height: auto; display: block; }
