@@ -126,6 +126,58 @@ oynatıcıya çeviriyor.
 
 ---
 
+## Sürümleme (cache-busting)
+
+Site GitHub Pages'te, önünde Cloudflare var. Pages her dosyaya
+`Cache-Control: max-age=600` gönderiyor ve **bunu değiştiremiyoruz** — Pages
+özel header kabul etmiyor, `.htaccess` çalışmıyor. O yüzden önbellek kırma
+tamamen adresteki `?v=` damgası üzerine kurulu.
+
+**Her push'tan önce çalıştır — sıra önemli:**
+
+```bash
+./bump-version.sh
+git add -A
+git commit -m "..."
+git push
+```
+
+Damgayı basmadan commit edersen hiçbir işe yaramaz.
+
+Script tüm `.html` dosyalarındaki yerel `<link href="*.css">` ve
+`<script src="*.js">` etiketlerine `?v=YYYYMMDDHHMM` basar (varsa günceller),
+damgayı `VERSION` dosyasına yazar. `https://` içeren satırlara dokunmaz — CDN
+adresleri sürümü zaten yolunda taşır.
+
+### ⚠ Görseller versiyonlanmıyor
+
+Script **sadece** `.js` ve `.css` damgalar. **Aynı adla bir görseli
+değiştirirsen ziyaretçiye eskisi gider.** Bir görselin içeriğini
+değiştireceksen dosyayı yeniden adlandır (`kapak.webp` → `kapak-2.webp`) ve
+sayfadaki bağlantıyı güncelle.
+
+### Neden perl, neden sed değil
+
+Git Bash'te `awk` satır sonlarını bozuyor — ama ölçtük, bu ortamdaki
+GNU sed 4.9 de aynısını yapıyor:
+
+```
+printf 'a
+b
+' | sed -E -i 's|a|A|'
+önce:  61 0d 0a 62 0d 0a
+sonra: 41 0a    62 0a      ← dokunulmayan satırda bile  silinmiş
+```
+
+Çalışma kopyası CRLF olduğu için (`core.autocrlf=true`) bu, alakasız
+dosyaların baştan aşağı değişmiş görünmesine yol açar. `perl -i -pe` aynı
+testte baytları koruyor, o yüzden script perl kullanıyor.
+
+`.gitattributes` ayrıca `*.sh` dosyalarını LF'e sabitliyor — shell script
+CRLF ile checkout edilirse `#!/bin/sh` satırı kırılır.
+
+---
+
 ## Yerelde çalıştırmak
 
 ```bash
