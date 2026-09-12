@@ -1,0 +1,19 @@
+
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editör
+.vscode/
+.idea/
+*.swp
+
+# Geçici / çalışma dosyaları
+*.tmp
+~$*
+*.bak
+
+# Ham kaynaklar (siteye girmeyecek büyük dosyalar buraya taşınırsa)
+kaynak/
