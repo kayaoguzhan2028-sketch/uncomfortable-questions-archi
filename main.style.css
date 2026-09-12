@@ -110,12 +110,15 @@
   /* SAYFA KOLONU — şemadaki ölçü. Sitedeki HER kutu (nav, main, footer,
      kayıt sayfası) bu genişlikte ve ortalanmış. Sayfa tarayıcı genişliğine
      yayılmıyor. Tek yerden değişir: burası. */
-  --wrap-width:   620px;
+  --wrap-width:   1180px;
   --wrap-wide:    var(--wrap-width);
+  /* Şemadaki iki kolonlu ritim: solda dar etiket/not kolonu, sağda içerik.
+     Sayfadaki hemen her bölüm bu ızgarayı kullanıyor. */
+  --etiket-kolon: 15rem;
   /* Kutuların iç yan boşluğu. px — em DEĞİL: em kendi punto'suna göre
      çözülür, nav (13.6px punto) ile kart ızgarası (16px punto) farklı
      yerden başlardı. Sol kenar çizgisi tek olsun diye sabit. */
-  --wrap-ic:      14px;
+  --wrap-ic:      0px;   /* geniş formatta kutu çerçevesi yok, iç boşluk da yok */
   --nav-height:   56px;
 }
 
@@ -411,7 +414,6 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 /* GÖVDE METNİ -------------------------------------------------------------
    yazi.md'den gelen kısım. Sayfanın okunan yeri burası. */
 
-.prose { max-width: var(--wrap-width); }
 
 .prose > *:first-child { margin-top: 0; }
 .prose h2 { margin-top: var(--space-lg); }
@@ -741,10 +743,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .soru-tablo {
   width: 100%;
-  /* 44rem idi: 620px kolonda tablo hep yana kayıyordu, yani sorular
-     görünmüyordu. Artık kolona sığıyor, uzun soru satır atlıyor.
-     22rem sadece çok dar telefonda sütunların ezilmemesi için taban. */
-  min-width: 22rem;
+  min-width: 22rem;   /* çok dar telefonda sütunlar ezilmesin */
   border-collapse: collapse;
   font-size: var(--size-label);
   line-height: 1.5;
@@ -768,6 +767,12 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 }
 
 .soru-tablo tbody tr:nth-child(odd) { background: var(--bg-alt); }
+
+/* Şemada üzerine gelinen satır tamamen siyah — hangi satırı okuduğun
+   32 satırlık bir tabloda kaybolmasın diye. */
+.soru-tablo tbody tr:hover,
+.soru-tablo tbody tr:hover .s-tema,
+.soru-tablo tbody tr:hover .s-no { background: var(--text); color: var(--bg); }
 
 .soru-tablo .s-tema { color: var(--text-soft); white-space: nowrap;
                       width: 1%; }   /* kendi içeriği kadar, kalanı soruya */
@@ -941,70 +946,120 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 /* Activity şemasından: nav ve footer hücrelere bölünmüş bir tablo gibi.
    Aktif bağlantı siyah ve altı çizili, diğerleri gri. Satır araları çizgili. */
 
+/* Şemadaki sayfa: geniş ve ortalanmış. Çerçeve YOK — önceki dar formatta
+   her bölüm kutu içindeydi, bu formatta ayrım boşlukla yapılıyor. */
 .kutu {
-  /* Şemadaki yerleşimin özü: kutu sayfaya yayılmaz, ortada durur.
-     width + max-width birlikte: dar ekranda kenarda boşluk kalır. */
-  width: calc(100% - 2 * var(--space-sm));
+  width: calc(100% - 2 * var(--space-md));
   max-width: var(--wrap-width);
   margin-inline: auto;
-  border: 1px solid var(--border);
   background: var(--bg);
 }
 
-/* ÜST NAV ---------------------------------------------------------------- */
+/* ÜST NAV ----------------------------------------------------------------
+   Tek satır: solda işaret, ortada sekmeler, sağda menü. Şemadaki gibi küçük
+   harf — metnin kendisi küçük yazılı, text-transform kullanmıyoruz (Türkçe
+   i/İ eşlemesini bozuyor). */
 .ust {
   position: sticky;
   top: 0;
   z-index: 100;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0 var(--space-xl);
+  background: var(--bg);
+}
+
+.ust-ikon { display: inline-flex; }
+.ust-ikon .site-ikon { height: 20px; }
+
+.ust-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding-left: calc(var(--etiket-kolon) - 20px - var(--space-md));
+}
+.ust-nav a {
+  font-size: var(--size-small);
+  text-decoration: none;
+  color: var(--text-soft);
+  transition: color 0.15s;
+}
+.ust-nav a:hover { color: var(--accent); }
+.ust-nav a[aria-current="page"] { color: var(--text); font-weight: 700; }
+
+/* MENÜ — <details>, JavaScript yok. Klavyeyle açılıyor, Esc ile kapanıyor,
+   sayfa JS olmadan da tam çalışıyor. */
+.menu { position: relative; }
+.menu > summary {
+  font-size: var(--size-small);
+  color: var(--text-soft);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.menu > summary::-webkit-details-marker { display: none; }
+.menu > summary:hover { color: var(--text); }
+.menu[open] > summary { color: var(--text); font-weight: 700; }
+
+.menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-sm));
+  min-width: 14rem;
+  background: var(--bg);
+  border: 1px solid var(--text);
+  padding: var(--space-sm);
+  display: grid;
+  gap: 0.35em;
+  z-index: 200;
+}
+.menu-panel a {
+  font-size: var(--size-small);
+  text-decoration: none;
+  color: var(--text-soft);
+}
+.menu-panel a:hover { color: var(--accent); }
+.menu-panel hr { margin: var(--space-xs) 0; }
+
+
+/* BLOK — şemanın temel ritmi: solda etiket/not, sağda içerik ------------- */
+.blok {
+  display: grid;
+  grid-template-columns: var(--etiket-kolon) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+  margin-bottom: var(--space-xl);
+}
+
+/* Sol kolondaki küçük kalın etiket: "about", "latest", "themes" */
+.blok-etiket {
+  font-size: var(--size-h3);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+
+/* Sol kolondaki soluk açıklama notu */
+.blok-not {
+  font-size: var(--size-label);
+  line-height: 1.5;
+  color: var(--text-faint);
+  margin-top: var(--space-xs);
+}
+
+/* Şemadaki büyük açılış başlığı — sayfanın en iri elemanı */
+.hero-baslik {
+  font-size: clamp(2.2rem, 7vw, 5.2rem);
+  font-stretch: 125%;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
   margin-bottom: var(--space-md);
 }
 
-.ust-satir {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-}
-.ust-satir:last-child { border-bottom: 0; }
-
-.ust-satir > * {
-  padding: 0.55em var(--wrap-ic);
-  font-size: var(--size-small);
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--text-faint);
-  transition: color 0.15s;
-}
-.ust-satir a:hover { color: var(--text); }
-
-/* Bulunduğun sayfanın bağlantısı — gri değil siyah, altı çizili */
-.ust-satir a[aria-current="page"] {
-  color: var(--text);
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-}
-
-.ust-ad   { grid-column: 2 / 4; text-align: center; color: var(--text) !important;
-            font-size: var(--size-body); }
-.ust-sag  { text-align: right; }
-.ust-genis{ grid-column: 1 / 3; }
-
-/* Sağ üst: dil düğmesi + Connect aynı hücrede */
-.ust-grup { display: flex; gap: 0.9em; justify-content: flex-end; }
-.ust-grup > a { padding: 0; }
-
-/* TR / EN düğmesi — bağlantı gibi değil, düğme gibi dursun */
-.ust-dil {
-  border: 1px solid var(--border);
-  padding: 0.05em 0.5em !important;
-  border-radius: 2px;
-  color: var(--text) !important;
-  letter-spacing: 0.06em;
-}
-.ust-dil:hover { background: var(--text); color: var(--bg) !important; }
-
-.ust-ikon { padding-block: 0.35em; }
-.ust-ikon .site-ikon { height: 18px; }
+/* Açılış fotoğrafı içerik kolonunun tamamını kullanır */
+.hero-foto { width: 100%; margin-bottom: var(--space-md); }
+.hero-foto img { width: 100%; height: auto; display: block; }
 
 
 /* GİRİŞ METNİ ------------------------------------------------------------ */
@@ -1064,7 +1119,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 /* Görsel kutusu — fotoğraf yoksa da ızgara bozulmasın diye gri zemin durur */
 .oge-gorsel {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   background: var(--bg-alt);
   display: grid;
   place-items: center;
@@ -1077,7 +1132,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .oge-gorsel .site-ikon { height: 26px; color: var(--border); }
 
 .oge-tarih { font-size: var(--size-label); font-weight: 700; font-variant-numeric: tabular-nums; }
-.oge-tip   { font-size: var(--size-label); font-weight: 700; }
+.oge-tip   { font-size: var(--size-label); font-weight: 700;
+             display: flex; justify-content: space-between; gap: 0.5em;
+             border-top: 1px solid var(--border); padding-top: 0.35em; }
+.oge-ok    { color: var(--text-faint); transition: transform 0.2s; }
+.oge:hover .oge-ok { transform: translateX(4px); color: var(--accent); }
 .oge-metin {
   font-size: var(--size-label);
   line-height: 1.35;
@@ -1138,20 +1197,68 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .akordeon-govde a:hover { color: var(--accent); }
 
 
-/* ALT — footer ızgarası --------------------------------------------------- */
-.alt { margin-top: var(--space-lg); }
+/* ALT — footer ---------------------------------------------------------
+   Şemada: solda iri çağrı (sağa yaslı), sağda küçük bağlantı kolonu,
+   en altta ince bir çizgi ve iki uçta künye. */
+.alt {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+}
 
 .alt-gorsel img { width: 100%; height: auto; display: block; }
 
-.alt-metin {
-  padding: var(--space-sm) var(--wrap-ic);
-  font-size: var(--size-label);
-  line-height: 1.5;
-  border-bottom: 1px solid var(--border);
+.alt-ust {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 16rem);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
 }
 
-.alt-satir--6 { grid-template-columns: repeat(6, 1fr); }
-.alt-satir--3 { grid-template-columns: repeat(3, 1fr); }
+.alt-cagri { text-align: right; }
+.alt-cagri a {
+  display: block;
+  font-size: clamp(1.3rem, 3vw, 2.2rem);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  margin-bottom: 0.15em;
+}
+.alt-cagri a:hover { color: var(--accent); }
+
+.alt-baglar { display: grid; gap: 0.3em; align-content: start; }
+.alt-baglar a {
+  font-size: var(--size-small);
+  color: var(--text-soft);
+  text-decoration: none;
+}
+.alt-baglar a:hover { color: var(--accent); }
+.alt-baglar .bosluk { height: var(--space-sm); }
+.alt-baglar .site-ikon { height: 20px; margin-top: var(--space-sm); }
+
+.alt-kunye {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-xs);
+  font-size: var(--size-label);
+  color: var(--text-faint);
+}
+.alt-kunye a { text-decoration: none; }
+
+.alt-metin {
+  font-size: var(--size-label);
+  line-height: 1.5;
+  color: var(--text-soft);
+  max-width: 46rem;
+  margin-bottom: var(--space-lg);
+}
+
+/* Kayıt sayfasında gövde metni: kolon 1180px, okunacak metin o kadar geniş
+   olmaz. Satır uzunluğu ~75 karakterde kalsın. */
+.prose { max-width: 46rem; }
 
 
 @media (max-width: 760px) {
@@ -1163,6 +1270,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   .izgara--orta { grid-template-columns: repeat(2, 1fr); }
   .izgara--sik  { grid-template-columns: repeat(3, 1fr); }
   .akordeon-blok { grid-template-columns: 1fr; }
+  /* Geniş format tek kolona iner: etiket kolonu içeriğin üstüne geçer */
+  .blok { grid-template-columns: 1fr; gap: var(--space-sm);
+          margin-bottom: var(--space-lg); }
+  .ust { grid-template-columns: auto 1fr auto; gap: var(--space-sm);
+         padding-bottom: var(--space-lg); }
+  .ust-nav { padding-left: 0; gap: var(--space-sm); }
+  .alt-ust { grid-template-columns: 1fr; gap: var(--space-md); }
+  .alt-cagri { text-align: left; }
 }
 
 
@@ -1249,7 +1364,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
   border-top: 1px solid var(--border);
 }
-.iletisim > * { padding: var(--space-md) var(--wrap-ic); }
+.iletisim > * { padding: var(--space-md) 0; }
 .iletisim-form { border-left: 1px solid var(--border); }
 
 .iletisim-bilgi dl { display: grid; grid-template-columns: auto; gap: 0; }

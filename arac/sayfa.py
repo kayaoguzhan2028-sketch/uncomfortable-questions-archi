@@ -24,7 +24,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from veri import KOK, oku  # noqa: E402
 
-SITE_AD = "Mimarlıkta Rahatsız Edici Sorular"
+# Kolektifin adı iki dilde. İngilizcesi "disturbing" DEĞİL — kolektifin
+# kendi kullandığı ad "Uncomfortable Questions in Architecture".
+SITE_ADI = {
+    "tr": "Mimarlıkta Rahatsız Edici Sorular",
+    "en": "Uncomfortable Questions in Architecture",
+}
+SITE_AD = SITE_ADI["tr"]
+
+# SAYFALAR — dil başına dört tane. manifesto ve temalar ayrı sayfa değil,
+# ana sayfanın bölümleri; nav onlara çapa (#) ile iniyor.
+SAYFA_ETKINLIK = "etkinlikler.html"
+SAYFA_URETIM = "uretimler.html"
+SAYFA_ILETISIM = "iletisim.html"
 
 # Site iki dilde üretiliyor: tr/ ve en/. İlk dil varsayılan.
 DILLER = ("tr", "en")
@@ -78,6 +90,16 @@ METIN = {
         "alt_soru": "Sen de bir soru sor",
         "alt_katil": "Nasıl katılırım",
         "ana_baslik": "mimarlıkta rahatsız edici sorular",
+        "kunye": "2024 Ankara bağımsız kolektif",
+        "alt_iletisim": "iletişim",
+        "hepsi_baslik": "Tamamı",
+        "tema_not": "Çalışmalarımız beş ana tema etrafında şekilleniyor. Her tema, "
+                    "disiplinin sessiz kaldığı bir noktaya açılan tartışma kapısıdır.",
+        "manifesto_not": "Bu manifesto bir sonuç değil, sürekli güncellenen bir başlangıç.",
+        "ag_uluslararasi": "uluslararası ağ",
+        "ag_not": "Mimarlık emeği sınırları aşan bir örgütlenme sorunu. "
+                  "Bağ kurduğumuz yapılar:",
+        "son_not": "En yeni etkinlikler. Tamamı arşivde.",
     },
     "en": {
         "dil_ad": "English", "oteki": "tr", "oteki_ad": "TR",
@@ -128,6 +150,17 @@ METIN = {
         "alt_soru": "Ask an uncomfortable question",
         "alt_katil": "How to participate",
         "ana_baslik": "uncomfortable questions in architecture",
+        "kunye": "2024 Ankara independent collective",
+        "alt_iletisim": "get in touch",
+        "hepsi_baslik": "All of it",
+        "tema_not": "Our work takes shape around five themes. Each opens a door onto "
+                    "a point where the discipline has kept quiet.",
+        "manifesto_not": "This manifesto is not a conclusion but a beginning kept "
+                         "under revision.",
+        "ag_uluslararasi": "international network",
+        "ag_not": "Architectural labour is a question of organising across borders. "
+                  "The structures we are tied to:",
+        "son_not": "The most recent activities. All of them are in the archive.",
     },
 }
 
@@ -183,11 +216,24 @@ IKON = ('<svg class="site-ikon" viewBox="0 0 24 32" aria-hidden="true" focusable
         '<rect fill="currentColor" x="9" y="29" width="6" height="3"/></svg>')
 
 # Nav bağlantıları: (etiket, kök'e göre yol, bu sayfanın kimliği)
+# Şemadaki sekmeler, küçük harfle. CSS'te text-transform YOK — metnin
+# kendisi küçük yazılı (büyük harfe çevirmek Türkçe'de i/İ'yi bozuyor).
+# İlk ikisi ve sonuncusu ana sayfadaki bölüme iniyor, ayrı sayfa yok.
 NAV = [
-    ("Manifesto", "manifesto/", "manifesto"),
-    ("Themes", "temalar/", "temalar"),
-    ("Activity", "etkinlikler/", "etkinlikler"),
-    ("Network", "#network", "network"),
+    ("themes", "index.html#temalar", "temalar"),
+    ("manifesto", "index.html#manifesto", "manifesto"),
+    ("archive", SAYFA_URETIM, "uretimler"),
+    ("network", "index.html#network", "network"),
+]
+
+# Sağ üstteki "menu" panelinde duranlar — nav'a sığmayan her şey.
+MENU = [
+    ("activity", SAYFA_ETKINLIK),
+    ("works / archive", SAYFA_URETIM),
+    ("themes", "index.html#temalar"),
+    ("manifesto", "index.html#manifesto"),
+    ("questions", "index.html#sorular"),
+    ("connect", SAYFA_ILETISIM),
 ]
 
 TEMALAR = [
@@ -307,7 +353,7 @@ def bas(dil: str, baslik: str, aciklama: str, derinlik: int, yol: str) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html.escape(baslik)} — {SITE_AD}</title>
+<title>{html.escape(baslik)} — {SITE_ADI[dil]}</title>
 <meta name="description" content="{html.escape(aciklama)}">
 <link rel="icon" href="{k}ikon.svg" type="image/svg+xml">
 <link rel="alternate" hreflang="{dil}" href="{k}{dil}/{yol}">
@@ -319,81 +365,70 @@ def bas(dil: str, baslik: str, aciklama: str, derinlik: int, yol: str) -> str:
 
 
 def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
-    """Üç satırlı çerçeveli nav. Bulunduğun sayfa siyah ve altı çizili.
+    """Tek satır nav: solda işaret, ortada sekmeler, sağda menü.
 
-    yol: dil kökünden sonraki kısım ('', 'manifesto/', ...). Dil düğmesi
+    yol: dil kökünden sonraki kısım ('', 'iletisim.html', ...). Dil düğmesi
     öteki dilde AYNI sayfaya gitsin diye lazım."""
     k = kac(derinlik)
     ot, ot_ad = S(dil, "oteki"), S(dil, "oteki_ad")
+
     baglar = []
     for etiket_, hedef_yol, kimlik in NAV:
-        hedef = (f"{k}{dil}/index.html{hedef_yol}" if hedef_yol.startswith("#")
-                 else f"{k}{dil}/{hedef_yol}")
         simdi = ' aria-current="page"' if kimlik == aktif else ""
-        baglar.append(f'<a href="{hedef}"{simdi}>{etiket_}</a>')
+        baglar.append(f'<a href="{k}{dil}/{hedef_yol}"{simdi}>{etiket_}</a>')
 
-    uretim_simdi = ' aria-current="page"' if aktif == "uretimler" else ""
-    iletisim_simdi = ' aria-current="page"' if aktif == "iletisim" else ""
+    menu = [f'      <a href="{k}{dil}/{h}">{e}</a>' for e, h in MENU]
 
     return f"""<header class="ust kutu">
-  <div class="ust-satir">
-    <a class="ust-ikon" href="{k}{dil}/" aria-label="{SITE_AD}">{IKON}</a>
-    <span class="ust-ad">{SITE_AD}</span>
-    <span class="ust-sag ust-grup">
-      <a class="ust-dil" href="{k}{ot}/{yol}" data-dil="{ot}" hreflang="{ot}">{ot_ad}</a>
-      <a href="{k}{dil}/iletisim/"{iletisim_simdi}>Connect</a>
-    </span>
-  </div>
-  <div class="ust-satir">
-    {chr(10).join('    ' + b for b in baglar).strip()}
-  </div>
-  <div class="ust-satir">
-    <a class="ust-genis" href="{k}{dil}/uretimler/"{uretim_simdi}>Productions / Archive</a>
-    <span></span>
-    <a class="ust-sag" href="https://www.instagram.com/">Instagram</a>
-  </div>
+  <a class="ust-ikon" href="{k}{dil}/" aria-label="{SITE_ADI[dil]}">{IKON}</a>
+  <nav class="ust-nav">
+    {(chr(10) + '    ').join(baglar)}
+  </nav>
+  <details class="menu">
+    <summary>menu</summary>
+    <div class="menu-panel">
+{chr(10).join(menu)}
+      <hr>
+      <a href="https://www.instagram.com/">instagram</a>
+      <a href="mailto:merhaba@uqinarchi.com">email</a>
+      <hr>
+      <a class="ust-dil" href="{k}{ot}/{yol}" data-dil="{ot}" hreflang="{ot}">{ot_ad} — {S(ot, "dil_ad")}</a>
+    </div>
+  </details>
 </header>
 """
 
 
 def alt(dil: str, derinlik: int) -> str:
     k = kac(derinlik)
-    # Şemadaki footer üstü şerit görsel. Dosya yoksa etiket hiç yazılmıyor —
-    # kırık görsel ya da boş yer tutucu bırakmıyoruz.
+    # Footer üstü şerit görsel. Dosya yoksa etiket hiç yazılmıyor — kırık
+    # görsel ya da boş yer tutucu bırakmıyoruz.
     serit = (f'<div class="alt-gorsel kutu"><img src="{k}alt-gorsel.webp" alt=""></div>'
              if (KOK / "alt-gorsel.webp").exists() else "")
     return serit + f"""
 <footer class="alt kutu">
-  <div class="ust-satir">
-    <a class="ust-ikon" href="{k}{dil}/" aria-label="{SITE_AD}">{IKON}</a>
-    <span class="ust-ad">{S(dil, "alt_soru")}</span>
-    <a class="ust-sag" href="{k}{dil}/iletisim/">Connect</a>
-  </div>
-  <div class="ust-satir">
-    <a href="https://www.instagram.com/">Instagram</a>
-    <a href="{k}{dil}/iletisim/">{S(dil, "il_eposta")}</a>
-    <span></span>
-    <a class="ust-sag" href="{k}{dil}/iletisim/">{S(dil, "alt_katil")}</a>
+  <div class="alt-ust">
+    <div class="alt-cagri">
+      <a href="{k}{dil}/{SAYFA_ILETISIM}">{S(dil, "alt_soru")} →</a>
+      <a href="{k}{dil}/{SAYFA_ILETISIM}">{S(dil, "alt_iletisim")} →</a>
+    </div>
+    <div class="alt-baglar">
+      <a href="{k}{dil}/index.html#temalar">themes</a>
+      <a href="{k}{dil}/index.html#manifesto">manifesto</a>
+      <a href="{k}{dil}/{SAYFA_URETIM}">archive</a>
+      <a href="{k}{dil}/index.html#network">network</a>
+      <a href="{k}{dil}/{SAYFA_ETKINLIK}">activity</a>
+      <span class="bosluk"></span>
+      <a href="https://www.instagram.com/">instagram</a>
+      <a href="mailto:merhaba@uqinarchi.com">email</a>
+      <a href="{k}{dil}/{SAYFA_ILETISIM}">contact</a>
+      {IKON}
+    </div>
   </div>
   <p class="alt-metin">{alt_metin(dil)}</p>
-  <div class="ust-satir">
-    <a href="{k}{dil}/manifesto/">Manifesto</a>
-    <span></span>
-    <a href="{k}{dil}/temalar/">Themes</a>
-    <a class="ust-sag" href="{k}{dil}/index.html#network">Network</a>
-  </div>
-  <div class="ust-satir alt-satir--6">
-    <a href="{k}{dil}/etkinlikler/">Conferences</a>
-    <a href="{k}{dil}/etkinlikler/">Podcasts</a>
-    <a href="{k}{dil}/etkinlikler/">Activity</a>
-    <a href="{k}{dil}/etkinlikler/">Events</a>
-    <a href="{k}{dil}/uretimler/">Archive</a>
-    <a class="ust-sag" href="{k}{dil}/uretimler/">News/Updates</a>
-  </div>
-  <div class="ust-satir alt-satir--3">
-    <a href="{k}{dil}/iletisim/">Terms</a>
-    <span style="text-align:center">www.uqinarchi.com</span>
-    <span class="ust-sag">©2026 All Rights Reserved</span>
+  <div class="alt-kunye">
+    <span>©2026 All Rights Reserved</span>
+    <a href="{k}{dil}/{SAYFA_ILETISIM}">Terms &amp; Conditions</a>
   </div>
 </footer>
 
@@ -409,7 +444,7 @@ def kart(dil, kayit, derinlik: int) -> str:
     Sayfa tr/ ya da en/ altında, FOTOĞRAF kayit/ altında: fotoğraf iki dilde
     de aynı, repoda tek kopya duruyor."""
     k = kac(derinlik)
-    sayfa = f"{k}{dil}/{kayit.klasor.as_posix()}/"
+    sayfa = f"{k}{dil}/{kayit.klasor.as_posix()}.html"
     gorsel = KOK / kayit.kaynak / "kapak.webp"
     ic = (f'<img src="{k}{kayit.kaynak.as_posix()}/kapak.webp" alt="" loading="lazy">'
           if gorsel.exists() else IKON)
@@ -417,126 +452,87 @@ def kart(dil, kayit, derinlik: int) -> str:
     return f"""      <li class="oge">
         <a href="{sayfa}">
           <span class="oge-gorsel">{ic}</span>
-          <span class="oge-tarih">{html.escape(kayit.tarih.yazi())}</span><br>
-          <span class="oge-tip">{html.escape(tip)}</span>
+          <span class="oge-tip">{html.escape(tip)}
+            <span class="oge-ok" aria-hidden="true">→</span></span>
+          <span class="oge-tarih">{html.escape(kayit.tarih.yazi())}</span>
           <span class="oge-metin">{html.escape(kayit.baslik)}</span>
         </a>
       </li>"""
 
 
-def tema_akordeonu(dil, kayitlar, derinlik):
-    """Solda başlık, sağda açılır tema satırları.
-
-    Satırlar gerçek kayıtlara açılıyor. '?tema=' gibi çalışmayan bir filtre
-    bağlantısı kullanmıyoruz — site JavaScript'siz de tam çalışsın diye."""
+def tema_akordeonu(dil, ev, pr, derinlik):
+    """Temaların açılır listesi. Gerçek kayıtlara açılıyor: '?tema=' gibi
+    çalışmayan bir filtre bağlantısı kullanmıyoruz — site JavaScript'siz
+    de tam çalışsın diye."""
     k = kac(derinlik)
-    p = ['  <div class="akordeon-blok">', f'    <h2>{S(dil, "tema_baslik")}</h2>',
-         '    <div class="akordeon">']
-    for ad, _slug in TEMALAR:
-        icinde = [x for x in kayitlar if ad in x.temalar]
-        p.append('      <details>')
-        p.append(f'        <summary><span>{html.escape(ad)}</span></summary>')
-        p.append('        <div class="akordeon-govde">')
-        if icinde:
-            p.append('          <ul>')
-            for x in icinde[:8]:
-                p.append(f'            <li><a href="{k}{dil}/{x.klasor.as_posix()}/">'
-                         f'{html.escape(x.tarih.yazi())} — '
-                         f'{html.escape(x.baslik[:70])}</a></li>')
-            p.append('          </ul>')
-            if len(icinde) > 8:
-                p.append('          <p class="metin-ikincil">'
-                         + S(dil, "tema_dahasi", n=len(icinde) - 8, t=len(icinde))
-                         + '</p>')
-        else:
-            p.append(f'          <p class="metin-ikincil">{S(dil, "tema_bos")}</p>')
-        p.append('        </div>')
-        p.append('      </details>')
-    p += ['    </div>', '  </div>']
-    return "\n".join(p)
-
-
-def liste_sayfasi(dil, aktif, baslik, kayitlar, derinlik):
-    yol = f"{aktif}/"
-    ilk, kalan = kayitlar[:3], kayitlar[3:]
-    p = [bas(dil, baslik, giris(dil)[:150], derinlik, yol),
-         ust(dil, aktif, derinlik, yol), '<main class="kutu">']
-    p.append(f'  <p class="giris">{giris(dil)}</p>')
-
-    p.append(f'  <div class="bolum-ust"><h2>Latest {baslik}</h2>'
-             f'<a class="daha" href="#hepsi">Load more ↓</a></div>')
-    p.append('  <ul class="izgara izgara--iri">')
-    p += [kart(dil, x, derinlik) for x in ilk]
-    p.append('  </ul>')
-
-    p.append(f'  <div class="bolum-ust" id="hepsi"><h2>All {baslik}</h2>'
-             f'<span class="daha">{len(kayitlar)} {S(dil, "kayit")}</span></div>')
-    p.append('  <ul class="izgara izgara--sik">')
-    p += [kart(dil, x, derinlik) for x in kalan]
-    p.append('  </ul>')
-
-    p.append(tema_akordeonu(dil, kayitlar, derinlik))
-
-    p.append('</main>')
-    p.append(alt(dil, derinlik))
-    return "\n".join(p)
-
-
-def temalar_sayfasi(dil, ev, pr, derinlik=2):
-    yol = "temalar/"
-    p = [bas(dil, "Themes", "Beş ana tema.", derinlik, yol),
-         ust(dil, "temalar", derinlik, yol),
-         '<main class="kutu">', '  <div class="akordeon">']
-
-    for i, (ad, slug) in enumerate(TEMALAR):
+    p = ['      <div class="akordeon">']
+    for (ad, slug), (no, _b, _i, _s) in zip(TEMALAR, TEMA_GORUNEN):
         e = [x for x in ev if ad in x.temalar]
         u = [x for x in pr if ad in x.temalar]
+        p.append(f'        <details id="tema-{slug}">')
+        p.append(f'          <summary><span>{no} &nbsp; {html.escape(ad)}</span></summary>')
+        p.append('          <div class="akordeon-govde">')
         metin = TEMA_METIN.get(ad, "")
-        govde = (notlu(dil, f'<p>{metin}</p>') if metin
-                 else f'<p class="prose-bos">{S(dil, "tema_metin_yok")}</p>')
+        if metin:
+            p.append(notlu(dil, f'            <p>{metin}</p>'))
+        p.append(f'            <p class="metin-ikincil">{len(e)} {S(dil, "etkinlikler")}'
+                 f' &nbsp;·&nbsp; {len(u)} {S(dil, "uretimler")}</p>')
+        hepsi = (e + u)[:10]
+        if hepsi:
+            p.append('            <ul>')
+            for x in hepsi:
+                p.append(f'              <li><a href="{k}{dil}/{x.klasor.as_posix()}.html">'
+                         f'{html.escape(x.tarih.yazi())} — '
+                         f'{html.escape(x.baslik[:70])}</a></li>')
+            p.append('            </ul>')
+        else:
+            p.append(f'            <p class="metin-ikincil">{S(dil, "tema_bos")}</p>')
+        p.append('          </div>')
+        p.append('        </details>')
+    p.append('      </div>')
+    return "\n".join(p)
 
-        tipler = collections.Counter(t for x in e for t in x.tipler)
-        utipler = collections.Counter(t for x in u for t in x.tipler)
-        say = lambda c: ", ".join(f"{a} ({n})" for a, n in c.most_common(5)) or "—"
 
-        p.append(f'    <details{" open" if i == 0 else ""}>')
-        p.append(f'      <summary>{html.escape(ad)}</summary>')
-        p.append(f'      <div class="akordeon-govde">{govde}')
-        p.append(f'        <p class="metin-ikincil"><b>Activities:</b> {say(tipler)}'
-                 f' &nbsp;·&nbsp; <b>Productions:</b> {say(utipler)}'
-                 f' &nbsp;·&nbsp; {len(e)} {S(dil, "etkinlikler")}, '
-                 f'{len(u)} {S(dil, "uretimler")}</p>')
-        p.append('        <ul>')
-        for x in (e + u)[:8]:
-            p.append(f'          <li><a href="{kac(derinlik)}{dil}/{x.klasor.as_posix()}/">'
-                     f'{html.escape(x.tarih.yazi())} — {html.escape(x.baslik[:70])}</a></li>')
-        p.append('        </ul>')
-        p.append('      </div>')
-        p.append('    </details>')
+def liste_sayfasi(dil, aktif, baslik, kayitlar, derinlik=1):
+    yol = SAYFA_ETKINLIK if aktif == "etkinlikler" else SAYFA_URETIM
+    p = [bas(dil, baslik, giris(dil)[:150], derinlik, yol),
+         ust(dil, aktif, derinlik, yol), '<main class="kutu">']
 
+    p.append('  <div class="blok">')
+    p.append(f'    <div><h1 class="blok-etiket">{baslik}</h1>'
+             f'<p class="blok-not">{len(kayitlar)} {S(dil, "kayit")}</p></div>')
+    p.append(f'    <p class="acilis">{giris(dil)}</p>')
     p.append('  </div>')
 
-    p.append(f'  <div class="bolum-ust"><h2>{S(dil, "tema_cikan")}</h2>'
-             f'<a class="daha" href="{kac(derinlik)}{dil}/etkinlikler/">'
-             f'{S(dil, "hepsi_ok")}</a></div>')
-    p.append('  <ul class="izgara izgara--orta">')
-    p += [kart(dil, x, derinlik) for x in ev[:6]]
-    p.append('  </ul>')
+    p.append('  <div class="blok">')
+    p.append(f'    <h2 class="blok-etiket">{S(dil, "b_son")}</h2>')
+    p.append('    <ul class="izgara izgara--iri">')
+    p += [kart(dil, x, derinlik) for x in kayitlar[:6]]
+    p.append('    </ul>')
+    p.append('  </div>')
+
+    p.append('  <div class="blok">')
+    p.append(f'    <h2 class="blok-etiket">{S(dil, "hepsi_baslik")}</h2>')
+    p.append('    <ul class="izgara izgara--sik">')
+    p += [kart(dil, x, derinlik) for x in kayitlar[6:]]
+    p.append('    </ul>')
+    p.append('  </div>')
 
     p.append('</main>')
     p.append(alt(dil, derinlik))
     return "\n".join(p)
 
 
-def iletisim_sayfasi(dil, derinlik=2):
-    yol = "iletisim/"
+def iletisim_sayfasi(dil, derinlik=1):
+    yol = SAYFA_ILETISIM
     return bas(dil, "Connect", S(dil, "il_form"), derinlik, yol) \
         + ust(dil, "iletisim", derinlik, yol) + f"""<main class="kutu">
-  <div class="giris">
-    <h1 class="iletisim-baslik">{S(dil, "il_baslik")}</h1>
+  <div class="blok">
+    <p class="blok-etiket">connect</p>
+    <h1 class="hero-baslik">{S(dil, "il_baslik")}</h1>
   </div>
 
-  <div class="iletisim">
+  <div class="blok">
     <div class="iletisim-bilgi">
       <dl>
         <dt>{S(dil, "il_toplanti")}</dt>
@@ -720,96 +716,124 @@ MANIFESTO_KAPANIS = (
 )
 
 
-def ag_listesi() -> str:
+def ag_listesi(dil) -> str:
+    """Şemadaki dikey yazılı ağ listesi.
+
+    writing-mode ile döndürülüyor, transform: rotate() ile değil — rotate
+    kutuyu yatay bırakır ve adlar üst üste biner."""
     satir = "\n".join(
-        f'    <li class="ag-satir"><span class="ag-ulke">{html.escape(u)}</span>'
-        f'<span class="ag-ad">{html.escape(a)}</span></li>'
+        f'      <li><span class="network-ulke">{html.escape(u)}</span>'
+        f'<span class="network-ad">{html.escape(a)}</span></li>'
         for u, a in AG)
-    return f'  <ul class="ag-liste">\n{satir}\n  </ul>'
+    return f"""  <section class="blok" id="network">
+    <div>
+      <h2 class="blok-etiket">{S(dil, "ag_uluslararasi")}</h2>
+      <p class="blok-not">{S(dil, "ag_not")}</p>
+    </div>
+    <ul class="network-liste">
+{satir}
+    </ul>
+  </section>"""
 
 
 def tema_listesi(dil, derinlik: int) -> str:
     k = kac(derinlik)
-    p = ['  <ul class="tema-liste">']
+    p = ['  <section class="blok" id="temalar">',
+         f'    <div><h2 class="blok-etiket">{S(dil, "b_temalar")}</h2>'
+         f'<p class="blok-not">{S(dil, "tema_not")}</p></div>',
+         '    <ul class="tema-liste">']
     for no, kalin, ince, slug in TEMA_GORUNEN:
-        p.append(f'    <li class="tema-satir"><a href="{k}{dil}/temalar/#{slug}">'
+        p.append(f'      <li class="tema-satir"><a href="#tema-{slug}">'
                  f'<span class="tema-no">{no}</span>'
                  f'<span class="tema-ad"><b>{kalin}</b>{ince}</span>'
                  f'<span class="tema-ok" aria-hidden="true">→</span></a></li>')
-    p.append('  </ul>')
+    p += ['    </ul>', '  </section>']
     return "\n".join(p)
 
 
-def manifesto_sayfasi(dil, derinlik=2):
-    yol = "manifesto/"
-    p = [bas(dil, "Manifesto", MANIFESTO_ACILIS[:150], derinlik, yol),
-         ust(dil, "manifesto", derinlik, yol), '<main class="kutu">']
-    p.append(etiket("01", "Manifesto"))
-    p.append(notlu(dil, f'  <p class="m-vurgu">{MANIFESTO_ACILIS}</p>'))
-
+def manifesto_bolumu(dil):
+    """Ana sayfadaki manifesto bölümü. Ayrı sayfa değil — nav oraya iniyor."""
+    p = ['  <section class="blok" id="manifesto">',
+         f'    <div><h2 class="blok-etiket">{S(dil, "b_manifesto")}</h2>'
+         f'<p class="blok-not">{S(dil, "manifesto_not")}</p></div>',
+         '    <div>']
+    p.append(notlu(dil, f'      <p class="m-vurgu">{MANIFESTO_ACILIS}</p>'))
     for ad, k1, b, k2 in MANIFESTO:
-        p.append('  <section class="m-bolum">')
-        p.append(f'    <div class="m-baslik">{IKON}<h2>{html.escape(ad)}</h2></div>')
-        p.append('    <div class="m-govde">')
+        p.append('      <section class="m-bolum">')
+        p.append(f'        <div class="m-baslik">{IKON}<h3>{html.escape(ad)}</h3></div>')
+        p.append('        <div class="m-govde">')
         if k1:
-            p.append(f'      <p class="m-kucuk">{k1}</p>')
-        p.append(f'      <p class="m-buyuk">{b}</p>')
+            p.append(f'          <p class="m-kucuk">{k1}</p>')
+        p.append(f'          <p class="m-buyuk">{b}</p>')
         if k2:
-            p.append(f'      <p class="m-kucuk">{k2}</p>')
-        p.append('    </div>')
-        p.append('  </section>')
-
-    p.append(f'  <p class="m-vurgu">{MANIFESTO_KAPANIS}</p>')
-
-    # Ana sayfadaki soru bağlantısı buraya iniyor.
-    p.append(f'  <div class="bolum-etiket" id="sorular"><span class="no">08</span>'
-             f'<span>{S(dil, "soru_bolum", n=len(SORULAR))}</span></div>')
-    p.append(soru_tablosu(dil))
-    p.append('</main>')
-    p.append(alt(dil, derinlik))
+            p.append(f'          <p class="m-kucuk">{k2}</p>')
+        p.append('        </div>')
+        p.append('      </section>')
+    p.append(f'      <p class="m-vurgu">{MANIFESTO_KAPANIS}</p>')
+    p += ['    </div>', '  </section>']
     return "\n".join(p)
 
 
 def ana_sayfa(dil, ev, pr, derinlik=1):
     k = kac(derinlik)
-    p = [bas(dil, S(dil, "ana_baslik"), giris(dil)[:150], derinlik, ""),
+    p = [bas(dil, SITE_ADI[dil], giris(dil)[:150], derinlik, ""),
          ust(dil, "", derinlik, ""), '<main class="kutu">']
 
-    p.append(f'  <p class="acilis">{giris(dil)}</p>')
-
-    p.append(etiket("01", S(dil, "b_temalar")))
-    p.append('  <div class="serit"><p class="prose-bos" style="margin:0;padding:3rem 0.9rem">'
-             + S(dil, "foto_bekliyor") + '</p></div>')
-    # Tema listesi kolonun tamamını kullanıyor: yanında açıklama kolonu ve
-    # çerçeve yok, satırlar sıkışmasın diye.
-    p.append(tema_listesi(dil, derinlik))
-
-    p.append(etiket("02", S(dil, "b_nasil")))
-    p.append('  <div class="yan-yana">')
-    p.append(f'    <div class="yan-kucuk"><h3>{S(dil, "hack_baslik")}</h3>'
-             f'<p>{S(dil, "hack_metin")}</p></div>')
-    p.append(f'    <div><p class="prose-bos">{S(dil, "diyagram_bekliyor")}</p></div>')
+    # AÇILIŞ — solda künye, sağda iri başlık ve fotoğraf
+    p.append('  <div class="blok">')
+    p.append(f'    <p class="blok-etiket">{S(dil, "kunye")}</p>')
+    p.append('    <div>')
+    p.append(f'      <h1 class="hero-baslik">{SITE_ADI[dil]}</h1>')
+    p.append(f'      <div class="hero-foto"><p class="prose-bos" '
+             f'style="margin:0;padding:5rem 1rem;text-align:center">'
+             f'{S(dil, "foto_bekliyor")}</p></div>')
+    p.append('    </div>')
     p.append('  </div>')
 
-    p.append(etiket("03", S(dil, "b_manifesto")))
-    p.append(notlu(dil, f'  <p class="acilis">{MANIFESTO_ACILIS}</p>'))
-    p.append(f'  <p class="giris"><a class="daha" href="{k}{dil}/manifesto/">'
-             f'{S(dil, "manifesto_tamami")}</a></p>')
+    # ABOUT
+    p.append('  <section class="blok" id="hakkinda">')
+    p.append('    <h2 class="blok-etiket">about</h2>')
+    p.append('    <div>')
+    p.append(f'      <p class="acilis">{giris(dil)}</p>')
+    p.append(f'      <p class="alt-metin">{alt_metin(dil)}</p>')
+    p.append('    </div>')
+    p.append('  </section>')
 
-    p.append(etiket("04", S(dil, "b_son")))
-    p.append('  <ul class="izgara izgara--iri">')
-    p += [kart(dil, x, derinlik) for x in ev[:3]]
-    p.append('  </ul>')
+    # TEMALAR — liste, altında açılır ayrıntı
+    p.append(tema_listesi(dil, derinlik))
+    p.append('  <div class="blok">')
+    p.append('    <div></div>')
+    p.append('    <div>')
+    p.append(tema_akordeonu(dil, ev, pr, derinlik))
+    p.append('    </div>')
+    p.append('  </div>')
 
-    p.append(etiket("05", S(dil, "soru_bolum", n=len(SORULAR))))
-    p.append(soru_tablosu(dil, sinir=30))
-    p.append(f'  <p class="giris">{S(dil, "soru_ilk", n=30)} '
-             f'<a class="daha" href="{k}{dil}/manifesto/#sorular">'
-             f'{S(dil, "soru_tamami", n=len(SORULAR) - 30)}</a></p>')
+    # MANİFESTO
+    p.append(manifesto_bolumu(dil))
 
-    p.append(f'  <div class="bolum-etiket" id="network"><span class="no">06</span>'
-             f'<span>{S(dil, "b_ag")}</span></div>')
-    p.append(ag_listesi())
+    # SORULAR
+    p.append('  <section class="blok" id="sorular">')
+    p.append(f'    <h2 class="blok-etiket">{S(dil, "soru_bolum", n=len(SORULAR))}</h2>')
+    p.append('    <div>')
+    p.append(soru_tablosu(dil))
+    p.append('    </div>')
+    p.append('  </section>')
+
+    # AĞ
+    p.append(ag_listesi(dil))
+
+    # SON ETKİNLİKLER
+    p.append('  <section class="blok" id="son">')
+    p.append(f'    <div><h2 class="blok-etiket">{S(dil, "b_son")}</h2>'
+             f'<p class="blok-not">{S(dil, "son_not")}</p></div>')
+    p.append('    <div>')
+    p.append('      <ul class="izgara izgara--iri">')
+    p += [kart(dil, x, derinlik) for x in ev[:6]]
+    p.append('      </ul>')
+    p.append(f'      <p><a class="daha" href="{k}{dil}/{SAYFA_ETKINLIK}">'
+             f'{S(dil, "hepsi_ok")}</a></p>')
+    p.append('    </div>')
+    p.append('  </section>')
 
     p.append('</main>')
     p.append(alt(dil, derinlik))
@@ -831,7 +855,7 @@ def kok_sayfasi() -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{SITE_AD}</title>
+<title>{SITE_ADI["tr"]} / {SITE_ADI["en"]}</title>
 <link rel="icon" href="ikon.svg" type="image/svg+xml">
 <link rel="alternate" hreflang="tr" href="tr/">
 <link rel="alternate" hreflang="en" href="en/">
@@ -884,13 +908,9 @@ def main():
     for dil in DILLER:
         isler += [
             (f"{dil}/index.html", ana_sayfa(dil, ev, pr)),
-            (f"{dil}/manifesto/index.html", manifesto_sayfasi(dil)),
-            (f"{dil}/etkinlikler/index.html",
-             liste_sayfasi(dil, "etkinlikler", "Events", ev, 2)),
-            (f"{dil}/uretimler/index.html",
-             liste_sayfasi(dil, "uretimler", "Works", pr, 2)),
-            (f"{dil}/temalar/index.html", temalar_sayfasi(dil, ev, pr)),
-            (f"{dil}/iletisim/index.html", iletisim_sayfasi(dil)),
+            (f"{dil}/{SAYFA_ETKINLIK}", liste_sayfasi(dil, "etkinlikler", "Activity", ev)),
+            (f"{dil}/{SAYFA_URETIM}", liste_sayfasi(dil, "uretimler", "Archive", pr)),
+            (f"{dil}/{SAYFA_ILETISIM}", iletisim_sayfasi(dil)),
         ]
 
     for yol, icerik in isler:
