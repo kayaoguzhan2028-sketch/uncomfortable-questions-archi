@@ -914,3 +914,430 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   color: var(--text);     /* satır içi SVG fill="currentColor" bunu alır */
 }
 .site-nav a:has(.site-ikon) { opacity: 1; }
+
+
+/* 10. ÇERÇEVELİ IZGARA DİLİ ============================================== */
+/* Activity şemasından: nav ve footer hücrelere bölünmüş bir tablo gibi.
+   Aktif bağlantı siyah ve altı çizili, diğerleri gri. Satır araları çizgili. */
+
+.kutu {
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* ÜST NAV ---------------------------------------------------------------- */
+.ust {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-bottom: var(--space-md);
+}
+
+.ust-satir {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.ust-satir:last-child { border-bottom: 0; }
+
+.ust-satir > * {
+  padding: 0.55em 0.9em;
+  font-size: var(--size-small);
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--text-faint);
+  transition: color 0.15s;
+}
+.ust-satir a:hover { color: var(--text); }
+
+/* Bulunduğun sayfanın bağlantısı — gri değil siyah, altı çizili */
+.ust-satir a[aria-current="page"] {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.ust-ad   { grid-column: 2 / 4; text-align: center; color: var(--text) !important;
+            font-size: var(--size-body); }
+.ust-sag  { text-align: right; }
+.ust-genis{ grid-column: 1 / 3; }
+
+.ust-ikon { padding-block: 0.35em; }
+.ust-ikon .site-ikon { height: 18px; }
+
+
+/* GİRİŞ METNİ ------------------------------------------------------------ */
+.giris {
+  padding: var(--space-sm) 0.9em var(--space-lg);
+  font-size: var(--size-small);
+  line-height: 1.45;
+  max-width: 78ch;
+}
+
+
+/* BÖLÜM BAŞLIĞI + "LOAD MORE" -------------------------------------------- */
+.bolum-ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 0 0.9em var(--space-sm);
+}
+.bolum-ust h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  font-stretch: 100%;
+}
+.daha {
+  font-size: var(--size-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--text);
+  white-space: nowrap;
+}
+.daha:hover { color: var(--accent); }
+
+
+/* KART IZGARALARI -------------------------------------------------------- */
+/* Üç yoğunluk: iri (öne çıkan), orta, sık. Şemadaki üç bölüm bunlar. */
+.izgara      { display: grid; gap: var(--space-sm); list-style: none;
+               padding: 0 0.9em; margin-bottom: var(--space-lg); }
+.izgara--iri { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+.izgara--orta{ grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+.izgara--sik { grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); }
+
+.oge a { text-decoration: none; display: block; height: 100%; }
+
+/* Görsel kutusu — fotoğraf yoksa da ızgara bozulmasın diye gri zemin durur */
+.oge-gorsel {
+  aspect-ratio: 1 / 1;
+  background: var(--bg-alt);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  margin-bottom: 0.5em;
+}
+.oge-gorsel img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Fotoğrafı olmayan kayıtta kutunun ortasındaki soluk işaret */
+.oge-gorsel .site-ikon { height: 26px; color: var(--border); }
+
+.oge-tarih { font-size: var(--size-label); font-weight: 700; font-variant-numeric: tabular-nums; }
+.oge-tip   { font-size: var(--size-label); font-weight: 700; }
+.oge-metin {
+  font-size: var(--size-label);
+  line-height: 1.35;
+  color: var(--text-soft);
+  margin-top: 0.2em;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;      /* uzun başlıklar kartı şişirmesin */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.oge:hover .oge-tip { color: var(--accent); }
+
+
+/* AKORDEON --------------------------------------------------------------- */
+/* <details>/<summary> kullanıyoruz: açılıp kapanması tarayıcının kendi işi,
+   JavaScript gerekmiyor ve klavyeyle de açılıyor. */
+.akordeon { padding: 0 0.9em; margin-bottom: var(--space-lg); }
+
+.akordeon details { border-bottom: 1px solid var(--border); }
+.akordeon details:first-child { border-top: 1px solid var(--border); }
+
+.akordeon summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.7em 0;
+  cursor: pointer;
+  font-size: var(--size-small);
+  font-weight: 700;
+  list-style: none;
+}
+.akordeon summary::-webkit-details-marker { display: none; }
+.akordeon summary::after { content: "+"; font-weight: 400; font-size: 1.2em; color: var(--text-soft); }
+.akordeon details[open] summary::after { content: "–"; }
+.akordeon summary:hover { color: var(--accent); }
+
+.akordeon-govde { padding: 0 0 0.9em; }
+.akordeon-govde ul { list-style: none; }
+.akordeon-govde li { padding: 0.25em 0; font-size: var(--size-small); }
+.akordeon-govde a { text-decoration: none; color: var(--text-soft); }
+.akordeon-govde a:hover { color: var(--accent); }
+
+
+/* ALT — footer ızgarası --------------------------------------------------- */
+.alt { margin-top: var(--space-lg); }
+
+.alt-gorsel img { width: 100%; height: auto; display: block; }
+
+.alt-metin {
+  padding: var(--space-sm) 0.9em;
+  font-size: var(--size-label);
+  line-height: 1.5;
+  border-bottom: 1px solid var(--border);
+}
+
+.alt-satir--6 { grid-template-columns: repeat(6, 1fr); }
+.alt-satir--3 { grid-template-columns: repeat(3, 1fr); }
+
+
+@media (max-width: 760px) {
+  .ust-satir { grid-template-columns: repeat(2, 1fr); }
+  .ust-ad { grid-column: 1 / 3; text-align: left; }
+  .ust-genis { grid-column: 1 / 2; }
+  .alt-satir--6 { grid-template-columns: repeat(3, 1fr); }
+  .izgara--sik { grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); }
+}
+
+
+/* 11. MANİFESTO ========================================================== */
+/* Şemadaki ritim: çerçeveli başlık çubuğu → küçük gri paragraf → büyük
+   vurgu paragrafı → küçük paragraf. Punto farkı hiyerarşiyi taşıyor. */
+
+.m-bolum { border-top: 1px solid var(--border); }
+
+.m-baslik {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.6em 0.9em;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.m-baslik h2 {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+  font-stretch: 100%;
+  letter-spacing: -0.01em;
+}
+.m-baslik .site-ikon { height: 15px; flex: 0 0 auto; }
+
+.m-govde { padding: var(--space-sm) 0.9em var(--space-md); }
+
+/* Küçük, soluk — bağlam cümlesi */
+.m-kucuk {
+  font-size: var(--size-label);
+  line-height: 1.5;
+  color: var(--text-soft);
+  max-width: 80ch;
+  margin-bottom: var(--space-sm);
+}
+
+/* Büyük, koyu — manifestonun asıl iddiası */
+.m-buyuk {
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  max-width: 62ch;
+  margin-bottom: var(--space-sm);
+}
+
+/* Açılış ve kapanış — en büyük punto, çerçevesiz */
+.m-vurgu {
+  font-size: clamp(1.2rem, 2.6vw, 1.8rem);
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  padding: var(--space-md) 0.9em;
+  max-width: 70ch;
+}
+
+/* Bölümler arası tam genişlik görsel */
+.m-serit { background: var(--bg-alt); aspect-ratio: 6 / 1; }
+.m-serit img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+
+/* 12. İLETİŞİM =========================================================== */
+
+.iletisim-baslik {
+  font-size: clamp(1.4rem, 3.4vw, 2.4rem);
+  margin-bottom: 0;
+}
+
+.iletisim {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  border-top: 1px solid var(--border);
+}
+.iletisim > * { padding: var(--space-md) 0.9em; }
+.iletisim-form { border-left: 1px solid var(--border); }
+
+.iletisim-bilgi dl { display: grid; grid-template-columns: auto; gap: 0; }
+.iletisim-bilgi dt {
+  font-size: var(--size-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-top: var(--space-sm);
+}
+.iletisim-bilgi dd { margin: 0; font-size: var(--size-small); font-weight: 700; }
+.iletisim-bilgi a { text-decoration: underline; text-underline-offset: 0.2em; }
+.iletisim-bilgi a:hover { color: var(--accent); }
+
+.iletisim-form h2 { margin-top: 0; font-size: var(--size-h3); }
+
+/* Form — etiketler input'u SARIYOR, ayrı for/id eşleşmesi gerekmiyor;
+   tıklanınca alan odaklanır, ekran okuyucu doğru okur. */
+.iletisim-form label {
+  display: block;
+  font-size: var(--size-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-bottom: var(--space-sm);
+}
+
+.form-satir { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+
+.iletisim-form input[type="text"],
+.iletisim-form input[type="email"],
+.iletisim-form select,
+.iletisim-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.35em;
+  padding: 0.5em 0;
+  font: inherit;
+  font-size: var(--size-small);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+}
+.iletisim-form textarea { resize: vertical; }
+.iletisim-form :focus-visible {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+.form-onay {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: var(--size-small);
+  color: var(--text-soft);
+}
+.form-onay input { margin-top: 0.25em; }
+
+.iletisim-form button {
+  font: inherit;
+  font-size: var(--size-small);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--text);
+  border: 0;
+  padding: 0.8em 2em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.iletisim-form button:hover { background: var(--accent); }
+
+.form-not {
+  font-size: var(--size-label);
+  color: var(--text-faint);
+  margin-top: var(--space-sm);
+}
+
+@media (max-width: 760px) {
+  .iletisim { grid-template-columns: 1fr; }
+  .iletisim-form { border-left: 0; border-top: 1px solid var(--border); }
+  .form-satir { grid-template-columns: 1fr; gap: 0; }
+  .m-serit { aspect-ratio: 3 / 1; }
+}
+
+
+/* 13. ANA SAYFA ========================================================== */
+
+/* Numaralı bölüm etiketi:  01 | THEMES  — şemada bölümleri ayıran çubuk */
+.bolum-etiket {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: var(--space-sm);
+  padding: 0.45em 0.9em;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+  font-size: var(--size-label);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-soft);
+  font-weight: 700;
+}
+.bolum-etiket .no { color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+/* Açılış paragrafı — giriş'ten daha iri, manifestoya köprü */
+.acilis {
+  padding: var(--space-sm) 0.9em var(--space-md);
+  font-size: clamp(0.95rem, 1.6vw, 1.12rem);
+  font-weight: 700;
+  line-height: 1.4;
+  max-width: 88ch;
+}
+
+/* Tam genişlik şerit görsel */
+.serit { background: var(--bg-alt); }
+.serit img { width: 100%; height: auto; display: block; }
+
+/* Sol dar kolon + sağ geniş alan (şemadaki "Nasıl çalışıyoruz" bloğu) */
+.yan-yana {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  border-top: 1px solid var(--border);
+}
+.yan-yana > * { padding: var(--space-sm) 0.9em; }
+.yan-yana > :last-child { border-left: 1px solid var(--border); }
+.yan-kucuk { font-size: var(--size-label); line-height: 1.45; color: var(--text-soft); }
+.yan-kucuk h3 { font-size: var(--size-small); margin: 0 0 var(--space-xs); }
+
+/* Tema listesinin ana sayfadaki hali — solunda küçük not kolonu */
+.tema-blok { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+             border-top: 1px solid var(--border); }
+.tema-blok > :first-child { padding: var(--space-sm) 0.9em; }
+.tema-blok > :last-child { border-left: 1px solid var(--border); padding: 0 0.9em; }
+
+
+/* AĞ LİSTESİ — yatay: solda küçük ülke, sağda kalın kurum adı ------------ */
+.ag-liste { list-style: none; padding: var(--space-sm) 0.9em var(--space-md); }
+
+.ag-satir {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-items: baseline;
+  padding: 0.1em 0;
+}
+.ag-ulke {
+  font-size: var(--size-label);
+  color: var(--text-faint);
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ag-ad {
+  font-size: clamp(0.95rem, 1.5vw, 1.12rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+@media (max-width: 760px) {
+  .yan-yana, .tema-blok { grid-template-columns: 1fr; }
+  .yan-yana > :last-child,
+  .tema-blok > :last-child { border-left: 0; border-top: 1px solid var(--border); }
+  .ag-satir { grid-template-columns: 1fr; gap: 0; padding: 0.35em 0; }
+  .ag-ulke { text-align: left; }
+}
