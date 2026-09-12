@@ -66,31 +66,19 @@
 /* Bir değeri değiştirmek istersen SADECE burayı değiştir. Aşağıdaki hiçbir
    kuralda çıplak renk/boyut yazmıyoruz — hepsi var() ile buraya bağlı.
    Renkler ve font şu an nötr yer tutucu; yön belli olunca buradan değişecek. */
-/* ---- RENK KARARI -------------------------------------------------------
-   Site şu an SİYAH zemin / beyaz metin. Gönderdiğin şemalar beyaz zeminliydi;
-   sen siyah istediğin için siyah kuruldu.
-
-   Beyaza çevirmek istersen aşağıdaki yedi satırı bununla değiştir, başka
-   hiçbir yere dokunma — altındaki kuralların hiçbirinde çıplak renk yok:
-
-     color-scheme: light;
-     --bg: #ffffff;  --bg-alt: #f0eeea;  --text: #0c0c0c;
-     --text-soft: #4a4a4a;  --text-faint: #9b9792;
-     --accent: #d8431c;  --border: rgba(12, 12, 12, 0.16);
-   ------------------------------------------------------------------------ */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Renk — siyah zemin, beyaz metin.
-     Tam siyah (#000) yerine çok koyu gri: tam siyahta beyaz metnin kenarları
-     titrer (halation), uzun metin okumayı yorar. */
-  --bg:           #0c0c0c;
-  --bg-alt:       #17171a;
-  --text:         #f2f0ec;
-  --text-soft:    #b4afa8;
-  --text-faint:   #837e77;
-  --accent:       #ef5a30;   /* koyu zeminde okunsun diye açıldı */
-  --border:       rgba(242, 240, 236, 0.16);
+  /* Renk — beyaz zemin, siyah metin. Şemalardaki gibi.
+     Bir değeri değiştirmek istersen SADECE burayı değiştir; aşağıdaki
+     kuralların hiçbirinde çıplak renk yok, hepsi var() ile buraya bağlı. */
+  --bg:           #ffffff;
+  --bg-alt:       #f2f1ee;   /* tablo şeridi, kart zemini */
+  --text:         #0c0c0c;
+  --text-soft:    #4a4a4a;
+  --text-faint:   #9b9792;
+  --accent:       #d8431c;
+  --border:       rgba(12, 12, 12, 0.18);
 
   /* Tipografi — şemadaki dil grotesk sans. Tek aile kullanıyoruz; ayrım
      puntodan, ağırlıktan ve harf aralığından geliyor, font değiştirerek değil. */
@@ -561,8 +549,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  background: rgba(12, 12, 12, 0.72);
-  border: 2px solid rgba(242, 240, 236, 0.9);
+  background: rgba(12, 12, 12, 0.78);
+  border: 2px solid rgba(255, 255, 255, 0.9);
   transition: background 0.2s, transform 0.2s;
 }
 
@@ -573,7 +561,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   margin: auto;
   width: 0;
   height: 0;
-  border-left: 24px solid var(--text);
+  border-left: 24px solid #fff;
   border-top: 15px solid transparent;
   border-bottom: 15px solid transparent;
   transform: translateX(4px);   /* üçgenin görsel ağırlığı sola kaçıyor */
@@ -756,7 +744,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .soru-tablo td {
   padding: 0.45em var(--space-sm) 0.45em 0;
   vertical-align: top;
-  border-bottom: 1px solid rgba(242, 240, 236, 0.06);
+  border-bottom: 1px solid rgba(12, 12, 12, 0.07);
 }
 
 .soru-tablo tbody tr:nth-child(odd) { background: var(--bg-alt); }
@@ -916,3 +904,13 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   .footer-kolonlar { gap: var(--space-md); flex-wrap: wrap; }
   .network-ad { max-height: 15rem; font-size: var(--size-small); }
 }
+
+
+/* SİTE İKONU — nav'ın sol üstündeki blok soru işareti -------------------- */
+.site-ikon {
+  display: block;
+  height: 22px;
+  width: auto;
+  color: var(--text);     /* satır içi SVG fill="currentColor" bunu alır */
+}
+.site-nav a:has(.site-ikon) { opacity: 1; }

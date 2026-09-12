@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" role="img" aria-label="Mimarlıkta Rahatsız Edici Sorular">
+  <!-- Blok soru işareti. Tek yol + nokta; eğri yok, hepsi dik açı.
+       fill="currentColor" — ikon bulunduğu yerin metin rengini alır, yani
+       zemin beyaza ya da siyaha dönerse ikon da kendiliğinden döner. -->
+  <path fill="currentColor" d="M0 0 H24 V23 H15 V26 H9 V17 H18 V7 H7 V13 H0 Z"/>
+  <rect fill="currentColor" x="9" y="29" width="6" height="3"/>
+</svg>
