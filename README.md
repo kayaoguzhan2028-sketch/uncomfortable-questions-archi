@@ -162,11 +162,11 @@ Git Bash'te `awk` satır sonlarını bozuyor — ama ölçtük, bu ortamdaki
 GNU sed 4.9 de aynısını yapıyor:
 
 ```
-printf 'a
-b
-' | sed -E -i 's|a|A|'
-önce:  61 0d 0a 62 0d 0a
-sonra: 41 0a    62 0a      ← dokunulmayan satırda bile  silinmiş
+CRLF satir sonlu bir dosyada, sadece ilk satiri degistiren komut:
+
+  baslangic       ->  61 0d 0a 62 0d 0a
+  sed -E -i       ->  41 0a    62 0a      CR (0d) her satirdan silindi
+  perl -i -pe     ->  41 0d 0a 62 0d 0a   baytlar korundu
 ```
 
 Çalışma kopyası CRLF olduğu için (`core.autocrlf=true`) bu, alakasız
