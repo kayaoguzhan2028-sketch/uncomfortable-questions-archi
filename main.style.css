@@ -24,6 +24,18 @@
 /* Bir değeri değiştirmek istersen SADECE burayı değiştir. Aşağıdaki hiçbir
    kuralda çıplak renk/boyut yazmıyoruz — hepsi var() ile buraya bağlı.
    Renkler ve font şu an nötr yer tutucu; yön belli olunca buradan değişecek. */
+/* ---- RENK KARARI -------------------------------------------------------
+   Site şu an SİYAH zemin / beyaz metin. Gönderdiğin şemalar beyaz zeminliydi;
+   sen siyah istediğin için siyah kuruldu.
+
+   Beyaza çevirmek istersen aşağıdaki yedi satırı bununla değiştir, başka
+   hiçbir yere dokunma — altındaki kuralların hiçbirinde çıplak renk yok:
+
+     color-scheme: light;
+     --bg: #ffffff;  --bg-alt: #f0eeea;  --text: #0c0c0c;
+     --text-soft: #4a4a4a;  --text-faint: #9b9792;
+     --accent: #d8431c;  --border: rgba(12, 12, 12, 0.16);
+   ------------------------------------------------------------------------ */
 :root {
   color-scheme: dark;
 
@@ -38,20 +50,22 @@
   --accent:       #ef5a30;   /* koyu zeminde okunsun diye açıldı */
   --border:       rgba(242, 240, 236, 0.16);
 
-  /* Tipografi */
-  --font:         Georgia, 'Times New Roman', serif;
-  --font-ui:      system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Tipografi — şemadaki dil grotesk sans. Tek aile kullanıyoruz; ayrım
+     puntodan, ağırlıktan ve harf aralığından geliyor, font değiştirerek değil. */
+  --font:         'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  --font-ui:      var(--font);
 
   /* Tip ölçeği — akışkan, clamp ile. Sayfalar bunları kullanır, kendi
      font-size'ını uydurmaz. */
-  --size-h1:      clamp(2.2rem, 5vw, 3.8rem);
-  --size-h2:      clamp(1.5rem, 3vw, 2.1rem);
-  --size-h3:      1.25rem;
-  --size-body:    1.05rem;
-  --size-small:   0.88rem;
-  --size-label:   0.72rem;
+  --size-h1:      clamp(2.6rem, 7.5vw, 6.4rem);
+  --size-h2:      clamp(1.4rem, 2.8vw, 2rem);
+  --size-h3:      1.15rem;
+  --size-body:    1rem;
+  --size-small:   0.85rem;
+  --size-label:   0.7rem;
 
-  --leading-tight: 1.15;
+  /* Şemadaki başlıklar neredeyse üst üste biniyor — 0.95 onu veriyor */
+  --leading-tight: 0.95;
   --leading-body:  1.7;
   --tracking-wide: 0.12em;
 
@@ -89,9 +103,16 @@ a { color: inherit; }
 
 
 /* 3. TİPOGRAFİ ============================================================ */
-h1, h2, h3, h4 { font-weight: 400; line-height: var(--leading-tight); }
+h1, h2, h3, h4 { font-weight: 700; line-height: var(--leading-tight); }
 
-h1 { font-size: var(--size-h1); letter-spacing: 0.02em; margin-bottom: var(--space-sm); }
+/* Başlıklar şemadaki gibi küçük harf ve sıkı. text-transform KULLANMIYORUZ:
+   büyük harfe çevirmek Türkçe'de i/İ sorunu çıkarır ve ekran okuyucu
+   bazı motorlarda harf harf okur. Metin neyse o basılıyor. */
+h1 {
+  font-size: var(--size-h1);
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-md);
+}
 h2 { font-size: var(--size-h2); margin: var(--space-lg) 0 var(--space-sm); }
 h3 { font-size: var(--size-h3); margin: var(--space-md) 0 var(--space-xs); }
 
@@ -161,13 +182,15 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 .site-nav a {
   font-family: var(--font-ui);
-  font-size: var(--size-label);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
+  font-size: var(--size-small);
+  letter-spacing: 0;
   text-decoration: none;
-  opacity: 0.6;
+  opacity: 0.65;
   transition: opacity 0.2s;
 }
+
+/* Nav'ın orta grubu: şemadaki gibi aralıklı bağlantılar */
+.site-nav .nav-orta { display: flex; gap: var(--space-md); }
 .site-nav a:hover,
 .site-nav a.active { opacity: 1; }
 
@@ -518,4 +541,108 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   .video { width: calc(100vw - 2 * var(--space-sm)); }
   .video-play { width: 58px; height: 58px; }
   .video-play::after { border-left-width: 18px; border-top-width: 11px; border-bottom-width: 11px; }
+}
+
+
+/* 8. ŞEMA BİLEŞENLERİ ===================================================== */
+/* Gönderdiğin üçüncü sayfadaki yerleşimden çıkarıldı: solda dar etiket
+   kolonu, sağda geniş içerik; büyük sıkı başlık; iki tonlu tema listesi. */
+
+/* İKİ KOLON --------------------------------------------------------------
+   Sol: küçük kalın etiket ("about", "2024 Ankara bağımsız kolektif").
+   Sağ: asıl içerik. Dar ekranda alt alta iner. */
+
+.iki-kolon {
+  display: grid;
+  grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+  margin-bottom: var(--space-lg);
+}
+
+.iki-kolon > .etiket-kolon {
+  font-weight: 700;
+  font-size: var(--size-h3);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+}
+
+/* İkincil, daha küçük ve soluk paragraf — şemada ana metnin altındaki blok */
+.metin-ikincil {
+  font-size: var(--size-small);
+  color: var(--text-soft);
+  margin-top: var(--space-sm);
+}
+
+
+/* TEMA LİSTESİ -----------------------------------------------------------
+   Şemadaki "01 ARCHITECTURE & PEDAGOGY" satırları: solda numara, sonra
+   iki tonlu başlık, sağda ok. Beş tema için.
+
+   İki ton <span> ile değil, iç içe iki elemanla yapılıyor: başlığın tamamı
+   okunabilir metin olarak duruyor, renk sadece görsel vurgu. */
+
+.tema-liste { list-style: none; }
+
+.tema-satir {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-sm);
+  align-items: baseline;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tema-satir a {
+  display: contents;
+  text-decoration: none;
+}
+
+.tema-no {
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-weight: 700;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.tema-ad {
+  font-size: clamp(1.6rem, 4.5vw, 3.2rem);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+  color: var(--text-faint);          /* ikinci ton */
+  transition: color 0.2s;
+}
+
+/* Başlığın ilk parçası tam kontrastta — şemadaki "ARCHI" / "TECTURE &" ayrımı */
+.tema-ad b { font-weight: inherit; color: var(--text); }
+
+.tema-ok {
+  font-size: var(--size-h3);
+  color: var(--text-faint);
+  transition: transform 0.2s, color 0.2s;
+}
+
+.tema-satir:hover .tema-ad,
+.tema-satir:hover .tema-ad b { color: var(--accent); }
+.tema-satir:hover .tema-ok { color: var(--accent); transform: translateX(6px); }
+
+
+/* AÇILIŞ BAŞLIĞI ---------------------------------------------------------
+   Ana sayfadaki büyük başlık. Çok sıkı, küçük harf, iki satır. */
+
+.hero h1 { margin-bottom: var(--space-md); }
+
+/* Şemadaki en küçük, en soluk kenar notu */
+.kenar-not {
+  font-size: var(--size-label);
+  line-height: 1.4;
+  color: var(--text-faint);
+  max-width: 20rem;
+}
+
+
+@media (max-width: 760px) {
+  .iki-kolon { grid-template-columns: 1fr; gap: var(--space-xs); }
+  .tema-satir { grid-template-columns: auto minmax(0, 1fr) auto; }
 }
