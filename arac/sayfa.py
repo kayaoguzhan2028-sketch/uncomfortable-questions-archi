@@ -75,7 +75,13 @@ def sayfa_yolu(kayit) -> str:
     return f"{BOLUM_YOL[bolum]}/{ad}.html"
 
 # Site iki dilde üretiliyor: tr/ ve en/. İlk dil varsayılan.
-DILLER = ("tr", "en")
+# Site şu an TEK DİL üretiliyor. İngilizce makinesi (METIN sözlüğünün "en"
+# kanadı, hreflang, nav'daki dil düğmesi) olduğu gibi duruyor — silinmedi,
+# sadece üretimden çıkarıldı. Çeviriler hazır olduğunda burada "en" eklemek
+# yetiyor; kayıtların İngilizce metni kendi klasöründe yazi.en.md olarak
+# bekliyor.
+DILLER = ("tr",)
+TEK_DIL = len(DILLER) == 1
 
 # ARAYÜZ metinleri. Sadece arayüz: başlık, düğme, bölüm adı, form etiketi.
 # Manifesto, tema metinleri ve 32 soru BURADA YOK — onlar kolektifin kendi
@@ -427,7 +433,15 @@ def kac(n: int) -> str:
 
 def bas(dil: str, baslik: str, aciklama: str, derinlik: int, yol: str) -> str:
     k = kac(derinlik)
-    ot = S(dil, "oteki")
+    # Tek dilde hreflang yazmıyoruz: var olmayan bir dile işaret eden
+    # alternatif, arama motoruna kırık bir adres bildirmek olur.
+    if TEK_DIL:
+        alternatif = ""
+    else:
+        ot = S(dil, "oteki")
+        alternatif = (
+            f'<link rel="alternate" hreflang="{dil}" href="{k}{dil}/{yol}">' + chr(10)
+            + f'<link rel="alternate" hreflang="{ot}" href="{k}{ot}/{yol}">' + chr(10))
     return f"""<!DOCTYPE html>
 <html lang="{dil}">
 <head>
@@ -438,9 +452,7 @@ def bas(dil: str, baslik: str, aciklama: str, derinlik: int, yol: str) -> str:
 <link rel="icon" href="{k}ikon.svg" type="image/svg+xml">
 <link rel="icon" href="{k}favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="{k}apple-touch-icon.png">
-<link rel="alternate" hreflang="{dil}" href="{k}{dil}/{yol}">
-<link rel="alternate" hreflang="{ot}" href="{k}{ot}/{yol}">
-<link rel="stylesheet" href="{k}main.style.css">
+{alternatif}<link rel="stylesheet" href="{k}main.style.css">
 </head>
 <body>
 """
@@ -452,7 +464,14 @@ def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
     yol: dil kökünden sonraki kısım ('', 'iletisim.html', ...). Dil düğmesi
     öteki dilde AYNI sayfaya gitsin diye lazım."""
     k = kac(derinlik)
-    ot, ot_ad = S(dil, "oteki"), S(dil, "oteki_ad")
+    if TEK_DIL:
+        dil_dugmesi = ""
+    else:
+        ot, ot_ad = S(dil, "oteki"), S(dil, "oteki_ad")
+        dil_dugmesi = (
+            '      <hr>' + chr(10)
+            + f'      <a class="ust-dil" href="{k}{ot}/{yol}" data-dil="{ot}"'
+            + f' hreflang="{ot}">{ot_ad} — {S(ot, 'dil_ad')}</a>' + chr(10))
 
     bu_sayfa = yol or "index.html"
 
@@ -476,7 +495,7 @@ def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
     menu = [f'      <a href="{hedefle(h)}">{S(dil, e)}</a>' for e, h in MENU]
 
     return f"""<header class="ust kutu">
-  <a class="ust-ikon" href="{k}{dil}/" aria-label="{SITE_ADI[dil]}">{IKON}</a>
+  <a class="ust-ikon" href="{k}{dil}/index.html" aria-label="{SITE_ADI[dil]}">{IKON}</a>
   <nav class="ust-nav">
     {(chr(10) + '    ').join(baglar)}
   </nav>
@@ -487,9 +506,7 @@ def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
       <hr>
       <a href="https://www.instagram.com/">instagram</a>
       <a href="mailto:merhaba@uqinarchi.com">email</a>
-      <hr>
-      <a class="ust-dil" href="{k}{ot}/{yol}" data-dil="{ot}" hreflang="{ot}">{ot_ad} — {S(ot, "dil_ad")}</a>
-    </div>
+{dil_dugmesi}    </div>
   </details>
 </header>
 """
@@ -1063,45 +1080,31 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
 
 
 def kok_sayfasi() -> str:
-    """Kökteki index.html — dil seçer ve yönlendirir.
+    """Kokteki index.html.
 
-    IP'ye bakmıyoruz: GitHub Pages statik, ziyaretçinin nereden geldiğini
-    bilmez. Tarayıcının dil ayarına bakıyoruz — bu zaten kullanıcının kendi
-    yazdığı bilgi ve IP'den daha doğru (Berlin'deki Türk öğrenci Türkçe,
-    Ankara'daki Erasmus öğrencisi İngilizce görür). Daha önce seçim
-    yapılmışsa o kazanır.
+    Site su an TEK DIL. Burada secilecek bir sey olmadigi icin sayfa
+    dogrudan tr/'ye yonlendiriyor; eskiden duran TR/EN secici kaldirildi.
 
-    JavaScript kapalıysa aşağıdaki iki bağlantı görünür ve site çalışır."""
+    Ikinci dil acildiginda buraya secici geri gelecek: tercih (localStorage),
+    sonra tarayicinin dili, sonra varsayilan. IP'ye bakmiyoruz -- GitHub
+    Pages statik, ziyaretcinin nereden geldigini bilmez.
+
+    JavaScript kapaliysa asagidaki baglanti gorunur ve site calisir."""
+    d = DILLER[0]
     return f"""<!DOCTYPE html>
-<html lang="{DILLER[0]}">
+<html lang="{d}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{SITE_ADI["tr"]} / {SITE_ADI["en"]}</title>
+<title>{SITE_ADI[d]}</title>
 <link rel="icon" href="ikon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="alternate" hreflang="tr" href="tr/">
-<link rel="alternate" hreflang="en" href="en/">
-<link rel="alternate" hreflang="x-default" href="tr/">
-<!-- Yönlendirme stil dosyasından ÖNCE: bir <script>, kendisinden önceki
-     <link rel="stylesheet"> inene kadar çalışmaz. Aşağıda dursaydı
-     yönlendirme 41 KB'lık stilin inmesini beklerdi. -->
+<link rel="canonical" href="{d}/index.html">
+<meta http-equiv="refresh" content="0; url={d}/index.html">
 <script>
-(function () {{
-  var d = "{DILLER[0]}";
-  try {{
-    var secili = localStorage.getItem("uqa-dil");
-    if (secili === "tr" || secili === "en") {{
-      d = secili;
-    }} else {{
-      var t = (navigator.languages && navigator.languages[0]) || navigator.language || "";
-      d = t.toLowerCase().indexOf("tr") === 0 ? "tr" : "en";
-    }}
-  }} catch (e) {{ /* localStorage kapalı olabilir; varsayılan dil kalır */ }}
-  // replace: geri düğmesi ziyaretçiyi buraya geri atıp döngüye sokmasın
-  location.replace(d + "/");
-}})();
+// replace: geri dugmesi ziyaretciyi buraya geri atip donguye sokmasin
+location.replace("{d}/index.html");
 </script>
 <link rel="stylesheet" href="main.style.css">
 </head>
@@ -1109,13 +1112,9 @@ def kok_sayfasi() -> str:
 <main class="kutu" style="padding:2rem 14px">
   <p class="giris" style="padding-left:0;padding-right:0">{SITE_AD}</p>
   <ul class="tema-liste" style="padding-left:0;padding-right:0">
-    <li class="tema-satir"><a href="tr/" hreflang="tr" data-dil="tr">
-      <span class="tema-no">TR</span>
-      <span class="tema-ad"><b>TÜRK</b>ÇE</span>
-      <span class="tema-ok" aria-hidden="true">→</span></a></li>
-    <li class="tema-satir"><a href="en/" hreflang="en" data-dil="en">
-      <span class="tema-no">EN</span>
-      <span class="tema-ad"><b>ENG</b>LISH</span>
+    <li class="tema-satir"><a href="{d}/index.html" hreflang="{d}">
+      <span class="tema-no">01</span>
+      <span class="tema-ad"><b>SİTEYE</b> GİR</span>
       <span class="tema-ok" aria-hidden="true">→</span></a></li>
   </ul>
 </main>

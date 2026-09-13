@@ -89,10 +89,23 @@
   --font:         'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-ui:      var(--font);
 
-  /* TİP ÖLÇEĞİ — BEŞ ROL, BAŞKA PUNTO YOK.
-     Aşağıdaki hiçbir kuralda çıplak font-size yazmıyor; hepsi bu beşinden
+  /* TİP ÖLÇEĞİ — YEDİ ROL, BAŞKA PUNTO YOK.
+     Aşağıdaki hiçbir kuralda çıplak font-size yazmıyor; hepsi bu yediden
      birini kullanıyor. Yeni bir punto gerektiğini düşünüyorsan muhtemelen
      var olan bir rolün yerine geçmeli — yenisini eklemek ölçeği çözer.
+
+     1rem = 16px (html'de ezilmiyor). Üstteki üç rol clamp: ekranla büyür,
+     alt ve üst sınırı vardır. Alttaki dört rol sabittir.
+       afis   35.2 → 70.4px      h3      18px
+       h1     28   → 44px        govde   16px
+       h2     22   → 32px        author  14px
+                                  ref     13px
+
+     Gövde önceden 0.9rem (14.4px) idi ve taşıyıcı punto olarak küçüktü;
+     yardımcı yazılar 12.8, referanslar 11.5px'e düşüyordu. Ölçek tutarlıydı
+     ama bir kademe aşağıdaydı — 620px'lik okuma kolonunda uzun metin için
+     ufak kalıyordu. Şimdi merdiven 13 / 14 / 16 / 18; 16px web'in oturmuş
+     okuma boyutu ve tarayıcı varsayılanı.
 
   Adlar HTML'in başlık hiyerarşisine bağlı; <h1>/<h2>/<h3> yazınca doğru
   punto kendiliğinden geliyor, ayrıca sınıf vermek gerekmiyor. Ekran
@@ -108,12 +121,19 @@
 
      clamp(en küçük, ekrana göre, en büyük): dar ekranda küçülür, geniş
      ekranda bir yerde durur. Ortadaki vw değeri geçişin hızı. */
-  --tip-h1:       clamp(2.2rem, 6.5vw, 4.4rem);
-  --tip-h2:       clamp(1.5rem, 3.4vw, 2.4rem);
-  --tip-h3:       1rem;
-  --tip-govde:    0.9rem;
-  --tip-author:   0.8rem;
-  --tip-ref:      0.72rem;
+  /* Afis puntosu. Ana sayfadaki kolektif adi bir BASLIK degil, bir afis:
+     sayfanin en iri elemani, tek isi uzaktan okunmak. Kayit sayfasindaki
+     baslikla ayni puntoyu paylasamiyordu -- 620px'lik okuma kolonunda ayni
+     deger uzun bir kaydi uc satira kiriyor. O yuzden rol ikiye ayrildi ve
+     istisnanin adi konuldu; gizli bir clamp olarak bir kuralin icine
+     saklanmadi. Kullanan TEK eleman .hero-baslik. */
+  --tip-afis:    clamp(2.2rem, 6.5vw, 4.4rem);
+  --tip-h1:      clamp(1.75rem, 3.8vw, 2.75rem);
+  --tip-h2:      clamp(1.375rem, 3.4vw, 2rem);
+  --tip-h3:      1.125rem;
+  --tip-govde:   1rem;
+  --tip-author:  0.875rem;
+  --tip-ref:     0.8125rem;
 
   /* Şemadaki başlıklar neredeyse üst üste biniyor — 0.95 onu veriyor */
   --leading-tight: 0.95;
@@ -132,6 +152,10 @@
      kayıt sayfası) bu genişlikte ve ortalanmış. Sayfa tarayıcı genişliğine
      yayılmıyor. Tek yerden değişir: burası. */
   --wrap-width:   1180px;
+  /* Kayit sayfasinin yazi kolonu. Nav ve footer (.kutu) 1180'de kaliyor,
+     ortadaki makale bu genislige iniyor -- uzun metin 1180px boyunca tek
+     satirda okunmuyor. .wrap SADECE kayit sayfalarinda kullaniliyor. */
+  --kolon-yazi:   620px;
   --wrap-wide:    var(--wrap-width);
   /* Şemadaki iki kolonlu ritim: solda dar etiket/not kolonu, sağda içerik.
      Sayfadaki hemen her bölüm bu ızgarayı kullanıyor. */
@@ -223,10 +247,11 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 
 /* 4. YERLEŞİM ============================================================= */
 .wrap {
-  /* .kutu ile BİREBİR aynı genişlik kuralı — kayıt sayfasındaki metin,
-     nav ve footer kutularıyla aynı hizada dursun diye. */
+  /* Kayıt sayfasının makale kolonu. Nav ve footer (.kutu) 1180'de kalıyor,
+     makale 620'ye iniyor: bir okuma kolonu, nav'la aynı hizada değil ortada.
+     Eskiden .kutu ile aynı genişlikteydi, ama 1180px'lik satır okunmuyordu. */
   width: calc(100% - 2 * var(--space-sm));
-  max-width: var(--wrap-width);
+  max-width: var(--kolon-yazi);
   margin: 0 auto;
   /* Üst nav artık sticky (fixed değil), o yüzden nav yüksekliği kadar
      boşluk bırakmaya gerek yok. Yan boşluk .kutu'nunkiyle aynı: metin
@@ -324,6 +349,29 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .tag:hover { color: var(--text); border-color: var(--text); }
 
 
+/* KAYIT SAYFASI — tek sütun ===============================================
+   Ana sayfa 1180px genişliğinde çalışıyor; kayıt sayfası baştan aşağı 620px
+   okuma kolonu. Nav (.ust) ve footer (.alt) ikisi de .kutu olduğu için
+   genişlik oradan geliyordu; <body class="kayit"> ile ikisini birden bu
+   kolona çekiyoruz. Makale (.wrap) zaten 620.
+
+   Neden body sınıfı: .kutu ana sayfada da kullanılıyor, doğrudan
+   daraltılamaz. README'nin sayfaya özel kural için tarif ettiği yol bu. */
+.kayit .kutu { max-width: var(--kolon-yazi); }
+
+/* Footer çağrısı --tip-h2 (en fazla 38px) idi; kayıt başlığı --tip-h1 (en
+   fazla 41px). İkisi neredeyse aynı irilikteydi ve footer sayfa başlığıyla
+   yarışıyordu. Burada bir kademe iniyor ama kalın kalıyor: footer'ın en
+   sesli elemanı olmayı sürdürüyor, sayfanın en sesli elemanı olmadan.
+   Ana sayfanın footer'ı DEĞİŞMİYOR — orada çağrı hala --tip-h2. */
+.kayit .alt-cagri a { font-size: var(--tip-h3); }
+
+/* Nav'ın 188px'lik sol boşluğu ana sayfadaki etiket koloniyla (15rem)
+   hizalanmak için. Kayıt sayfasında öyle bir kolon yok; 620'lik bantta o
+   boşluk sekmeleri iki satıra kırıyordu. */
+.kayit .ust-nav { padding-left: 0; }
+
+
 /* 6. YARDIMCILAR ========================================================== */
 .visually-hidden {
   position: absolute; width: 1px; height: 1px;
@@ -353,8 +401,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 /* ÖLÇÜ STANDARDI — 128 sayfanın hepsi için geçerli:
 
    Sayfadaki her şey varsayılan olarak OKUMA KOLONUNA hizalanır. Kolon
-   genişliği tek yerden gelir: --wrap-width (680px) eksi .wrap'ın yan boşluğu
-   = ~616px. Video, metin, etiketler, künye — hepsi aynı sol ve sağ kenarda
+   genişliği tek yerden gelir: --kolon-yazi (620px) eksi .wrap'ın yan
+   boşluğu. Video, metin, etiketler, künye — hepsi aynı sol ve sağ kenarda
    başlar ve biter. Videoyu sayfa genişliğine yaymak metni 616px'de bırakıp
    oynatıcıyı 1100px yapıyordu; ikisi aynı sayfada tutarsız duruyordu.
 
@@ -406,7 +454,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 :root {
   /* Şeridin kenar boşluğu — metin kolonuyla hizalansın diye hesaplanıyor */
   --gallery-gutter: max(var(--wrap-ic),
-                        calc(50vw - var(--wrap-width) / 2 + var(--wrap-ic)));
+                        calc(50vw - var(--kolon-yazi) / 2 + var(--wrap-ic)));
 }
 
 .gallery figure {
@@ -469,19 +517,24 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   padding-top: var(--space-sm);
   border-top: 1px solid var(--border);
   font-family: var(--font-ui);
-  font-size: var(--tip-govde);
 }
 
-.credits dt, .credits dd { font-size: var(--tip-author); }
+/* Etiket (dt) değer'den (dd) bir kademe küçük: "KONUK" bir referans,
+   "İpek Bengisu Kumaş" asıl bilgi. İkisi de kendi rolünü doğrudan alıyor —
+   önceden .credits'te bir gövde puntosu, dt+dd'de bir author puntosu, bir de
+   dt'de ref puntosu vardı; üçü üst üste biniyor, ilk ikisi hiçbir şeye
+   uygulanmıyordu. */
+.credits dd {
+  font-size: var(--tip-author);
+  margin: 0;
+}
 .credits dt {
+  font-size: var(--tip-ref);
   color: var(--text-faint);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-size: var(--tip-ref);
   padding-top: 0.15em;
 }
-
-.credits dd { margin: 0; }
 
 /* Dış kaynağa (Drive vb.) giden bağlantı. Dışarı çıktığını belli etsin. */
 .source-link {
@@ -1096,7 +1149,7 @@ main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
 
 /* Şemadaki büyük açılış başlığı — sayfanın en iri elemanı */
 .hero-baslik {
-  font-size: var(--tip-h1);
+  font-size: var(--tip-afis);
   font-stretch: 125%;
   letter-spacing: -0.035em;
   line-height: 0.92;

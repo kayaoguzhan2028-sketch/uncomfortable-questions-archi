@@ -25,3 +25,6 @@ ham/
 # Python derleme önbelleği
 __pycache__/
 *.pyc
+
+# Kayitlarin calisma tablosu - uretilir, kaynak Excel
+durum.csv

@@ -14,12 +14,13 @@ Statik site — derleme adımı, bağımlılık, sunucu yok. GitHub Pages doğru
 
 Her kaydın malzemesi tek klasörde: metni, fotoğrafları ve sayfası bir arada.
 
-Site iki dilde: `tr/` ve `en/`. Kayıtların **malzemesi** ise dilden bağımsız,
-tek kopya, `kayit/` altında — fotoğraf iki dilde de aynı, repoda iki kere
-durmasın diye.
+Site şu an tek dilde: `tr/`. Kayıtların **malzemesi** dilden bağımsız, tek
+kopya, `kayit/` altında — fotoğraf hangi dilde olursa olsun aynı, repoda
+iki kere durmasın diye. İkinci dil açıldığında `en/` bunun yanına gelir,
+`kayit/` değişmez.
 
 ```
-index.html                 dil seçer, tr/ ya da en/'e yönlendirir
+index.html                 tr/'ye yönlendirir
 main.style.css             sitenin TEK stil dosyası
 main.js                    sitenin TEK script dosyası
 ikon.svg                   soru işareti — favicon
@@ -32,13 +33,13 @@ tr/                        Türkçe sayfa ağacı    ┐
   archive.html             üretim arşivi         │
   contact.html             iletişim              │
   activity/<slug>.html     tek etkinlik sayfası  │
-  archive/<slug>.html      tek üretim sayfası    │
-en/                        aynısının İngilizcesi ┘
+  archive/<slug>.html      tek üretim sayfası    ┘
 
 kayit/                     kayıtların malzemesi (dilden bağımsız)
   etkinlikler/
     2026-1-mayis-tandogan/
       ├── yazi.md          sayfanın metni (kaynak)
+      ├── yazi.en.md       İngilizce çevirisi — varsa; şu an kullanılmıyor
       ├── kapak.webp       siteye giren fotoğraflar
       └── ham/             ⛔ repoya girmez — ham fotoğraflar
   uretimler/
@@ -83,31 +84,41 @@ araçlarını (dosya oluşturma, üzerine yazma, silme, izin değiştirme) engel
 
 ## Dil
 
-Kökteki `index.html` ziyaretçiyi yönlendirir. **IP'ye bakmıyor** — GitHub Pages
-statik bir sunucu, ziyaretçinin nereden geldiğini bilmez ve bunu değiştiremeyiz.
-Bakılan şey sırasıyla:
+**Site şu an tek dil: Türkçe.** İngilizce kapalı.
 
-1. Daha önce TR/EN düğmesiyle yapılmış seçim (`localStorage`).
-2. Tarayıcının dil ayarı (`navigator.language`). IP'den daha doğru: Berlin'deki
-   Türk öğrenci Türkçe, Ankara'daki Erasmus öğrencisi İngilizce görür.
-3. Hiçbiri yoksa Türkçe.
+Kapalı demek "silindi" demek değil: `arac/sayfa.py` içindeki `METIN`
+sözlüğünün `en` kanadı, çeviri metinleri ve dil düğmesinin kodu olduğu gibi
+duruyor. Üretimden çıkarıldı, o kadar. Açmak tek satır:
 
-JavaScript kapalıysa kökte iki bağlantı görünür, site çalışmaya devam eder.
+```python
+DILLER = ("tr", "en")     # arac/sayfa.py
+```
 
-### Ne çevrildi, ne çevrilmedi
+O satır değişince hreflang etiketleri, nav'daki TR/EN düğmesi ve kökteki dil
+seçici kendiliğinden geri geliyor — hepsi `TEK_DIL` bayrağına bağlı.
 
-| ne | durum |
-|---|---|
-| Arayüz (nav, bölüm adları, form, footer) | Çevrildi — `METIN` sözlüğü |
-| Giriş ve footer tanıtım paragrafı | Çevrildi, **kolektifin onayından geçmedi** |
-| Manifesto, tema metinleri, 32 soru | **Çevrilmedi.** İngilizce sayfada Türkçe aslı, üstünde çeviri notuyla duruyor |
-| Kayıt sayfaları (128 kayıt) | Çevrilmedi |
+### Neden kapatıldı
 
-Manifesto ve sorular bilerek çevrilmedi: kolektifin kendi politik beyanı, bir
-makine çevirisi kolektifin adı altında yayınlanmaz. İngilizcesi geldiğinde
-`sayfa.py`'ye eklenecek.
+İngilizce yarım kalmıştı: çerçeve (nav, footer, form) çevrilmişti ama
+manifesto, tema metinleri ve 32 soru Türkçe duruyordu. Yarım bir İngilizce
+sayfa, ziyaretçiye hiç İngilizce olmamasından daha kötü görünüyor.
 
----
+Karar şu: **önce Türkçe biter, sonra Türkçeden çevrilir.** 128 kaydın metni
+Türkçe yazılıp oturduktan sonra çeviri tek seferde yapılır.
+
+### Çeviriler nerede duruyor
+
+Bir kaydın İngilizce metni kendi klasöründe, `yazi.en.md` olarak. Türkçe asıl
+`yazi.md`; `yazi.en.md` onun çevirisi. İngilizce açıldığında `sayfa.py` bu
+dosyayı okuyacak, yoksa Türkçe aslı çeviri notuyla basacak.
+
+Şu an iki kayıtta var: `2026-yas-hafiza-ve-mekan` ve
+`2026-stadyum-kimin-dunya-kupasi-mimarlik`. İkisi de kolektifin onayından
+**geçmedi**.
+
+Manifesto ve 32 soru bilerek çevrilmedi ve makine çevirisiyle
+çevrilmeyecek: kolektifin kendi politik beyanı, kolektifin adı altında
+yayınlanıyor. İngilizcesi kolektiften gelecek.
 
 ## Fotoğraf eklemek
 
@@ -168,16 +179,38 @@ ve `yazi.md` + Excel verisi + klasördeki webp'lerden `index.html` üretecek.
 Renk ve tipografi dosyanın başındaki `:root` bloğunda token olarak duruyor;
 altındaki hiçbir kuralda çıplak renk **ve çıplak punto** yok.
 
-### Tipografi — altı rol, başkası yok
+### Tipografi — yedi rol, başkası yok
 
 | rol | token | HTML | nerede |
 |---|---|---|---|
+| afiş | `--tip-afis` | `<h1 class="hero-baslik">` | ana sayfadaki kolektif adı. Sitede tek yer. |
 | ana başlık | `--tip-h1` | `<h1>` | sayfa başlığı. Sayfada bir tane olur. |
 | alt başlık | `--tip-h2` | `<h2>` | tema satırları, bölüm başlıkları, footer çağrısı |
 | sub başlık | `--tip-h3` | `<h3>` | "about", "latest", kart başlığı |
 | düz yazı | `--tip-govde` | `<p>` | paragraflar, form, bağlantı listeleri |
 | author | `--tip-author` | — | künye satırı: yazar, konuşmacı, tarih |
 | referans | `--tip-ref` | — | tablo, kenar notu, etiket, resim altı |
+
+**Gerçek değerler** (1rem = 16px, `html`'de ezilmiyor):
+
+| rol | telefon (400px) | masüstü (1440px) |
+|---|---|---|
+| afiş | 35.2px | 70.4px |
+| ana başlık | 28px | 44px |
+| alt başlık | 22px | 32px |
+| sub başlık | 18px | 18px |
+| düz yazı | 16px | 16px |
+| author | 14px | 14px |
+| referans | 13px | 13px |
+
+İlk üçü `clamp()` — ekranla büyür, alt ve üst sınırı var. Alttaki dörtü
+sabit. Merdiven 13 / 14 / 16 / 18.
+
+Gövde önceden 0.9rem (14.4px) idi; yardımcı yazılar 12.8px, referanslar
+11.5px'e düşüyordu. Ölçek tutarlıydı ama bir kademe aşağıdaydı — 620px'lik
+okuma kolonunda uzun metin için ufaktı. 16px tarayıcı varsayılanı ve web'in
+oturmuş okuma boyutu; taşıyıcı punto oraya çekildi, ölçeğin geri kalanı
+onunla birlikte kaydı.
 
 Adlar HTML'in kendi başlık hiyerarşisine bağlı. `<h2>` yazmak yeterli —
 punto kendiliğinden gelir, ayrıca sınıf vermeye gerek yok. Ekran okuyucu ve
@@ -186,12 +219,29 @@ yerden geliyor; biri değişince öteki geride kalmıyor.
 
 Önceden 6 token vardı ama 14 ayrı kural kendi `clamp()`'ini yazıyordu —
 sayfada 20 farklı punto dolaşıyordu. Şimdi `font-size:` yazan her kural bu
-altıdan birini kullanıyor, istisna yok.
+yediden birini kullanıyor, istisna yok.
+
+**Afiş neden ayrı bir rol.** Başlangıçta `--tip-h1` ikisini birden yapıyordu:
+ana sayfadaki dev kolektif adını ve kayıt sayfasının başlığını. Kayıt
+sayfası 620px'lik okuma kolonuna inince aynı değer (4.4rem) uzun bir başlığı
+üç satıra kırdı. Seçenek ikiydi: o kurala gizli bir `clamp()` yazmak, ya da
+rolü bölüp istisnanın adını koymak. İkincisi seçildi — ana sayfadaki ad bir
+başlık değil, afiş: tek işi uzaktan okunmak. Böylece "`<h1>` yazmak yeterli"
+kuralı her sayfada doğru kalmaya devam ediyor.
 
 Yeni bir punto gerektiğini düşünüyorsan önce var olan bir rolün yerine
-geçip geçemeyeceğine bak. Yedincisini eklemek ölçeği çözer; ayrımı çoğu
-yerde punto değil **ağırlık** yapıyor. Siteyi beyaz zemine çevirmek yedi
+geçip geçemeyeceğine bak; ayrımı çoğu yerde punto değil **ağırlık** yapıyor. Siteyi beyaz zemine çevirmek yedi
 satırlık bir değişiklik — nasıl yapılacağı o bloğun üstünde yazıyor.
+
+### Genişlik
+
+Nav ve footer (`.kutu`) 1180px. Kayıt sayfasının makale kolonu (`.wrap`)
+620px — `--kolon-yazi`. İkisi bilerek farklı: çerçeve sayfa genişliğinde
+kalıyor, okunan metin bir kolona iniyor. 1180px boyunca uzanan bir satır
+okunmuyor.
+
+`.wrap` SADECE kayıt sayfalarında kullanılıyor; ana sayfa ve iletişim
+`.kutu` ile çalışıyor. Yani bu kolonu değiştirmek ana sayfaya dokunmuyor.
 
 Başlıklar CSS'te büyük harfe çevrilmiyor: `text-transform: uppercase`
 Türkçe'de i/İ eşlemesini bozuyor ve bazı ekran okuyucular sonucu harf harf

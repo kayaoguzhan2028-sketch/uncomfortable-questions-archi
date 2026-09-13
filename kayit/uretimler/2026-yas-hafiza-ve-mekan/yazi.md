@@ -1,3 +1,9 @@
+---
+Konuk: İpek Bengisu Kumaş
+Sunan: Berk Bulut
+Dil: Türkçe
+---
+
 # Ankara, 10 Ekim, 15 Temmuz: Yas, Hafıza ve Mekan | Mimarlıkta Rahatsız Edici Cevaplar #2
 
 Mimarlıkta Rahatsız Edici Cevaplar'ın ikinci bölümünde Berk Bulut "Yas, Anma ve
