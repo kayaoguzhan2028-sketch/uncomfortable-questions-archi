@@ -17,6 +17,7 @@ desktop.ini
 # Ham veri kaynağı — ASLA pushlanmayacak, yerelde kalır
 *.xlsx
 *.xls
+*.ods
 *.csv
 
 # Ham fotoğraflar — her kaydın kendi ham/ klasörü. Sadece webp çıktısı repoya girer.
