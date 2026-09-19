@@ -6,7 +6,7 @@
     python arac/durum.py --json     # telefon listesinin verisini basar
 
 NEDEN
-    "Activity List.xlsx" ham veri kaynağı — 40 küsur sütun, dağınık.
+    "Activity List last.xlsx" ham veri kaynağı — 40 küsur sütun, dağınık.
     Kayıt kayıt ilerlerken lazım olan şey o değil: hangi kaydın metni
     yazılmış, hangisinin fotoğrafı ayıklanmış, hangisi hiç ellenmemiş.
     Bu tablo onu veriyor.

@@ -21,7 +21,7 @@ KOK = Path(__file__).resolve().parent.parent
 # Kayıtların malzeme kökü. Sayfalar tr/ ve en/ altında üretilir;
 # metin, ham fotoğraf ve webp burada tek kopya durur.
 KAYNAK_KOK = "kayit"
-EXCEL = KOK / "Activity List.xlsx"
+EXCEL = KOK / "Activity List last.xlsx"
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 
@@ -36,8 +36,8 @@ TR = str.maketrans("çğıöşüÇĞİÖŞÜ", "cgiosuCGIOSU")
 # (UQA-010, UQA-011, UQA-048). Bunlar tip değil; boş sayılır.
 ID_DESENI = re.compile(r"^UQA-\d+$", re.I)
 
-# Video kayıtlarında YouTube linki kendi sütununda değil, "Aktivite Drive Adı"
-# sütununa "YT_link: https://..." diye yazılmış. Oradan çekiyoruz.
+# YouTube linkinden 11 karakterlik video kimliği. Link youtu.be/, watch?v=
+# ya da embed/ biçiminde gelebiliyor, sonunda ?si=... takibi olabiliyor.
 YT_DESENI = re.compile(r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([\w-]{11})")
 
 
@@ -77,6 +77,15 @@ def kisa_ad(baslik: str, sinir: int = 42) -> str:
     t = baslik.split("|")[0].strip()
     t = re.sub(r"^.*?:\s*", "", t, count=1)
     return slug(t, sinir)
+
+
+def _link(deger: str) -> str:
+    """Excel'de linklerin bir kısmı https:// olmadan yazılmış
+    ('open.spotify.com/episode/...'). Tarayıcı onu göreli yol sanar."""
+    deger = (deger or "").strip()
+    if deger and not re.match(r"^[a-z]+://", deger, re.I):
+        deger = "https://" + deger
+    return deger
 
 
 def _parcala(deger: str) -> list[str]:
@@ -160,12 +169,12 @@ def _tek_tarih(parca: str) -> tuple[int, int | None, int | None] | None:
     return None
 
 
-def tarih_coz(tam: str, yil: str, ay: str, gun: str) -> Tarih:
+def tarih_coz(tam: str, yil: str = "", ay: str = "", gun: str = "") -> Tarih:
     """
-    Excel'de tarih üç ayrı yerde ve üç ayrı formatta duruyor:
-      G (Tam Tarih): '17.05.2024' | '2025-04-02' | '19.09.2026-20.09.2026'
-      D/E/F        : '2024' | 'Mayıs' | '17.0'
-    Hangisi doluysa ondan çıkarıyoruz; G önceliklidir çünkü aralıkları o taşıyor.
+    Tam Tarih sütunu: '17.05.2024' | '2025-04-02' | '2025-11' |
+    '19.09.2026-20.09.2026'. Eski Excel'de tarih ayrıca yıl/ay/gün diye üç
+    sütuna bölünmüştü ('2024' | 'Mayıs' | '17.0'); yil/ay/gun onlar için,
+    tam boşsa ya da çözülemezse kullanılır.
     """
     t = Tarih(ham=tam or "")
 
@@ -217,13 +226,19 @@ class Kayit:
     # etkinliğe özel
     sehir: str = ""
     mekan: str = ""
+    # sayfanın metni: özet başlığın altında, uzun yazı içeriğin altında
+    ozet: str = ""
+    uzun: str = ""
+    # etkinliğe özel bağlantılar
+    ig_link: str = ""
+    spotify_link: str = ""
     # üretime özel
     yazar: str = ""
     dil: str = ""
     dosya_turu: str = ""
-    kaynak_link: str = ""
-    kontrol_notu: str = ""
-    drive_adi: str = ""
+    pdf_link: str = ""
+    anket_link: str = ""
+    podcast_link: str = ""
     video: str = ""               # YouTube video kimliği (11 karakter)
     slug: str = ""
 
@@ -290,45 +305,63 @@ def oku(excel: Path = EXCEL) -> tuple[list[Kayit], list[Kayit]]:
     ss = ["".join(t.text or "" for t in si.iter(NS + "t"))
           for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall(NS + "si")]
 
+    # "Activity List last.xlsx" sütunları. Sütun harfi değişirse SADECE
+    # burası değişir; diğer script'ler Kayit alanlarını okur, harfleri değil.
+    #
+    # Etkinlikler: A no · B ad · C tam tarih · D bitiş · E şehir · F mekan ·
+    #   G tip · H temalar · I etiketler · J network · K özet · L uzun ·
+    #   M IG · N YouTube · O Spotify
+    # Üretimler:   A etkinlik no · B ad · C tarih · D tip · E temalar ·
+    #   F etiketler · G network · H yazar · I dil · J dosya türü · K özet ·
+    #   L uzun · M pdf · N video · O anket · P podcast
     etkinlikler = []
     for r in _satirlar(z, "xl/worksheets/sheet1.xml", ss)[1:]:
-        if not r.get("C"):
+        if not r.get("B"):
             continue
+        tarih = tarih_coz(r.get("C", ""))
+        # Bitiş ayrı sütunda da gelebilir; C zaten aralık değilse ekle.
+        bitis = _tek_tarih(r.get("D", "")) if r.get("D", "") not in ("", "-") else None
+        if bitis and not tarih.bitis and tarih.var_mi and bitis != (tarih.yil, tarih.ay, tarih.gun):
+            tarih.bitis = bitis
         etkinlikler.append(Kayit(
             tur="etkinlik",
-            baslik=r["C"],
-            tarih=tarih_coz(r.get("G", ""), r.get("D", ""), r.get("E", ""), r.get("F", "")),
-            sehir=r.get("H", ""),
-            mekan=r.get("I", ""),
-            tipler=_parcala(r.get("J", "")),
-            temalar=_parcala(r.get("K", "")),
-            etiketler=_parcala(r.get("L", "")),
-            network=r.get("M", ""),
-            drive_adi=r.get("B", ""),
+            baslik=r["B"],
+            tarih=tarih,
+            sehir=r.get("E", ""),
+            mekan=r.get("F", ""),
+            tipler=_parcala(r.get("G", "")),
+            temalar=_parcala(r.get("H", "")),
+            etiketler=_parcala(r.get("I", "")),
+            network=r.get("J", ""),
+            ozet=r.get("K", ""),
+            uzun=r.get("L", ""),
+            ig_link=_link(r.get("M", "")),
+            video=video_id(r.get("N", "")),
+            spotify_link=_link(r.get("O", "")),
         ))
 
     uretimler = []
     for r in _satirlar(z, "xl/worksheets/sheet2.xml", ss)[1:]:
-        if not r.get("C"):
+        if not r.get("B"):
             continue
-        tip = r.get("H", "")
-        b = r.get("B", "")
-        vid = video_id(b)
+        tip = r.get("D", "")
         uretimler.append(Kayit(
-            video=vid,
             tur="uretim",
-            baslik=r["C"],
-            tarih=tarih_coz(r.get("G", ""), r.get("D", ""), r.get("E", ""), r.get("F", "")),
+            baslik=r["B"],
+            tarih=tarih_coz(r.get("C", "")),
             tipler=[] if ID_DESENI.match(tip) else _parcala(tip),
-            temalar=_parcala(r.get("I", "")),
-            etiketler=_parcala(r.get("J", "")),
-            network=r.get("K", ""),
-            yazar=r.get("L", ""),
-            dil=r.get("M", ""),
-            dosya_turu=r.get("N", ""),
-            kaynak_link=r.get("O", ""),
-            kontrol_notu=r.get("P", ""),
-            drive_adi="" if vid else b,
+            temalar=_parcala(r.get("E", "")),
+            etiketler=_parcala(r.get("F", "")),
+            network=r.get("G", ""),
+            yazar=r.get("H", ""),
+            dil=r.get("I", ""),
+            dosya_turu=r.get("J", ""),
+            ozet=r.get("K", ""),
+            uzun=r.get("L", ""),
+            pdf_link=_link(r.get("M", "")),
+            video=video_id(r.get("N", "") or r.get("P", "")),
+            anket_link=_link(r.get("O", "")),
+            podcast_link=_link(r.get("P", "")),
         ))
 
     for grup in (etkinlikler, uretimler):

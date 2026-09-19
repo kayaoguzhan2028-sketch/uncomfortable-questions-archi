@@ -1,0 +1,620 @@
+/* ==========================================================================
+   Örneklem sayfalarının ek stili
+   --------------------------------------------------------------------------
+   Sitenin kuralı: tek stil dosyası (main.style.css). Bu dosya örneklem
+   süresince ayrı duruyor ki canlı sayfalara dokunmadan denenebilsin.
+   Bileşenler onaylanınca "KİTAPÇIK" ve "İNDİR" bölümleri main.style.css'e
+   taşınır; "ÖRNEKLEM ŞERİDİ" ve "ALAN ETİKETLERİ" taşınmaz, sadece burada.
+
+   Renk, font, boşluk hep main.style.css'teki token'lardan (var(--...)).
+   ========================================================================== */
+
+
+/* ÖRNEKLEM ŞERİDİ ---------------------------------------------------------
+   Sayfanın en üstünde: bunun bir örnek olduğunu ve hangi üretim tipini
+   gösterdiğini söyler. Sağdaki düğme alan etiketlerini açıp kapatır. */
+
+.orneklem-serit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs) var(--space-sm);
+  padding: 0.6rem var(--space-sm);
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  letter-spacing: 0.04em;
+}
+.orneklem-serit a { color: inherit; }
+.orneklem-serit strong { font-weight: 600; }
+
+.orneklem-serit button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 1px solid currentColor;
+  padding: 0.3em 0.8em;
+  cursor: pointer;
+}
+.orneklem-serit button[aria-pressed="true"] { background: var(--bg); color: var(--text); }
+
+
+/* ALAN ETİKETLERİ ---------------------------------------------------------
+   Sayfayı yapacak kişi için: her parçanın Excel'de hangi sütundan geldiği.
+   data-alan="K · Özet" gibi yazılır; düğmeyle görünür olur. */
+
+.alanlar [data-alan] {
+  position: relative;
+  outline: 1px dashed var(--accent);
+  outline-offset: 4px;
+}
+.alanlar [data-alan]::before {
+  content: attr(data-alan);
+  position: absolute;
+  top: -0.9rem;
+  right: 0;
+  z-index: 5;
+  padding: 0.1em 0.5em;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+
+/* KİTAPÇIK ----------------------------------------------------------------
+   Fanzin ve rapor: PDF sayfaları görsel olarak, sayfa çevrilerek okunur.
+   Kütüphane: StPageFlip (MIT) — lib/page-flip.browser.js.
+
+   Video gibi okuma kolonunun (620px) içinde durur, metinle aynı hizada.
+   Kolonda iki sayfa yan yana küçük kalıyor; asıl okuma tam ekranda.
+   Dar ekranda kütüphane kendiliğinden tek sayfaya geçer. */
+
+/* Kitapçık, slayt, tek görsel: hepsi .video ile aynı kural — kolon kadar. */
+.kitapcik,
+.slayt,
+.tek-gorsel {
+  width: 100%;
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+/* Galeri şeridi main.style.css'te sayfa genişliğine taşıyor; örneklemde
+   o da kolonun içinde kalsın. */
+.gallery {
+  width: auto;
+  margin-left: 0;
+  padding-inline: 0;
+  scroll-padding-inline: 0;
+}
+
+.kitapcik-sahne {
+  /* Kütüphane içine kendi kutusunu kuruyor; burası sadece zemin. */
+  background: var(--bg-alt);
+  padding: var(--space-sm);
+}
+
+/* JS çalışmazsa ya da kütüphane inmezse: sadece kapak görünür,
+   altında indir düğmesi yine çalışır. */
+.kitapcik-sahne .sayfa { display: none; }
+.kitapcik-sahne .sayfa:first-child { display: block; max-width: 380px; margin: 0 auto; }
+.kitapcik-hazir .kitapcik-sahne .sayfa { display: block; max-width: none; margin: 0; }
+
+.kitapcik .sayfa {
+  background: var(--bg);
+}
+.kitapcik .sayfa img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Kitapçık ve slaytın altındaki araç satırı: geri · konum · ileri · tam ekran */
+.kitapcik-arac,
+.slayt-arac {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+}
+
+.kitapcik-arac button,
+.slayt-arac button {
+  font: inherit;
+  color: var(--text);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 0.45em 0.9em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+.kitapcik-arac button:hover:not(:disabled),
+.slayt-arac button:hover:not(.swiper-button-disabled) { border-color: var(--accent); color: var(--accent); }
+.kitapcik-arac button:disabled,
+.slayt-arac button.swiper-button-disabled { color: var(--text-faint); cursor: default; }
+.kitapcik-arac button:focus-visible,
+.slayt-arac button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.kitapcik-konum {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.kitapcik-konum input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+.kitapcik-sayac,
+.slayt-sayac {
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kitapcik-ipucu {
+  margin-top: var(--space-xs);
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  color: var(--text-faint);
+}
+
+@media (max-width: 600px) {
+  .kitapcik-sahne { padding: var(--space-xs); }
+  .kitapcik-arac,
+  .slayt-arac { grid-template-columns: 1fr 1fr 1fr; gap: var(--space-xs); }
+  .kitapcik-konum { grid-column: 1 / -1; grid-row: 1; }
+}
+
+
+/* TAM EKRAN ---------------------------------------------------------------
+   Kitapçık ve slayt için. Tarayıcı destekliyorsa gerçek tam ekran
+   (requestFullscreen); desteklemiyorsa (iPhone) sayfanın üstünü kaplayan
+   katman. İkisinde de aynı sınıf: .tam-ekran. Esc ile çıkılır. */
+
+/* Ekranı kaplayan katman. Dikey düzen: [sahne — kalan bütün alan] [araç satırı].
+   İçerik ORTALANMIYOR (justify-content: center yok): taşan bir şey olursa
+   ortalama onu üstten keser; bunun yerine sahne kalan alanı dolduruyor. */
+.tam-ekran {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: auto;
+  height: 100dvh;          /* telefonda adres çubuğu hariç gerçek ekran boyu */
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* Sahne: araç satırından geriye kalan alan. container-type: size ile
+   içindeki kitap bu alanın eni (cqw) ve boyuna (cqh) göre ölçülebiliyor. */
+.tam-ekran .kitapcik-sahne {
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs);
+}
+
+/* Kitap alana hem enine hem boyuna sığsın. Kütüphane yüksekliği genişlikten
+   hesaplıyor (iki sayfa: yükseklik = genişlik ÷ 2 ÷ sayfa oranı), o yüzden
+   genişliği iki sınırdan küçük olana eşitliyoruz:
+     - alanın eni             (100cqw)
+     - alanın boyu × 2 × oran (100cqh × 2 × en/boy)
+   Kütüphane kutuya satır içi stil (style="width:100%; min-width…") yazıyor;
+   onu ancak !important geçer. */
+.tam-ekran .kitapcik-kitap {
+  width: min(100cqw, 100cqh * 2 * var(--sayfa-orani, 0.704)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0;
+}
+/* Dar alanda kütüphane tek sayfaya geçiyor (kutu 520px'ten darsa):
+   o zaman sınır tek sayfanın oranı. */
+@container (max-width: 520px) {
+  .tam-ekran .kitapcik-kitap { width: min(100cqw, 100cqh * var(--sayfa-orani, 0.704)) !important; }
+}
+
+.tam-ekran .kitapcik-ipucu { display: none; }
+.tam-ekran .kitapcik-arac,
+.tam-ekran .slayt-arac {
+  flex: none;
+  width: min(100%, 1000px);
+  margin: 0 auto;
+}
+
+
+/* İNDİR -------------------------------------------------------------------
+   Dosyanın tamamı. Şimdilik bir açıklama penceresi açıyor; indirme
+   altyapısı (GitHub Releases vb.) kurulunca gerçek bağlantı olacak. */
+
+.indir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+.indir-dugme {
+  font-family: var(--font-ui);
+  font-size: var(--tip-govde);
+  font-weight: 500;
+  color: var(--bg);
+  background: var(--text);
+  border: 1px solid var(--text);
+  padding: 0.7em 1.3em;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.indir-dugme::after { content: " ↓"; }
+.indir-dugme:hover { background: var(--accent); border-color: var(--accent); }
+.indir-dugme:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.indir-bilgi {
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+  color: var(--text-faint);
+}
+
+.pencere {
+  max-width: min(28rem, 100vw - 2 * var(--space-sm));
+  border: 1px solid var(--text);
+  padding: var(--space-md);
+  background: var(--bg);
+  color: var(--text);
+}
+.pencere::backdrop { background: rgba(12, 12, 12, 0.45); }
+.pencere h2 { font-size: var(--tip-h3); margin: 0 0 var(--space-xs); }
+.pencere p { font-size: var(--tip-govde); color: var(--text-soft); }
+.pencere form { margin-top: var(--space-sm); }
+.pencere button {
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 0.45em 1em;
+  cursor: pointer;
+}
+.pencere button:hover { border-color: var(--accent); color: var(--accent); }
+
+
+/* UZUN YAZIDAKİ TEMA LİSTESİ ----------------------------------------------
+   Excel'de "Tema — içerik" satırları. Liste olarak basılıyor. */
+
+.prose .icerik-listesi { list-style: none; margin-left: 0; }
+.prose .icerik-listesi li { margin-bottom: var(--space-xs); }
+.prose .icerik-listesi strong { font-weight: 600; }
+
+
+/* ÖRNEKLEM LİSTESİ (index.html) ------------------------------------------- */
+
+.orneklem-liste { list-style: none; margin: var(--space-md) 0; border-top: 1px solid var(--border); }
+.orneklem-liste li { border-bottom: 1px solid var(--border); }
+.orneklem-liste a {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  text-decoration: none;
+}
+.orneklem-liste a:hover .orneklem-ad { color: var(--accent); }
+.orneklem-tip {
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-top: 0.2em;
+}
+.orneklem-ad { display: block; font-weight: 500; }
+.orneklem-not { display: block; font-size: var(--tip-author); color: var(--text-faint); margin-top: 0.2em; }
+.orneklem-liste .bekliyor .orneklem-tip { color: var(--text-faint); }
+.orneklem-liste .bekliyor span { color: var(--text-faint); }
+
+@media (max-width: 600px) {
+  .orneklem-liste a { grid-template-columns: 1fr; gap: 0.2em; }
+}
+.orneklem-grup { margin-top: var(--space-lg); }
+
+
+/* SLAYT -------------------------------------------------------------------
+   Sunum: PPTX'in her slaytı bir görsel, yatay 16:9. Kütüphane: Swiper (MIT)
+   — lib/swiper-bundle.min.js/.css. Telefonda da yatay kalır; ekranın
+   genişliğine oturur, parmakla kaydırılır. */
+
+.slayt-ana { background: var(--bg-alt); }
+.slayt-ana .swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slayt-ana img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+}
+
+.slayt-kucuk { margin-top: var(--space-xs); }
+.slayt-kucuk .swiper-slide {
+  width: 7.5rem;
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.slayt-kucuk .swiper-slide:hover { opacity: 0.8; }
+.slayt-kucuk .swiper-slide-thumb-active { opacity: 1; outline: 2px solid var(--accent); outline-offset: -2px; }
+.slayt-kucuk img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+
+/* Tam ekranda slayt da aynı mantık: büyük slayt kalan alanı doldurur,
+   araç satırı ve önizlemeler altta sabit. */
+.tam-ekran .slayt-ana {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+.tam-ekran .slayt-ana .swiper-slide { height: 100%; }
+.tam-ekran .slayt-ana img { width: 100%; height: 100%; aspect-ratio: auto; }
+.tam-ekran .slayt-kucuk { flex: none; width: min(100%, 1000px); margin-inline: auto; }
+
+@media (max-width: 600px) {
+  .slayt-kucuk .swiper-slide { width: 5rem; }
+}
+
+
+/* BÜYÜTEÇ -----------------------------------------------------------------
+   Albüm ve tek görselde: görsele tıklayınca ekranı kaplayan görünüm.
+   Oklar, sayaç, çift tıkla / iki parmakla yakınlaştırma (Swiper zoom). */
+
+.buyut-ac {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.buyut-ac:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.buyutec {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(12, 12, 12, 0.94);
+  color: #fff;
+  --swiper-theme-color: #fff;
+  --swiper-navigation-size: 28px;
+}
+.buyutec::backdrop { background: rgba(12, 12, 12, 0.94); }
+.buyutec .swiper { width: 100%; height: 100%; }
+.buyutec .swiper-slide { display: flex; align-items: center; justify-content: center; }
+.buyutec img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+.buyutec .swiper-zoom-container { padding: var(--space-lg) var(--space-md); box-sizing: border-box; }
+.buyutec-ust {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+}
+.buyutec-baslik { color: rgba(255, 255, 255, 0.85); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.buyutec-sayac { margin-left: auto; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.7); }
+.buyutec-kapat {
+  font: inherit;
+  color: #fff;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 0.35em 0.8em;
+  cursor: pointer;
+}
+.buyutec-kapat:hover { border-color: #fff; }
+
+@media (max-width: 600px) {
+  .buyutec .swiper-button-prev,
+  .buyutec .swiper-button-next { display: none; }   /* telefonda parmakla */
+  .buyutec .swiper-zoom-container { padding: var(--space-lg) 0; }
+}
+
+
+/* ALBÜM -------------------------------------------------------------------
+   Galeri şeridi (main.style.css .gallery) + büyüteç. Fotoğraflı etkinlikte
+   şeritler süreç aşamalarına bölünüyor (prejüri, final jürisi …). */
+
+.gallery .buyut-ac img { height: min(50vh, 380px); }
+.gallery figure { max-width: 100%; }
+.asama { margin-top: var(--space-md); }
+.asama h2 { font-size: var(--tip-h3); margin: 0; }
+.asama-tarih {
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+  color: var(--text-faint);
+}
+.asama .gallery { margin-top: var(--space-xs); }
+
+
+/* TEK GÖRSEL --------------------------------------------------------------- */
+
+.tek-gorsel .buyut-ac { width: 100%; }
+.tek-gorsel img { display: block; width: 100%; height: auto; }
+
+/* Albüm ve tek görselin altındaki satır: tam ekran düğmesi. Kitapçık ve
+   slaytın araç satırıyla aynı görünüm. */
+.galeri-arac {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-xs) 0 var(--space-md);
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+  color: var(--text-faint);
+}
+.galeri-arac button {
+  font: inherit;
+  color: var(--text);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 0.45em 0.9em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+.galeri-arac button:hover { border-color: var(--accent); color: var(--accent); }
+.galeri-arac button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+
+/* DİNLE (Spotify) ---------------------------------------------------------
+   Video kapağıyla aynı mantık: sayfa açılırken Spotify'a istek gitmez,
+   tıklanınca oynatıcı yüklenir. */
+
+.dinle { margin: var(--space-md) 0 var(--space-xs); }
+.dinle-ac {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm);
+  text-align: left;
+  font: inherit;
+  color: var(--bg);
+  background: var(--text);
+  border: 0;
+  cursor: pointer;
+}
+.dinle-play {
+  position: relative;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--bg);
+  transition: background 0.2s;
+}
+.dinle-play::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 54%;
+  transform: translate(-50%, -50%);
+  border-left: 15px solid var(--text);
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+}
+.dinle-ac:hover .dinle-play,
+.dinle-ac:focus-visible .dinle-play { background: var(--accent); }
+.dinle-ac:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.dinle-metin { display: grid; gap: 0.15em; min-width: 0; }
+.dinle-ust {
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.dinle-baslik { font-size: var(--tip-h3); font-weight: 600; line-height: 1.3; }
+.dinle-kisi { font-size: var(--tip-author); opacity: 0.8; }
+.dinle iframe { display: block; width: 100%; height: 232px; border: 0; }
+
+
+/* DİL SEÇİMİ (rapor) ------------------------------------------------------ */
+
+.dil-secim {
+  display: inline-flex;
+  margin-top: var(--space-md);
+  border: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+}
+.dil-secim button {
+  font: inherit;
+  color: var(--text-soft);
+  background: none;
+  border: 0;
+  padding: 0.45em 1em;
+  cursor: pointer;
+}
+.dil-secim button + button { border-left: 1px solid var(--border); }
+.dil-secim button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+/* İki dilin kitapçığı da düğmenin altında aynı aralıkla başlasın. ("+" ile
+   yazınca sadece düğmenin hemen arkasındaki TR bloğa uyuyordu, EN'e değil.) */
+.dil-blok .kitapcik { margin-top: var(--space-xs); }
+
+/* KONUŞMA METNİ -----------------------------------------------------------
+   Bağlam notu (nerede, kim, hangi dilde), bölüm başlıkları (Türkçe özet /
+   Konuşma metni / Fotoğraflar) ve metinden bir alıntı. */
+
+.baglam-notu {
+  font-style: italic;
+  color: var(--text-soft);
+  border-left: 2px solid var(--accent);
+  padding-left: var(--space-sm);
+  margin: var(--space-md) 0;
+}
+
+.metin-bolum { margin-top: var(--space-lg); }
+.metin-baslik {
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border);
+}
+.metin-baslik span { color: var(--text-faint); }
+
+/* Metnin içindeki ara başlıklar: panelin soruları */
+.metin-bolum .prose h2 {
+  font-size: var(--tip-h3);
+  line-height: 1.35;
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+/* Alıntı: metinden bir cümle, iri puntoyla. main.style.css'teki blockquote'un
+   üstüne yazıyor. */
+.prose blockquote.alinti {
+  border-left: 0;
+  border-top: 2px solid var(--accent);
+  padding: var(--space-sm) 0 0;
+  margin: var(--space-md) 0;
+  font-size: var(--tip-h3);
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/* İndir + anket gibi yan yana bağlantılar */
+.baglar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-sm); margin: var(--space-sm) 0; }
