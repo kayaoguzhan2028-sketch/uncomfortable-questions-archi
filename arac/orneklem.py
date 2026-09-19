@@ -590,6 +590,9 @@ def main() -> None:
 
     # ---- ALBÜM (Güç Haritası — Toplu) -------------------------------------
     k = bul(pr, "2025-guc-haritasi-toplu")
+    # Sayfada "Toplu" yazmıyor; yerine atölyenin yapıldığı okul (G · Network):
+    # "Güç Haritası — Toplu" → "Güç Haritası - Yeditepe Üniversitesi"
+    k.baslik = k.baslik.replace(" — Toplu", f" - {k.network}")
     kisiler = [x for x in pr if x.klasor.name.startswith("2025-guc-haritasi-") and x is not k]
     figs = []
     for x in kisiler:
@@ -730,7 +733,7 @@ def liste(sira) -> None:
         "rapor.html": ("Mimarlar Ne Kadar Kazanıyor?", "Kitapçık (A4), Türkçe / English geçişi, anket bağlantısı."),
         "sunum.html": ("Mimarlık ve Eğitim Kurultayı XIII — Sunum", "Yatay slayt gösterici (16:9), küçük önizlemeler, tam ekran."),
         "yazi.html": ("Athens AKEA — Konuşma Metni", "Görselsiz, metin ağırlıklı sayfa."),
-        "album.html": ("Güç Haritası — Toplu", "Katılımcı işlerinden galeri; tıklayınca büyür."),
+        "album.html": ("Güç Haritası - Yeditepe Üniversitesi", "Katılımcı işlerinden galeri; tıklayınca büyür."),
         "gorsel.html": ("Zihin Akış Bezi — ODTÜ", "Tek büyük görsel; tıklayınca büyür, yakınlaşır."),
         "video.html": ("Ankara, 10 Ekim, 15 Temmuz: Yas, Hafıza ve Mekan", "YouTube oynatıcı."),
         "etkinlik-podcast.html": ("Podcast 06 — Müfredat Teşhiri", "Spotify oynatıcı."),
