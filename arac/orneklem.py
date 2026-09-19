@@ -216,7 +216,7 @@ def post_head(k: Kayit, label: str, h1: str | None = None, meta: str | None = No
     return f"""
     <header class="post-head">
       <p class="label" data-alan="{label_alan}">{e(label)}</p>
-      <h1 data-alan="{b_alan}">{e(h1)}</h1>
+      <h1 data-alan="{b_alan}">{e(h1).replace("/", "/<wbr>")}</h1>
 {ozet}
       <p class="meta-line" data-alan="{meta_alan(k)}">
         {meta}
@@ -240,6 +240,17 @@ def etkinlik_meta(k: Kayit) -> str:
     return " · ".join(parcalar)
 
 
+IG_ETIKET = re.compile(r"(?<![\w.])@([A-Za-z0-9_](?:[A-Za-z0-9_.]*[A-Za-z0-9_])?)")
+
+
+def ig_bagla(metin_html: str) -> str:
+    """Instagram'dan gelen metindeki @etiketler profile bağlanır, yeni sekmede
+    açılır. Metin renginde kalır (lacivert link değil), altı noktalı çizgili."""
+    return IG_ETIKET.sub(
+        lambda m: (f'<a class="ig-etiket" href="https://www.instagram.com/{m.group(1)}/" '
+                   f'target="_blank" rel="noopener">@{m.group(1)}</a>'), metin_html)
+
+
 def uzun_html(metin: str, bos: str = "Uzun yazı boş — Excel'de L sütunu doldurulunca burada görünür.") -> str:
     """Excel'deki uzun yazı → paragraflar. Her satırı 'X — Y' olan paragraf
     liste olarak basılır (tema tema içerik, katılımcı katılımcı harita)."""
@@ -255,7 +266,7 @@ def uzun_html(metin: str, bos: str = "Uzun yazı boş — Excel'de L sütunu dol
                 li.append(f"        <li><strong>{e(a)}</strong> — {e(b)}</li>")
             out.append('      <ul class="icerik-listesi">\n' + "\n".join(li) + "\n      </ul>")
         else:
-            out.append("      <p>" + "<br>\n        ".join(e(s) for s in satirlar) + "</p>")
+            out.append("      <p>" + "<br>\n        ".join(ig_bagla(e(s)) for s in satirlar) + "</p>")
     return '    <div class="prose" data-alan="L · uzun">\n' + "\n".join(out) + "\n    </div>"
 
 
@@ -425,10 +436,12 @@ def main() -> None:
 
     ev, pr = oku()
     SIRA = [  # (dosya, liste başlığı) — önceki/sonraki bağlantıları bu sırayla
-        ("fanzin.html", "Fanzin"), ("rapor.html", "Rapor"), ("sunum.html", "Sunum"),
-        ("yazi.html", "Yazı"), ("album.html", "Foto albüm"), ("gorsel.html", "Tek görsel"),
+        ("fanzin.html", "Fanzin"), ("rapor.html", "Rapor"),
+        ("album.html", "Foto albüm"), ("gorsel.html", "Tek görsel"),
         ("video.html", "Video"), ("etkinlik-podcast.html", "Etkinlik · Podcast"),
         ("etkinlik-fotograf.html", "Etkinlik · Fotoğraflı"), ("etkinlik-video.html", "Etkinlik · Videolu"),
+        ("etkinlik-cok-gunlu.html", "Etkinlik · Çok günlü"),
+        ("etkinlik-akea.html", "Etkinlik · Konferans"), ("etkinlik-kurultay.html", "Etkinlik · Kurultay"),
     ]
 
     def nav(dosya):
@@ -482,34 +495,23 @@ def main() -> None:
     govde = govde.replace("<dt>Dil</dt>\n      <dd>Türkçe</dd>\n", "", 1)
     sayfa("rapor.html", baslik, tr.ozet, "Üretim tipi: Rapor (kitapçık, iki dil)", govde, pageflip=True)
 
-    # ---- SUNUM ------------------------------------------------------------
+    # ---- SUNUM (Kurultay etkinliğinin malzemesi) --------------------------
+    # Sunum ayrı bir üretim sayfası DEĞİL: yapıldığı etkinliğin sayfasında,
+    # etkinlik yazısının altında durur. Burada sadece o bölüm hazırlanıyor.
     k = bul(pr, "2025-mimarlik-ve-egitim-kurultayi-xiii-sunum")
-    # Üretim satırında özet / uzun / tema boş; metin sunumun yapıldığı
-    # etkinliğin satırında (Etkinlikler 53: "Mimarlık ve Eğitim Kurultayı - XIII").
-    etk = bul(ev, "2025-mimarlik-ve-egitim-kurultayi-xiii")
-    k.ozet, k.uzun, k.temalar = k.ozet or etk.ozet, k.uzun or etk.uzun, k.temalar or etk.temalar
-    pptx = ham(k)[0]
-    slaytlar = pptx_slaytlari(pptx, GORSEL / "sunum-kurultay")
-    govde = (post_head(k, "Sunum", meta=f"{etkinlik_meta(etk)} · {e(etk.network)}",
-                       label_alan="D · Üretim Tipi (boş — dosya türünden: pptx)")
-             + slayt_html("sunum-slayt", "sunum-kurultay", slaytlar, "Kurultay sunumu")
-             + indir("indir-pencere", "Sunumu indir (PDF)", f"{len(slaytlar)} slayt · PowerPoint'ten PDF")
-             + "\n" + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n"
-             + uretim_kunye(k, [("Sunan", "Nihal Evirgen"),
-                                ("Biçim", f"Sunum, {len(slaytlar)} slayt, 16:9")]) + nav("sunum.html"))
-    # Metin Etkinlikler sayfasından geldiği için etiketler de onu söylesin.
-    for eski, yeni in (('"K · Özet"', '"Etkinlikler 53 · K · Özet"'),
-                       ('"L · uzun"', '"Etkinlikler 53 · L · Uzun"'),
-                       ('"E · Temalar"', '"Etkinlikler 53 · H · Temalar"'),
-                       (f'"{meta_alan(k)}"', '"Etkinlikler 53 · C · Tam Tarih · E · Şehir · F · Mekan · J · Network"')):
-        govde = govde.replace(eski, yeni)
-    sayfa("sunum.html", k.baslik, k.ozet, "Üretim tipi: Sunum (yatay slayt)", govde, swiper=True)
+    slaytlar = pptx_slaytlari(ham(k)[0], GORSEL / "sunum-kurultay")
+    sunum_bolumu = f"""
+    <section class="metin-bolum" data-alan="Etkinliğin malzemesi · Üretimler: “Kurultayı XIII — Sunum” (pptx)">
+      <h2 class="metin-baslik">Sunum <span>· Nihal Evirgen</span></h2>
+{slayt_html("sunum-slayt", "sunum-kurultay", slaytlar, "Kurultay sunumu")}
+{indir("indir-sunum", "Sunumu indir (PDF)", f"{len(slaytlar)} slayt · PowerPoint'ten PDF", "Sunum dosyası")}
+    </section>
+"""
 
-    # ---- YAZI -------------------------------------------------------------
-    # Uluslararası yayınlardaki konuşma metni kalıbı: başlık + özet, künye
-    # satırı (tarih · yer · dil · okuma süresi), bir fotoğraf, bağlam notu,
-    # Türkçe özet, orijinal metin (panel soruları ara başlık), bir alıntı,
-    # sonda fotoğraflar ve etkinliğe bağlantı.
+    # ---- KONUŞMA METNİ (AKEA etkinliğinin malzemesi) ----------------------
+    # Uluslararası yayınlardaki konuşma metni kalıbı: bağlam notu, Türkçe
+    # özet, orijinal metin (panel soruları ara başlık), bir alıntı. Ayrı
+    # sayfa değil; AKEA etkinlik sayfasında, etkinlik yazısının altında.
     k = bul(pr, "tarihsiz-athens-akea-konusma-metni")
     etk = bul(ev, "2026-akea-calisan-mimarlarin-muhendislerin")
     docx = next(p for p in ham(k) if p.suffix.lower() == ".docx")
@@ -535,58 +537,27 @@ def main() -> None:
         else:
             metin.append(f"      <p>{e(p)}</p>")
 
-    # Fotoğraflar AKEA etkinliğinin ham/ klasöründen (galeri-1/).
-    fotolar = [magick(p, GORSEL / "akea" / f"{i + 1:02}.webp", "1600x1600>", 76)
-               for i, p in enumerate(f for f in ham(etk) if f.suffix.lower() in FOTO_UZANTI)]
-    kapak = fotolar[2]
-    kapak_fig = figur("akea", kapak, "Atina, Embros Tiyatrosu — panel", "akea", "")
-    kapak_fig = kapak_fig.replace("<figure>", '<figure class="tek-gorsel" data-alan="İçerik · bir fotoğraf (etkinliğin ham/ klasöründen)">')
-    galeri = [figur("akea", w, f"Atina AKEA panelinden, fotoğraf {i + 1}", "akea", "") for i, w in enumerate(fotolar)]
-
-    meta = (f'<time datetime="{etk.tarih.iso()}">{etk.tarih.yazi()}</time> · {e(etk.sehir)} · '
-            f"İngilizce · {dakika} dk okuma")
-    govde = (post_head(k, "Konuşma metni", meta=meta)
-             + f"""
-{kapak_fig}
-
+    konusma_bolumu = f"""
     <p class="baglam-notu" data-alan="Etkinlik satırından · B · C · F (elle cümle)">
       Bu metin, {etk.tarih.yazi()} tarihinde {e(etk.sehir)}'da, {e(etk.mekan)}'nda AKEA'nın düzenlediği
       “{e(etk.baslik.replace("AKEA ", ""))}” panelinde Nihal Evirgen tarafından İngilizce olarak sunuldu.
     </p>
 
-    <section class="metin-bolum">
-      <h2 class="metin-baslik">Türkçe özet</h2>
+    <section class="metin-bolum" data-alan="Etkinliğin malzemesi · Üretimler: “Athens AKEA — Konuşma Metni” · L · uzun">
+      <h2 class="metin-baslik">Konuşma metni <span>· Nihal Evirgen · İngilizce · {dakika} dk okuma</span></h2>
+      <p class="metin-altbaslik">Türkçe özet</p>
 {uzun_html(k.uzun)}
     </section>
 
-    <!-- İÇERİK: konuşmanın kendisi. docx'teki metin düz yazı olarak girer;
+    <!-- Konuşmanın kendisi. docx'teki metin düz yazı olarak girer;
          panelin soruları ara başlık. Dosya indirtilmez. -->
     <section class="metin-bolum" lang="en">
-      <h2 class="metin-baslik">Konuşma metni <span>(İngilizce)</span></h2>
-      <div class="prose" data-alan="İçerik · docx metni (ham/ klasöründen)">
+      <p class="metin-altbaslik">Full text (English)</p>
+      <div class="prose" data-alan="docx metni (ham/ klasöründen)">
 {chr(10).join(metin)}
       </div>
     </section>
-
-    <section class="metin-bolum">
-      <h2 class="metin-baslik">Panelden fotoğraflar</h2>
-      <div class="gallery" data-alan="İçerik · etkinliğin fotoğrafları">
-{chr(10).join(galeri)}
-      </div>
-{galeri_arac(f"{len(galeri)} fotoğraf · tıklayınca büyür")}
-    </section>
-
-    <div class="baglar" data-alan="Etkinlik kaydına bağlantı">
-      <a class="source-link etkinlik-bag" href="../tr/index.html#activity">Etkinlik: {e(etk.baslik)}</a>
-    </div>
-""" + temalar_html(k) + "\n"
-             + uretim_kunye(k, [("Konuşmacı", "Nihal Evirgen"),
-                                ("Yer", f"{e(etk.mekan)}, {e(etk.sehir)}"),
-                                ("Dil", "İngilizce (Türkçe özetli)"),
-                                ("Uzunluk", f"{kelime:,} kelime · {dakika} dk".replace(",", "."))])
-             + nav("yazi.html"))
-    govde = govde.replace("<dt>Dil</dt>\n      <dd>Türkçe</dd>\n", "", 1)
-    sayfa("yazi.html", k.baslik, k.ozet, "Üretim tipi: Yazı / konuşma metni", govde, swiper=True)
+"""
 
     # ---- ALBÜM (Güç Haritası — Toplu) -------------------------------------
     k = bul(pr, "2025-guc-haritasi-toplu")
@@ -723,6 +694,80 @@ def main() -> None:
     sayfa("etkinlik-video.html", k.baslik, k.ozet, "Etkinlik: Videolu (YouTube + Instagram)", govde,
           bolum="etkinlik")
 
+    # ---- ETKİNLİK · ÇOK GÜNLÜ (Yeditepe) ----------------------------------
+    # Program, haftanın üretimlerinden kuruluyor: her üretimin tarihi bir gün.
+    # Excel'de etkinlik ↔ üretim bağı yok (T sütunundaki U.0xx numaraları
+    # üretim sayfasında karşılıksız); bağ burada ad ve tarihle kuruluyor.
+    k = bul(ev, "2025-yeditepe")
+    GUNLER = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
+    import datetime
+    program = [  # (üretim klasörü, ne yapıldı, örneklemde sayfası varsa)
+        ("2025-yeditepe-yaraticiligin-otesinde-mimarlik", "Açılış dersi · Sunum", None),
+        ("2025-yeditepe-bilginin-uretimi", "Atölye · Sunum", None),
+        ("2025-co-writing-toplu", "Atölye · Birlikte yazma", None),
+        ("2025-yeditepe-oznenin-uretimi", "Atölye · Sunum", None),
+        ("2025-guc-haritasi-toplu", "Atölye · Güç haritası", "album.html"),
+    ]
+    adlar = {x.klasor.name: x for x in pr}
+    satirlar = []
+    for klasor, ne, bag in program:
+        u = adlar[klasor]
+        gun = datetime.date(u.tarih.yil, u.tarih.ay, u.tarih.gun)
+        ad = re.sub(r"^Yeditepe — | — Toplu$", "", u.baslik)
+        baslik_html = f'<a href="{bag}">{e(ad)} →</a>' if bag else e(ad)
+        onizleme = ""
+        if klasor == "2025-guc-haritasi-toplu":
+            kucukler = sorted((GORSEL / "guc-haritasi").glob("*.webp"))[:4]
+            onizleme = ('\n          <div class="program-onizleme">' + "".join(
+                f'<img src="gorsel/guc-haritasi/{p.name}" alt="" loading="lazy">' for p in kucukler) + "</div>")
+        satirlar.append(f"""        <li>
+          <p class="program-gun"><strong>{GUNLER[gun.weekday()]}</strong> {gun.day} Ekim</p>
+          <div class="program-icerik">
+            <p class="program-ne">{e(ne)}</p>
+            <p class="program-baslik">{baslik_html}</p>{onizleme}
+          </div>
+        </li>""")
+    govde = (post_head(k, ", ".join(k.tipler), meta=etkinlik_meta(k), label_alan="G · Etkinlik Tipi")
+             + f"""
+    <!-- İÇERİK: program. Çok günlü etkinlikte gün gün ne yapıldığı; her gün
+         o gün çıkan üretime bağlanır (tarihler Üretimler sayfasının C sütunundan). -->
+    <section class="program" data-alan="İçerik · Üretimler · C · Tam Tarih + B · ad">
+      <h2 class="metin-baslik">Program</h2>
+      <ol>
+{chr(10).join(satirlar)}
+      </ol>
+    </section>
+""" + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("etkinlik-cok-gunlu.html"))
+    sayfa("etkinlik-cok-gunlu.html", k.baslik, k.ozet, "Etkinlik: Çok günlü (program + üretimler)", govde,
+          bolum="etkinlik")
+
+    # ---- ETKİNLİK + MALZEMESİ: AKEA (konuşma metni) ve Kurultay (sunum) ---
+    # Konuşma metni ve sunum etkinlik malzemesi, üretim değil: etkinlik
+    # sayfasında fotoğraflar ve etkinlik yazısının altında dururlar.
+    def etkinlik_fotolari(k: Kayit, klasor: str, grup: str) -> tuple[str, list[Path]]:
+        fotolar = [magick(p, GORSEL / klasor / f"{i + 1:02}.webp", "1600x1600>", 76)
+                   for i, p in enumerate(f for f in ham(k) if f.suffix.lower() in FOTO_UZANTI)]
+        figs = [figur(klasor, w, f"{k.baslik}, fotoğraf {i + 1}", grup, "") for i, w in enumerate(fotolar)]
+        blok = (f'    <div class="gallery" data-alan="İçerik · etkinliğin fotoğrafları (ham/ klasöründen)">\n'
+                + "\n".join(figs) + "\n    </div>\n" + galeri_arac(f"{len(figs)} fotoğraf · tıklayınca büyür") + "\n")
+        return blok, fotolar
+
+    k = bul(ev, "2026-akea-calisan-mimarlarin-muhendislerin")
+    galeri, _ = etkinlik_fotolari(k, "akea", "akea")
+    govde = (post_head(k, ", ".join(k.tipler), meta=etkinlik_meta(k), label_alan="G · Etkinlik Tipi")
+             + "\n" + galeri + uzun_html(k.uzun) + konusma_bolumu
+             + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("etkinlik-akea.html"))
+    sayfa("etkinlik-akea.html", k.baslik, k.ozet, "Etkinlik: Konferans + konuşma metni", govde,
+          bolum="etkinlik", swiper=True)
+
+    k = bul(ev, "2025-mimarlik-ve-egitim-kurultayi-xiii")
+    galeri, _ = etkinlik_fotolari(k, "kurultay", "kurultay")
+    govde = (post_head(k, ", ".join(k.tipler), meta=etkinlik_meta(k), label_alan="G · Etkinlik Tipi")
+             + "\n" + galeri + uzun_html(k.uzun) + sunum_bolumu
+             + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("etkinlik-kurultay.html"))
+    sayfa("etkinlik-kurultay.html", k.baslik, k.ozet, "Etkinlik: Kurultay + sunum (slayt)", govde,
+          bolum="etkinlik", swiper=True)
+
     # ---- LİSTE ------------------------------------------------------------
     liste(SIRA)
 
@@ -731,14 +776,15 @@ def liste(sira) -> None:
     notlar = {
         "fanzin.html": ("Rahatsız Edici Sorular Fanzin #1", "Kitapçık: PDF sayfaları çevrilerek okunur, tam ekran, indir düğmesi."),
         "rapor.html": ("Mimarlar Ne Kadar Kazanıyor?", "Kitapçık (A4), Türkçe / English geçişi, anket bağlantısı."),
-        "sunum.html": ("Mimarlık ve Eğitim Kurultayı XIII — Sunum", "Yatay slayt gösterici (16:9), küçük önizlemeler, tam ekran."),
-        "yazi.html": ("Athens AKEA — Konuşma Metni", "Görselsiz, metin ağırlıklı sayfa."),
         "album.html": ("Güç Haritası - Yeditepe Üniversitesi", "Katılımcı işlerinden galeri; tıklayınca büyür."),
         "gorsel.html": ("Zihin Akış Bezi — ODTÜ", "Tek büyük görsel; tıklayınca büyür, yakınlaşır."),
         "video.html": ("Ankara, 10 Ekim, 15 Temmuz: Yas, Hafıza ve Mekan", "YouTube oynatıcı."),
         "etkinlik-podcast.html": ("Podcast 06 — Müfredat Teşhiri", "Spotify oynatıcı."),
         "etkinlik-fotograf.html": ("ARCH302 Sunum ve Jüri", "Süreç aşamalarına bölünmüş fotoğraflar."),
         "etkinlik-video.html": ("Venedik Bienali — Mimarlık İşçileri Buluşması", "YouTube + Instagram bağlantısı."),
+        "etkinlik-cok-gunlu.html": ("Yeditepe — 20–24 Ekim 2025", "Beş günlük hafta, gün gün program; her gün o günün üretimine bağlanır."),
+        "etkinlik-akea.html": ("AKEA — Atina, 8 Şubat 2026", "Fotoğraflar, etkinlik yazısı, altında konuşma metni (Türkçe özet + İngilizce tam metin)."),
+        "etkinlik-kurultay.html": ("Mimarlık ve Eğitim Kurultayı XIII", "Fotoğraflar, etkinlik yazısı, altında sunumun slaytları (tam ekran)."),
     }
 
     def li(dosya, tip):

@@ -616,5 +616,73 @@
   color: var(--text);
 }
 
+/* PROGRAM (çok günlü etkinlik) ---------------------------------------------
+   Solda gün, sağda o gün ne yapıldığı ve çıkan üretim. */
+
+.program { margin: var(--space-md) 0; }
+.program ol { list-style: none; margin: 0; padding: 0; }
+.program li {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border);
+}
+.program p { margin: 0; }
+.program-gun {
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+.program-gun strong { display: block; color: var(--text); font-weight: 500; }
+.program-ne {
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.program-baslik { font-size: var(--tip-h3); font-weight: 500; line-height: 1.35; margin-top: 0.15em; }
+.program-baslik a { text-decoration: none; }
+.program-baslik a:hover { color: var(--accent); }
+.program-onizleme {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+.program-onizleme img {
+  width: 4.5rem;
+  height: 3.2rem;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+  .program li { grid-template-columns: 1fr; gap: 0.3rem; }
+  .program-gun strong { display: inline; margin-right: 0.3em; }
+}
+
+/* Metindeki Instagram @etiketleri: metin renginde, altı noktalı; üstüne
+   gelince vurgu rengi. (main.style.css'te .prose a düz alt çizgili.) */
+.prose a.ig-etiket {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--text-faint);
+  text-underline-offset: 0.2em;
+}
+.prose a.ig-etiket:hover { color: var(--accent); text-decoration-color: var(--accent); }
+
+/* Etkinlik malzemesi bölümünün içindeki küçük başlık (Türkçe özet / Full text) */
+.metin-altbaslik {
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+  font-weight: 500;
+  color: var(--text-soft);
+  margin: 0 0 var(--space-xs);
+}
+.metin-bolum + .metin-bolum { margin-top: var(--space-md); }
+.metin-bolum .slayt { margin-top: 0; }
+
 /* İndir + anket gibi yan yana bağlantılar */
 .baglar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-sm); margin: var(--space-sm) 0; }
