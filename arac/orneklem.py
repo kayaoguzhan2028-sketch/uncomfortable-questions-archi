@@ -7,8 +7,9 @@
 
 Çıktı orneklem/ altına:
     index.html              örneklerin listesi
-    fanzin.html  rapor.html  sunum.html  yazi.html  album.html  gorsel.html
-    video.html   etkinlik-podcast.html  etkinlik-fotograf.html  etkinlik-video.html
+    fanzin.html  rapor.html  album.html  gorsel.html  video.html          (üretimler)
+    etkinlik-podcast.html  etkinlik-fotograf.html  etkinlik-video.html
+    etkinlik-akea.html  etkinlik-kurultay.html                            (etkinlikler)
     gorsel/<ad>/…webp       sayfaların kullandığı görseller (ham/ klasörlerinden)
     lib/                    StPageFlip ve Swiper — internetten çekilmez
     orneklem.css / .js      örneklemin ek stili ve scripti
@@ -440,7 +441,6 @@ def main() -> None:
         ("album.html", "Foto albüm"), ("gorsel.html", "Tek görsel"),
         ("video.html", "Video"), ("etkinlik-podcast.html", "Etkinlik · Podcast"),
         ("etkinlik-fotograf.html", "Etkinlik · Fotoğraflı"), ("etkinlik-video.html", "Etkinlik · Videolu"),
-        ("etkinlik-cok-gunlu.html", "Etkinlik · Çok günlü"),
         ("etkinlik-akea.html", "Etkinlik · Konferans"), ("etkinlik-kurultay.html", "Etkinlik · Kurultay"),
     ]
 
@@ -694,53 +694,6 @@ def main() -> None:
     sayfa("etkinlik-video.html", k.baslik, k.ozet, "Etkinlik: Videolu (YouTube + Instagram)", govde,
           bolum="etkinlik")
 
-    # ---- ETKİNLİK · ÇOK GÜNLÜ (Yeditepe) ----------------------------------
-    # Program, haftanın üretimlerinden kuruluyor: her üretimin tarihi bir gün.
-    # Excel'de etkinlik ↔ üretim bağı yok (T sütunundaki U.0xx numaraları
-    # üretim sayfasında karşılıksız); bağ burada ad ve tarihle kuruluyor.
-    k = bul(ev, "2025-yeditepe")
-    GUNLER = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
-    import datetime
-    program = [  # (üretim klasörü, ne yapıldı, örneklemde sayfası varsa)
-        ("2025-yeditepe-yaraticiligin-otesinde-mimarlik", "Açılış dersi · Sunum", None),
-        ("2025-yeditepe-bilginin-uretimi", "Atölye · Sunum", None),
-        ("2025-co-writing-toplu", "Atölye · Birlikte yazma", None),
-        ("2025-yeditepe-oznenin-uretimi", "Atölye · Sunum", None),
-        ("2025-guc-haritasi-toplu", "Atölye · Güç haritası", "album.html"),
-    ]
-    adlar = {x.klasor.name: x for x in pr}
-    satirlar = []
-    for klasor, ne, bag in program:
-        u = adlar[klasor]
-        gun = datetime.date(u.tarih.yil, u.tarih.ay, u.tarih.gun)
-        ad = re.sub(r"^Yeditepe — | — Toplu$", "", u.baslik)
-        baslik_html = f'<a href="{bag}">{e(ad)} →</a>' if bag else e(ad)
-        onizleme = ""
-        if klasor == "2025-guc-haritasi-toplu":
-            kucukler = sorted((GORSEL / "guc-haritasi").glob("*.webp"))[:4]
-            onizleme = ('\n          <div class="program-onizleme">' + "".join(
-                f'<img src="gorsel/guc-haritasi/{p.name}" alt="" loading="lazy">' for p in kucukler) + "</div>")
-        satirlar.append(f"""        <li>
-          <p class="program-gun"><strong>{GUNLER[gun.weekday()]}</strong> {gun.day} Ekim</p>
-          <div class="program-icerik">
-            <p class="program-ne">{e(ne)}</p>
-            <p class="program-baslik">{baslik_html}</p>{onizleme}
-          </div>
-        </li>""")
-    govde = (post_head(k, ", ".join(k.tipler), meta=etkinlik_meta(k), label_alan="G · Etkinlik Tipi")
-             + f"""
-    <!-- İÇERİK: program. Çok günlü etkinlikte gün gün ne yapıldığı; her gün
-         o gün çıkan üretime bağlanır (tarihler Üretimler sayfasının C sütunundan). -->
-    <section class="program" data-alan="İçerik · Üretimler · C · Tam Tarih + B · ad">
-      <h2 class="metin-baslik">Program</h2>
-      <ol>
-{chr(10).join(satirlar)}
-      </ol>
-    </section>
-""" + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("etkinlik-cok-gunlu.html"))
-    sayfa("etkinlik-cok-gunlu.html", k.baslik, k.ozet, "Etkinlik: Çok günlü (program + üretimler)", govde,
-          bolum="etkinlik")
-
     # ---- ETKİNLİK + MALZEMESİ: AKEA (konuşma metni) ve Kurultay (sunum) ---
     # Konuşma metni ve sunum etkinlik malzemesi, üretim değil: etkinlik
     # sayfasında fotoğraflar ve etkinlik yazısının altında dururlar.
@@ -782,7 +735,6 @@ def liste(sira) -> None:
         "etkinlik-podcast.html": ("Podcast 06 — Müfredat Teşhiri", "Spotify oynatıcı."),
         "etkinlik-fotograf.html": ("ARCH302 Sunum ve Jüri", "Süreç aşamalarına bölünmüş fotoğraflar."),
         "etkinlik-video.html": ("Venedik Bienali — Mimarlık İşçileri Buluşması", "YouTube + Instagram bağlantısı."),
-        "etkinlik-cok-gunlu.html": ("Yeditepe — 20–24 Ekim 2025", "Beş günlük hafta, gün gün program; her gün o günün üretimine bağlanır."),
         "etkinlik-akea.html": ("AKEA — Atina, 8 Şubat 2026", "Fotoğraflar, etkinlik yazısı, altında konuşma metni (Türkçe özet + İngilizce tam metin)."),
         "etkinlik-kurultay.html": ("Mimarlık ve Eğitim Kurultayı XIII", "Fotoğraflar, etkinlik yazısı, altında sunumun slaytları (tam ekran)."),
     }
