@@ -8,7 +8,8 @@
 Çıktı orneklem/ altına:
     index.html              örneklerin listesi
     fanzin.html  rapor.html  album.html  gorsel.html  video.html          (üretimler)
-    etkinlik-podcast.html  etkinlik-fotograf.html  etkinlik-video.html
+    podcast.html                                              (üretim, Spotify)
+    etkinlik-fotograf.html  etkinlik-video.html
     etkinlik-akea.html  etkinlik-kurultay.html                            (etkinlikler)
     gorsel/<ad>/…webp       sayfaların kullandığı görseller (ham/ klasörlerinden)
     lib/                    StPageFlip ve Swiper — internetten çekilmez
@@ -541,7 +542,7 @@ def main() -> None:
     SIRA = [  # (dosya, liste başlığı) — önceki/sonraki bağlantıları bu sırayla
         ("fanzin.html", "Fanzin"), ("rapor.html", "Rapor"),
         ("album.html", "Foto albüm"), ("gorsel.html", "Tek görsel"),
-        ("video.html", "Video"), ("etkinlik-podcast.html", "Etkinlik · Podcast"),
+        ("video.html", "Video"), ("podcast.html", "Üretim · Podcast"), 
         ("etkinlik-fotograf.html", "Etkinlik · Fotoğraflı"), ("etkinlik-video.html", "Etkinlik · Videolu"),
         ("etkinlik-akea.html", "Etkinlik · Konferans"), ("etkinlik-kurultay.html", "Etkinlik · Kurultay"),
         ("duyuru.html", "Duyuru · Tek etkinlik"), ("duyurular.html", "Duyuru · Liste"),
@@ -719,8 +720,8 @@ def main() -> None:
              + nav("video.html"))
     sayfa("video.html", ad, k.ozet, "Üretim tipi: Video (YouTube)", govde)
 
-    # ---- ETKİNLİK · PODCAST -----------------------------------------------
-    k = bul(ev, "2025-podcast-06-mufredat-teshiri")
+    # ---- ÜRETİM · PODCAST -------------------------------------------------
+    k = bul(pr, "2025-podcast-06-mufredat-teshiri")
     bolum = k.baslik.rsplit(" - ", 1)[-1]                 # "06-Müfredat Teşhiri: Sezin Sarıca-Ülkü Karakaş"
     no, _, kalan = bolum.partition("-")
     konu, _, kisiler_ = kalan.partition(":")
@@ -742,8 +743,8 @@ def main() -> None:
       Oynatmazsa
       <a href="{e(k.spotify_link)}">Spotify'da dinle ↗</a>
     </p>
-""" + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("etkinlik-podcast.html"))
-    sayfa("etkinlik-podcast.html", k.baslik, k.ozet, "Etkinlik: Podcast (Spotify)", govde, bolum="etkinlik")
+""" + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("podcast.html"))
+    sayfa("podcast.html", k.baslik, k.ozet, "Üretim tipi: Podcast (Spotify)", govde)
 
     # ---- ETKİNLİK · FOTOĞRAFLI (ARCH302) ----------------------------------
     k = bul(ev, "2025-arch302-sunum-ve-juri")
@@ -908,7 +909,7 @@ def liste(sira) -> None:
         "album.html": ("Güç Haritası - Yeditepe Üniversitesi", "Katılımcı işlerinden galeri; tıklayınca büyür."),
         "gorsel.html": ("Zihin Akış Bezi — ODTÜ", "Tek büyük görsel; tıklayınca büyür, yakınlaşır."),
         "video.html": ("Ankara, 10 Ekim, 15 Temmuz: Yas, Hafıza ve Mekan", "YouTube oynatıcı."),
-        "etkinlik-podcast.html": ("Podcast 06 — Müfredat Teşhiri", "Spotify oynatıcı."),
+        "podcast.html": ("Podcast 06 — Müfredat Teşhiri", "Spotify oynatıcı."),
         "etkinlik-fotograf.html": ("ARCH302 Sunum ve Jüri", "Süreç aşamalarına bölünmüş fotoğraflar."),
         "etkinlik-video.html": ("Venedik Bienali — Mimarlık İşçileri Buluşması", "YouTube + Instagram bağlantısı."),
         "etkinlik-akea.html": ("AKEA — Atina, 8 Şubat 2026", "Fotoğraflar, etkinlik yazısı, altında konuşma metni (Türkçe özet + İngilizce tam metin)."),

@@ -364,6 +364,22 @@ def oku(excel: Path = EXCEL) -> tuple[list[Kayit], list[Kayit]]:
             podcast_link=_link(r.get("P", "")),
         ))
 
+    # Podcast bölümleri Excel'de etkinlik satırı olarak girilmiş. Podcast bir
+    # etkinlik değil bir ÜRETİM: sonradan dinlenen bir kayıt, olup biten bir
+    # buluşma değil. Excel'e dokunmak yerine burada taşınıyorlar — Excel'in
+    # dağınıklığı bu modülde temizleniyor (modül başlığına bak). Excel'de
+    # tipleri düzeltilirse aşağıdaki liste kendiliğinden boşalır, kod durur.
+    #
+    # Sadece TEK tipi "Podcast" olanlar taşınıyor. Hem podcast hem başka bir
+    # şey olan bir kayıt gerçekten de iki şey birden olurdu; öylesi yok.
+    podcastler = [k for k in etkinlikler if k.tipler == ["Podcast"]]
+    for k in podcastler:
+        etkinlikler.remove(k)
+        k.tur = "uretim"
+        # Etkinlikte Spotify bağlantısı O sütunundan, üretimde P'den okunuyor.
+        k.podcast_link = k.podcast_link or k.spotify_link
+        uretimler.append(k)
+
     for grup in (etkinlikler, uretimler):
         _slug_ata(grup)
         grup.sort(key=lambda k: k.tarih.sirala(), reverse=True)
