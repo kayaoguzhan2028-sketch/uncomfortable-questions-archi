@@ -561,6 +561,22 @@ def alt(dil: str, derinlik: int) -> str:
 """
 
 
+def gosterim_basligi(kayit) -> str:
+    """Kartta ve sayfada görünecek ad.
+
+    Toplu yapılan işlerin katılımcı satırları .ods'de karartılı: ayrı
+    sayfaları yok, hepsi baştaki satırda toplanıyor. O satır Excel'de
+    "— Toplu" diye işaretli, ama "Toplu" kolektifin kendi not tutma
+    sözcüğü; ziyaretçiye bir şey söylemiyor. Yerine işin yapıldığı yer
+    yazılıyor: "Güç Haritası — Toplu" -> "Güç Haritası — Yeditepe
+    Üniversitesi". Klasör adı ve adres değişmiyor, sadece görünen ad.
+    """
+    ad = kayit.baslik
+    if ad.endswith("— Toplu") and kayit.network:
+        ad = ad[:-len("— Toplu")].rstrip() + f" — {kayit.network}"
+    return ad
+
+
 def kart(dil, kayit, derinlik: int) -> str:
     """Izgaradaki tek kayıt.
 
@@ -587,7 +603,7 @@ def kart(dil, kayit, derinlik: int) -> str:
     return f"""      <li class="oge">
         <a href="{sayfa}">
           <span class="oge-gorsel">{ic}</span>
-          <span class="oge-tip">{html.escape(kayit.baslik)}
+          <span class="oge-tip">{html.escape(gosterim_basligi(kayit))}
             <span class="oge-ok" aria-hidden="true">→</span></span>
           <span class="oge-tarih">{html.escape(kayit.tarih.yazi())}</span>{tema_satiri}
         </a>
