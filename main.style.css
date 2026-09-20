@@ -726,19 +726,21 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .tema-liste { list-style: none; padding: 0 var(--wrap-ic) var(--space-lg);
               border-top: 1px solid var(--border); }
 
-.tema-satir {
+.tema-satir { border-bottom: 1px solid var(--border); }
+
+/* Satır artık <details>: aşağı doğru açılıyor, ayrı sayfa yok.
+   Eskiden üstte bu büyük liste, altında aynı temaların küçük puntolu bir
+   kopyası vardı; küçük olan okunmuyordu, ikisi birleşti. */
+.tema-satir > details > summary {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--space-sm);
   align-items: baseline;
   padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  list-style: none;
 }
-
-.tema-satir a {
-  display: contents;
-  text-decoration: none;
-}
+.tema-satir > details > summary::-webkit-details-marker { display: none; }
 
 .tema-no {
   font-size: var(--tip-h2);
@@ -753,12 +755,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   line-height: var(--leading-tight);
   letter-spacing: -0.02em;
   font-stretch: 115%;                /* başlıkla aynı genişlikte dursun */
-  color: var(--text-faint);          /* ikinci ton */
   transition: color 0.2s;
 }
-
-/* Başlığın ilk parçası tam kontrastta — şemadaki "ARCHI" / "TECTURE &" ayrımı */
-.tema-ad b { font-weight: inherit; color: var(--text); }
 
 .tema-ok {
   font-size: var(--tip-h3);
@@ -766,9 +764,30 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
   transition: transform 0.2s, color 0.2s;
 }
 
-.tema-satir:hover .tema-ad,
-.tema-satir:hover .tema-ad b { color: var(--accent); }
+.tema-satir:hover .tema-ad { color: var(--accent); }
 .tema-satir:hover .tema-ok { color: var(--accent); transform: translateX(6px); }
+/* Açıkken ok aşağıyı gösterir */
+.tema-satir > details[open] > summary .tema-ok { transform: rotate(90deg); }
+
+/* Açılan gövde. Metin okuma kolonunda, numaranın hizasında başlıyor —
+   eleştiri alan küçük punto burada tam boyuta çıkıyor. */
+.tema-govde {
+  padding: 0 0 var(--space-md);
+  max-width: var(--kolon-yazi);
+}
+.tema-govde p { font-size: var(--tip-govde); line-height: var(--leading-body); }
+.tema-kapak {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  margin-bottom: var(--space-sm);
+}
+.tema-kayitlar { list-style: none; margin-top: var(--space-xs); }
+.tema-kayitlar li { padding: 0.25em 0; font-size: var(--tip-govde); }
+.tema-kayitlar a { text-decoration: none; color: var(--text-soft); }
+.tema-kayitlar a:hover { color: var(--accent); }
 
 
 /* AÇILIŞ BAŞLIĞI ---------------------------------------------------------

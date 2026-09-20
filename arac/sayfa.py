@@ -334,6 +334,13 @@ TEMALAR = [
     ("Müfredat Teşhiri", "mufredat-teshiri"),
     ("Sınıf ve Emek", "sinif-ve-emek"),
     ("Toplumsal Cinsiyet", "toplumsal-cinsiyet"),
+    ("Örgütlenme", "orgutlenme"),
+    ("Toplumsal Hareketler", "toplumsal-hareketler"),
+    ("Kamusallık", "kamusallik"),
+    ("Katılımcılık", "katilimcilik"),
+    ("Kapsayıcılık", "kapsayicilik"),
+    ("Kent", "kent"),
+    ("Mekan", "mekan"),
 ]
 
 # 2024 listesindeki rahatsız edici sorular. Beş tema sabit bir döngüyle
@@ -610,27 +617,41 @@ def kart(dil, kayit, derinlik: int) -> str:
       </li>"""
 
 
-def tema_akordeonu(dil, ev, pr, derinlik):
-    """Temaların açılır listesi. Gerçek kayıtlara açılıyor: '?tema=' gibi
-    çalışmayan bir filtre bağlantısı kullanmıyoruz — site JavaScript'siz
-    de tam çalışsın diye."""
+def tema_akordeonu(dil, ev, pr, derinlik, kimlikli: bool = True):
+    """Temaların listesi. Büyük satır AÇILIR: 01 ARCHITECTURE & PEDAGOGY'ye
+    basınca temanın Türkçe adı, metni ve kayıtları aşağı doğru açılıyor.
+
+    Önce iki ayrı şey vardı: üstte bu büyük liste, aşağıda aynı temaların
+    küçük puntolu bir açılır listesi. Küçük olanın puntosu eleştiri aldı;
+    ikisi birleşti. Türkçe ad artık satırın altında küçük değil, açılan
+    gövdenin başında, okunur boyutta.
+
+    Temaya ayrı sayfa açmıyoruz: aynı sayfada, yerinde açılıyor. <details>
+    ile, yani JavaScript'siz ve klavyeyle de.
+
+    kimlikli: satırlara id verilsin mi. Liste sayfada iki kere basılıyor
+    (ana akış ve temalar görünümü); id'ler bir kere olmalı, yoksa
+    #tema-... çapası hangisine gideceğini bilemez."""
     k = kac(derinlik)
-    p = ['      <div class="akordeon">']
-    for (ad, slug), (no, _b, _i, _s) in zip(TEMALAR, TEMA_GORUNEN):
+    p = ['    <ul class="tema-liste">']
+    for sira, (ad, slug) in enumerate(TEMALAR, 1):
         e = [x for x in ev if ad in x.temalar]
         u = [x for x in pr if ad in x.temalar]
-        # Summary'deki küçük kapak: temanın KENDİ görseli yok — o temadaki
-        # en yeni kaydın kapağını gösteriyoruz. Yani temayı temsil etmiyor,
-        # "bu temada en son şu yapıldı" diyor. Temaya ait bir görsel
-        # üretilirse burası ona bakacak şekilde değişir.
+        kimlik = f' id="tema-{slug}"' if kimlikli else ""
+        p.append(f'      <li class="tema-satir">')
+        p.append(f'        <details{kimlik}>')
+        p.append(f'          <summary><span class="tema-no">{sira:02d}</span>'
+                 f'<span class="tema-ad">{html.escape(ad)}</span>'
+                 f'<span class="tema-ok" aria-hidden="true">→</span></summary>')
+        p.append('          <div class="tema-govde">')
+        # Temanın KENDİ görseli yok — o temadaki en yeni kaydın kapağı
+        # duruyor. Temayı temsil etmiyor, "bu temada en son şu yapıldı" diyor.
         kapakli = next((x for x in (e + u)
                         if (KOK / x.kaynak / "kapak.webp").exists()), None)
-        kucuk = (f'<span class="akordeon-kapak">'
-                 f'<img src="{k}{kapakli.kaynak.as_posix()}/kapak.webp" alt="" loading="lazy">'
-                 f'</span>' if kapakli else '<span class="akordeon-kapak"></span>')
-        p.append(f'        <details id="tema-{slug}">')
-        p.append(f'          <summary>{kucuk}<span>{no} &nbsp; {html.escape(ad)}</span></summary>')
-        p.append('          <div class="akordeon-govde">')
+        if kapakli:
+            p.append(f'            <img class="tema-kapak" '
+                     f'src="{k}{kapakli.kaynak.as_posix()}/kapak.webp" alt="" loading="lazy">')
+
         metin = TEMA_METIN.get(ad, "")
         if metin:
             p.append(notlu(dil, f'            <p>{metin}</p>'))
@@ -638,7 +659,7 @@ def tema_akordeonu(dil, ev, pr, derinlik):
                  f' &nbsp;·&nbsp; {len(u)} {S(dil, "uretimler")}</p>')
         hepsi = (e + u)[:10]
         if hepsi:
-            p.append('            <ul>')
+            p.append('            <ul class="tema-kayitlar">')
             for x in hepsi:
                 p.append(f'              <li><a href="{k}{dil}/{sayfa_yolu(x)}">'
                          f'{html.escape(x.tarih.yazi())} — '
@@ -648,7 +669,8 @@ def tema_akordeonu(dil, ev, pr, derinlik):
             p.append(f'            <p class="metin-ikincil">{S(dil, "tema_bos")}</p>')
         p.append('          </div>')
         p.append('        </details>')
-    p.append('      </div>')
+        p.append('      </li>')
+    p.append('    </ul>')
     return "\n".join(p)
 
 
@@ -804,13 +826,6 @@ AG = [
 # Uydurma kurum adı koymuyoruz. Liste gelince buraya eklenecek, tek satır.
 AG_YEREL = []
 
-TEMA_GORUNEN = [
-    ("01", "ARCHI", "TECTURE &amp; PEDAGOGY", "mimarlik-ve-pedagoji"),
-    ("02", "STUDIO", " CULTURE", "studyo-kulturu"),
-    ("03", "CURRIC", "ULUM EXPOSURE", "mufredat-teshiri"),
-    ("04", "CLASS", " &amp; LABOR", "sinif-ve-emek"),
-    ("05", "GEN", "DER", "toplumsal-cinsiyet"),
-]
 
 # Manifesto bölümleri: (başlık, küçük, büyük, küçük)
 MANIFESTO = [
@@ -914,19 +929,17 @@ def ag_listesi(dil) -> str:
     return "\n".join(p)
 
 
-def tema_listesi(dil, derinlik: int) -> str:
-    k = kac(derinlik)
-    p = ['    <div class="blok">',
-         f'    <div><h2 class="blok-etiket">{S(dil, "b_temalar")}</h2>'
-         f'<p class="blok-not">{S(dil, "tema_not")}</p></div>',
-         '    <ul class="tema-liste">']
-    for no, kalin, ince, slug in TEMA_GORUNEN:
-        p.append(f'      <li class="tema-satir"><a href="#tema-{slug}">'
-                 f'<span class="tema-no">{no}</span>'
-                 f'<span class="tema-ad"><b>{kalin}</b>{ince}</span>'
-                 f'<span class="tema-ok" aria-hidden="true">→</span></a></li>')
-    p += ['    </ul>', '    </div>']
-    return "\n".join(p)
+def tema_bolumu(dil, ev, pr, derinlik: int, kimlikli: bool = True) -> str:
+    """Ana akıştaki temalar bölümü: solda başlık ve not, sağda açılır liste."""
+    return "\n".join([
+        '    <div class="blok">',
+        f'    <div><h2 class="blok-etiket">{S(dil, "b_temalar")}</h2>'
+        f'<p class="blok-not">{S(dil, "tema_not")}</p></div>',
+        '    <div>',
+        tema_akordeonu(dil, ev, pr, derinlik, kimlikli),
+        '    </div>',
+        '    </div>',
+    ])
 
 
 def manifesto_bolumu(dil):
@@ -1075,7 +1088,7 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     p.append('  </section>')
 
     # Temalar — 5 satır, devamı görünümde
-    p.append(tema_listesi(dil, derinlik))
+    p.append(tema_bolumu(dil, ev, pr, derinlik))
     p.append(ozet_bagi(dil, "temalar", "tema_hepsi"))
 
     # Sorular
@@ -1120,9 +1133,9 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
 
     # ===================== GÖRÜNÜMLER =====================
     tema_ic = "\n".join([
-        tema_listesi(dil, derinlik),
+
         '    <div class="blok">', '      <div></div>', '      <div>',
-        tema_akordeonu(dil, ev, pr, derinlik),
+        tema_akordeonu(dil, ev, pr, derinlik, kimlikli=False),
         '      </div>', '    </div>',
     ])
     p.append(gorunum("temalar", S(dil, "b_temalar"), tema_ic, dil, k))
