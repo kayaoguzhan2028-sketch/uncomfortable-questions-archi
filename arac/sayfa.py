@@ -623,7 +623,7 @@ def kart(dil, kayit, derinlik: int) -> str:
       </li>"""
 
 
-def tema_akordeonu(dil, ev, pr, derinlik, kimlikli: bool = True):
+def tema_akordeonu(dil, ev, pr, derinlik, kimlikli: bool = True, kac_tane: int = 0):
     """Temaların listesi. Büyük satır AÇILIR: 01 ARCHITECTURE & PEDAGOGY'ye
     basınca temanın Türkçe adı, metni ve kayıtları aşağı doğru açılıyor.
 
@@ -637,10 +637,16 @@ def tema_akordeonu(dil, ev, pr, derinlik, kimlikli: bool = True):
 
     kimlikli: satırlara id verilsin mi. Liste sayfada iki kere basılıyor
     (ana akış ve temalar görünümü); id'ler bir kere olmalı, yoksa
-    #tema-... çapası hangisine gideceğini bilemez."""
+    #tema-... çapası hangisine gideceğini bilemez. Çapalar tam listede,
+    yani görünümde duruyor.
+
+    kac_tane: kaç tema basılacak. Ana sayfa kurucu BEŞ temayı gösteriyor,
+    altındaki bağlantı on ikisinin tamamına açılan görünüme gidiyor.
+    0 = hepsi."""
     k = kac(derinlik)
     p = ['    <ul class="tema-liste">']
-    for sira, (ad, slug) in enumerate(TEMALAR, 1):
+    liste = TEMALAR[:kac_tane] if kac_tane else TEMALAR
+    for sira, (ad, slug) in enumerate(liste, 1):
         e = [x for x in ev if ad in x.temalar]
         u = [x for x in pr if ad in x.temalar]
         kimlik = f' id="tema-{slug}"' if kimlikli else ""
@@ -1091,8 +1097,11 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     # Temalar — ana akışta SADECE başlık, not ve bağlantı. On iki temanın
     # listesi yalnızca temalar görünümünde; ana sayfa onu taşımıyor.
     p.append('  <div class="blok">')
-    p.append(f'    <div><h2 class="blok-etiket">{S(dil, "b_temalar")}</h2></div>')
-    p.append(f'    <div><p class="tema-giris">{S(dil, "tema_not")}</p></div>')
+    p.append(f'    <div><h2 class="blok-etiket">{S(dil, "b_temalar")}</h2>'
+             f'<p class="blok-not">{S(dil, "tema_not")}</p></div>')
+    p.append('    <div>')
+    p.append(tema_akordeonu(dil, ev, pr, derinlik, kimlikli=False, kac_tane=5))
+    p.append('    </div>')
     p.append('  </div>')
     p.append(ozet_bagi(dil, "temalar", "tema_hepsi"))
 
