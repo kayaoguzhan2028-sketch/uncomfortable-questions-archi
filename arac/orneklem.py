@@ -9,7 +9,7 @@
     index.html              örneklerin listesi
     fanzin.html  rapor.html  album.html  gorsel.html  video.html          (üretimler)
     podcast.html                                              (üretim, Spotify)
-    etkinlik-fotograf.html  etkinlik-video.html
+    etkinlik-video.html
     etkinlik-akea.html  etkinlik-kurultay.html                            (etkinlikler)
     gorsel/<ad>/…webp       sayfaların kullandığı görseller (ham/ klasörlerinden)
     lib/                    StPageFlip ve Swiper — internetten çekilmez
@@ -47,6 +47,11 @@ e = html.escape
 DIL_ADI = {"TR": "Türkçe", "EN": "İngilizce", "TR-EN": "Türkçe, İngilizce"}
 YAZAR_ADI = {"UQA": "Mimarlıkta Rahatsız Edici Sorular"}
 FOTO_UZANTI = {".jpg", ".jpeg", ".png", ".heic", ".webp"}
+
+# Şimdilik yayınlanmayacak örnekler. Kodları duruyor; sadece
+# üretilmiyor ve listede görünmüyorlar. Geri almak için buradan çıkar,
+# scripti çalıştır — sayfa ve görselleri yeniden oluşur.
+YAYIN_DISI = {"etkinlik-fotograf.html"}   # ARCH302 sunum ve jüri
 
 
 # --------------------------------------------------------------------------
@@ -529,7 +534,7 @@ def main() -> None:
         ("fanzin.html", "Fanzin"), ("rapor.html", "Rapor"),
         ("album.html", "Foto albüm"), ("gorsel.html", "Tek görsel"),
         ("video.html", "Video"), ("podcast.html", "Üretim · Podcast"), 
-        ("etkinlik-fotograf.html", "Etkinlik · Fotoğraflı"), ("etkinlik-video.html", "Etkinlik · Videolu"),
+        ("etkinlik-video.html", "Etkinlik · Videolu"),
         ("etkinlik-akea.html", "Etkinlik · Konferans"), ("etkinlik-kurultay.html", "Etkinlik · Kurultay"),
         ("duyuru.html", "Duyuru · Tek etkinlik"), ("duyurular.html", "Duyuru · Liste"),
     ]
@@ -729,39 +734,40 @@ def main() -> None:
     sayfa("podcast.html", k.baslik, k.ozet, "Üretim tipi: Podcast (Spotify)", govde)
 
     # ---- ETKİNLİK · FOTOĞRAFLI (ARCH302) ----------------------------------
-    k = bul(ev, "2025-arch302-sunum-ve-juri")
-    asamalar = {}
-    for dosya in ham(k):
-        if dosya.suffix.lower() in FOTO_UZANTI:
-            asamalar.setdefault(dosya.parent.name, []).append(dosya)
-    bloklar = []
-    for klasor in sorted(asamalar):
-        # "02-Prejury-24.04.25" → ("Prejury", 24.04.2025)
-        m = re.match(r"\d+-(.*)-(\d{2})\.(\d{2})\.(\d{2})$", klasor)
-        ad, tarih = (m.group(1), f"{int(m.group(2))}.{m.group(3)}.20{m.group(4)}") if m else (klasor, "")
-        from veri import tarih_coz
-        tarih = tarih_coz(tarih).yazi() if tarih else ""
-        figs = []
-        for i, dosya in enumerate(asamalar[klasor]):
-            w = magick(dosya, GORSEL / "arch302" / f"{klasor[:2]}-{i + 1:02}.webp", "1400x1400>", 74)
-            figs.append(figur("arch302", w, f"{ad}, fotoğraf {i + 1}", "arch302", f"{ad} — {i + 1}"))
-        bloklar.append(f"""
-    <section class="asama">
-      <h2>{e(ad)}</h2>
-      <p class="asama-tarih">{tarih}</p>
-      <div class="gallery">
-{chr(10).join(figs)}
-      </div>
-  {galeri_arac(f"{len(figs)} fotoğraf")}
-    </section>""")
-    govde = (post_head(k, ", ".join(k.tipler), meta=etkinlik_meta(k), label_alan="G · Etkinlik Tipi")
-             + "\n    <!-- İÇERİK: fotoğraflar, ham/ içindeki alt klasörlere (süreç aşamalarına) göre.\n"
-               "         Klasör adı: 02-Prejury-24.04.25 → başlık \"Prejury\", tarih 24 Nisan 2025. -->\n"
-             + '    <div data-alan="İçerik · ham/ alt klasörleri = aşamalar">'
-             + "".join(bloklar) + "\n    </div>\n"
-             + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("etkinlik-fotograf.html"))
-    sayfa("etkinlik-fotograf.html", k.baslik, k.ozet, "Etkinlik: Fotoğraflı (süreç aşamaları)", govde,
-          bolum="etkinlik", swiper=True)
+    if "etkinlik-fotograf.html" not in YAYIN_DISI:
+      k = bul(ev, "2025-arch302-sunum-ve-juri")
+      asamalar = {}
+      for dosya in ham(k):
+          if dosya.suffix.lower() in FOTO_UZANTI:
+              asamalar.setdefault(dosya.parent.name, []).append(dosya)
+      bloklar = []
+      for klasor in sorted(asamalar):
+          # "02-Prejury-24.04.25" → ("Prejury", 24.04.2025)
+          m = re.match(r"\d+-(.*)-(\d{2})\.(\d{2})\.(\d{2})$", klasor)
+          ad, tarih = (m.group(1), f"{int(m.group(2))}.{m.group(3)}.20{m.group(4)}") if m else (klasor, "")
+          from veri import tarih_coz
+          tarih = tarih_coz(tarih).yazi() if tarih else ""
+          figs = []
+          for i, dosya in enumerate(asamalar[klasor]):
+              w = magick(dosya, GORSEL / "arch302" / f"{klasor[:2]}-{i + 1:02}.webp", "1400x1400>", 74)
+              figs.append(figur("arch302", w, f"{ad}, fotoğraf {i + 1}", "arch302", f"{ad} — {i + 1}"))
+          bloklar.append(f"""
+      <section class="asama">
+        <h2>{e(ad)}</h2>
+        <p class="asama-tarih">{tarih}</p>
+        <div class="gallery">
+  {chr(10).join(figs)}
+        </div>
+    {galeri_arac(f"{len(figs)} fotoğraf")}
+      </section>""")
+      govde = (post_head(k, ", ".join(k.tipler), meta=etkinlik_meta(k), label_alan="G · Etkinlik Tipi")
+               + "\n    <!-- İÇERİK: fotoğraflar, ham/ içindeki alt klasörlere (süreç aşamalarına) göre.\n"
+                 "         Klasör adı: 02-Prejury-24.04.25 → başlık \"Prejury\", tarih 24 Nisan 2025. -->\n"
+               + '    <div data-alan="İçerik · ham/ alt klasörleri = aşamalar">'
+               + "".join(bloklar) + "\n    </div>\n"
+               + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n" + etkinlik_kunye(k) + nav("etkinlik-fotograf.html"))
+      sayfa("etkinlik-fotograf.html", k.baslik, k.ozet, "Etkinlik: Fotoğraflı (süreç aşamaları)", govde,
+            bolum="etkinlik", swiper=True)
 
     # ---- ETKİNLİK · VİDEOLU (Venedik Bienali) -----------------------------
     k = bul(ev, "2025-venedik-bienali-mimarlik-iscileri")
@@ -892,7 +898,6 @@ def liste(sira) -> None:
         "gorsel.html": ("Zihin Akış Bezi — ODTÜ", "Tek büyük görsel; tıklayınca büyür, yakınlaşır."),
         "video.html": ("Ankara, 10 Ekim, 15 Temmuz: Yas, Hafıza ve Mekan", "YouTube oynatıcı."),
         "podcast.html": ("Podcast 06 — Müfredat Teşhiri", "Spotify oynatıcı."),
-        "etkinlik-fotograf.html": ("ARCH302 Sunum ve Jüri", "Süreç aşamalarına bölünmüş fotoğraflar."),
         "etkinlik-video.html": ("Venedik Bienali — Mimarlık İşçileri Buluşması", "YouTube + Instagram bağlantısı."),
         "etkinlik-akea.html": ("AKEA — Atina, 8 Şubat 2026", "Fotoğraflar, etkinlik yazısı, altında konuşma metni (Türkçe özet + İngilizce tam metin)."),
         "etkinlik-kurultay.html": ("Mimarlık ve Eğitim Kurultayı XIII", "Fotoğraflar, etkinlik yazısı, altında sunumun slaytları (tam ekran)."),
