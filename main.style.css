@@ -1313,9 +1313,33 @@ main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
 .izgara--iri .oge-tip,
 .izgara--orta .oge-tip { font-size: var(--tip-govde); line-height: 1.3; }
 
+/* Ad da iki satıra sabit: uzun başlık kartı uzatmıyor, kısa başlık
+   kısaltmıyor. Sığmayan başlık üç noktayla kesiliyor. */
+.izgara--iri .oge-tip > span:first-child,
+.izgara--orta .oge-tip { align-items: start; }
+.oge-ad {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(2 * 1.3em);
+}
+
 /* Kartın en altı: kaydın temaları. Kart neye dair olduğunu kendi söylüyor —
    ızgarada gezerken gruba bakmak gerekmiyor. */
-.oge-temalar { display: flex; flex-wrap: wrap; gap: 0.3em; margin-top: 0.5em; }
+.oge-temalar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  margin-top: 0.5em;
+  /* Etiket satırına SABİT iki satırlık yer. Kart yüksekliği etiket sayısına
+     göre oynamasın: tek etiketli kart ile beş etiketli kart aynı boyda
+     dursun, ızgaranın satırları hizada kalsın. Beşten fazlası taşmaz,
+     gizlenir — kaydın tam listesi kendi sayfasında. */
+  height: calc(2 * 1.4 * 0.6875rem + 2 * 0.2em + 0.3em);
+  overflow: hidden;
+  align-content: flex-start;
+}
 .oge-tema {
   font-size: 0.6875rem;
   line-height: 1.4;

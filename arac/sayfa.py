@@ -162,7 +162,7 @@ METIN = {
         "ag_yerel": "yerel ağ",
         "ag_yerel_not": "Türkiye'de birlikte çalıştığımız yapılar:",
         "b_uretimler": "üretimler",
-        "tema_not": "Çalışmalarımız beş ana tema etrafında şekilleniyor. Her tema, "
+        "tema_not": "Çalışmalarımız on iki tema etrafında şekilleniyor. Her tema, "
                     "disiplinin sessiz kaldığı bir noktaya açılan tartışma kapısıdır.",
         "manifesto_not": "Bu manifesto bir sonuç değil, sürekli güncellenen bir başlangıç.",
         "ag_uluslararasi": "uluslararası ağ",
@@ -249,7 +249,7 @@ METIN = {
         "ag_yerel": "local network",
         "ag_yerel_not": "The structures we work alongside in Turkey:",
         "b_uretimler": "works",
-        "tema_not": "Our work takes shape around five themes. Each opens a door onto "
+        "tema_not": "Our work takes shape around twelve themes. Each opens a door onto "
                     "a point where the discipline has kept quiet.",
         "manifesto_not": "This manifesto is not a conclusion but a beginning kept "
                          "under revision.",
@@ -616,7 +616,7 @@ def kart(dil, kayit, derinlik: int) -> str:
     return f"""      <li class="oge">
         <a href="{sayfa}">
           <span class="oge-gorsel">{ic}</span>
-          <span class="oge-tip">{html.escape(gosterim_basligi(kayit))}
+          <span class="oge-tip"><span class="oge-ad">{html.escape(gosterim_basligi(kayit))}</span>
             <span class="oge-ok" aria-hidden="true">→</span></span>
           <span class="oge-tarih">{html.escape(kayit.tarih.yazi())}</span>{tema_satiri}
         </a>
@@ -935,19 +935,6 @@ def ag_listesi(dil) -> str:
     return "\n".join(p)
 
 
-def tema_bolumu(dil, ev, pr, derinlik: int, kimlikli: bool = True) -> str:
-    """Ana akıştaki temalar bölümü: solda başlık ve not, sağda açılır liste."""
-    return "\n".join([
-        '    <div class="blok">',
-        f'    <div><h2 class="blok-etiket">{S(dil, "b_temalar")}</h2>'
-        f'<p class="blok-not">{S(dil, "tema_not")}</p></div>',
-        '    <div>',
-        tema_akordeonu(dil, ev, pr, derinlik, kimlikli),
-        '    </div>',
-        '    </div>',
-    ])
-
-
 def manifesto_bolumu(dil):
     """Ana sayfadaki manifesto bölümü. Ayrı sayfa değil — nav oraya iniyor."""
     # id dıştaki <section>'da duruyor. Burada tekrar yazsak aynı id iki kere
@@ -1101,8 +1088,12 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     p.append('    </div>')
     p.append('  </section>')
 
-    # Temalar — 5 satır, devamı görünümde
-    p.append(tema_bolumu(dil, ev, pr, derinlik))
+    # Temalar — ana akışta SADECE başlık, not ve bağlantı. On iki temanın
+    # listesi yalnızca temalar görünümünde; ana sayfa onu taşımıyor.
+    p.append('  <div class="blok">')
+    p.append(f'    <div><h2 class="blok-etiket">{S(dil, "b_temalar")}</h2></div>')
+    p.append(f'    <div><p class="tema-giris">{S(dil, "tema_not")}</p></div>')
+    p.append('  </div>')
     p.append(ozet_bagi(dil, "temalar", "tema_hepsi"))
 
     # Sorular
@@ -1149,7 +1140,7 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     tema_ic = "\n".join([
 
         '    <div class="blok">', '      <div></div>', '      <div>',
-        tema_akordeonu(dil, ev, pr, derinlik, kimlikli=False),
+        tema_akordeonu(dil, ev, pr, derinlik),
         '      </div>', '    </div>',
     ])
     p.append(gorunum("temalar", S(dil, "b_temalar"), tema_ic, dil, k))
