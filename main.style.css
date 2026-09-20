@@ -1285,28 +1285,35 @@ main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
    açıkken sayfa metrelerce uzuyordu. Akordeondaki gibi <details>: açılması
    tarayıcının işi, JavaScript yok, klavyeyle de açılıyor. */
 
-.blok--katlanir { display: block; margin-bottom: var(--space-md); }
-.blok--katlanir > summary {
+/* .blok'un iki kolonu aynen duruyor: başlık SOLDA, ızgara sağında.
+   details'in kendisi ızgara oluyor — summary birinci kolon, ul ikinci.
+   Kapalıyken sağ kolon boş kalıyor, başlık yerinden kıpırdamıyor. */
+.blok--katlanir {
   display: grid;
-  grid-template-columns: var(--etiket-kolon) minmax(0, 1fr) auto;
+  grid-template-columns: var(--etiket-kolon) minmax(0, 1fr);
   gap: var(--space-md);
+  align-items: start;
+  margin-bottom: var(--space-xl);
+}
+.blok--katlanir > summary {
+  display: flex;
   align-items: baseline;
-  padding: var(--space-sm) var(--wrap-ic);
-  border-top: 1px solid var(--border);
+  gap: var(--space-xs);
   cursor: pointer;
   list-style: none;
 }
 .blok--katlanir > summary::-webkit-details-marker { display: none; }
 .blok--katlanir > summary:hover .blok-etiket { color: var(--accent); }
-.blok--katlanir .blok-not { margin-top: 0; }
+/* Başlık ve sayı alt alta, artı işareti sağlarında */
+.blok--katlanir > summary > div { flex: 1; }
+.blok--katlanir .blok-not { margin-top: var(--space-xs); }
 .blok--katlanir > summary .blok-arti::before {
   content: "+";
   font-size: 1.2em;
   color: var(--text-soft);
 }
 .blok--katlanir[open] > summary .blok-arti::before { content: "–"; }
-/* Başlık ile ızgara arasında nefes payı */
-.blok--katlanir > .izgara { margin-top: var(--space-sm); }
+.blok--katlanir > .izgara { margin-bottom: 0; padding: 0; }
 
 
 /* AKORDEON --------------------------------------------------------------- */

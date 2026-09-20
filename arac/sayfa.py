@@ -577,14 +577,12 @@ def kart(dil, kayit, derinlik: int) -> str:
     # En altta temaların etiketleri: kart neye dair olduğunu kendi söylüyor.
     # Excel'in tema sütununda sitenin beş teması dışında serbest etiketler de
     # var (Örgütlenme, Kent, Mekan…) ve dokuz kayıtta beş-yedi tanesi birden.
-    # Hepsini basmak kartı etiket yığınına çeviriyordu: önce sitenin kendi
-    # temaları, sonra ötekiler; üçten fazlası "+n" olarak sayılıyor.
+    # HEPSİ yazılıyor, kesilmiyor: kaydın hangi temalarda durduğu kartta
+    # eksiksiz görünsün. Sıra: önce sitenin kendi temaları, sonra ötekiler.
     resmi = [a for a, _ in TEMALAR]
     sirali = sorted(kayit.temalar, key=lambda t: (t not in resmi, kayit.temalar.index(t)))
     etiketler = "".join(f'<span class="oge-tema">{html.escape(t)}</span>'
-                        for t in sirali[:3])
-    if len(sirali) > 3:
-        etiketler += f'<span class="oge-tema oge-tema--daha">+{len(sirali) - 3}</span>'
+                        for t in sirali)
     tema_satiri = f'\n          <span class="oge-temalar">{etiketler}</span>' if etiketler else ""
     return f"""      <li class="oge">
         <a href="{sayfa}">
@@ -992,8 +990,8 @@ def taksonomi(dil, kayitlar, derinlik, anahtar):
         icinde = gruplar[ad]
         acik = " open" if i == 0 else ""
         p.append(f'    <details class="blok blok--katlanir"{acik}>')
-        p.append(f'      <summary><h2 class="blok-etiket">{html.escape(ad)}</h2>'
-                 f'<p class="blok-not">{len(icinde)} {S(dil, "kayit")}</p>'
+        p.append(f'      <summary><div><h2 class="blok-etiket">{html.escape(ad)}</h2>'
+                 f'<p class="blok-not">{len(icinde)} {S(dil, "kayit")}</p></div>'
                  f'<span class="blok-arti" aria-hidden="true"></span></summary>')
         p.append('      <ul class="izgara izgara--orta">')
         p += [kart(dil, x, derinlik) for x in icinde]
