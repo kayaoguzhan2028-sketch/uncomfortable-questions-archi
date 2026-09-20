@@ -790,6 +790,35 @@ hr { border: none; border-top: 1px solid var(--border); margin: var(--space-lg) 
 .tema-kayitlar a:hover { color: var(--accent); }
 
 
+/* MANİFESTO ÇAĞRISI ------------------------------------------------------
+   Manifestonun altındaki iki düğme. Sayfaları daha yazılmadı, o yüzden
+   <a> değil <span>: tıklanacakmış gibi durup hiçbir yere gitmesinler.
+   Kesik çerçeve ve altındaki not, eksikliği gizlemeden söylüyor.
+   Sayfalar gelince <a> olacak, kesik çerçeve düz çizgiye dönecek. */
+
+.m-cagri {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  margin-top: var(--space-lg);
+}
+.m-dugme {
+  font-family: var(--font-ui);
+  font-size: var(--tip-govde);
+  font-weight: 700;
+  padding: 0.6em 1.4em;
+  border: 1px dashed var(--border);
+  color: var(--text-faint);
+}
+.m-cagri-not {
+  flex-basis: 100%;
+  font-size: var(--tip-ref);
+  color: var(--text-faint);
+  margin: 0;
+}
+
+
 /* AÇILIŞ BAŞLIĞI ---------------------------------------------------------
    Ana sayfadaki büyük başlık. Çok sıkı, küçük harf, iki satır. */
 

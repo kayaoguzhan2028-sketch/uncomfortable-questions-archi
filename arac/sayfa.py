@@ -151,6 +151,9 @@ METIN = {
         "n_archive": "üretimler",
         "n_sorular": "sorular",
         "n_contact": "iletişim",
+        "m_orgutlen": "Örgütlen!",
+        "m_nasil": "Nasıl Örgütleniyoruz",
+        "m_cagri_not": "Bu iki sayfa henüz yazılmadı.",
         "n_orneklem": "örneklem",
         "n_menu": "menü",
         "n_sartlar": "Koşullar",
@@ -235,6 +238,9 @@ METIN = {
         "n_archive": "works",
         "n_sorular": "questions",
         "n_contact": "connect",
+        "m_orgutlen": "Organise!",
+        "m_nasil": "How We Organise",
+        "m_cagri_not": "These two pages are not written yet.",
         "n_orneklem": "samples",
         "n_menu": "menu",
         "n_sartlar": "Terms &amp; Conditions",
@@ -963,6 +969,14 @@ def manifesto_bolumu(dil):
         p.append('        </div>')
         p.append('      </section>')
     p.append(f'      <p class="m-vurgu">{MANIFESTO_KAPANIS}</p>')
+    # Manifestonun altındaki iki çağrı. İçerikleri henüz yazılmadı: düğmeler
+    # duruyor ama bir yere gitmiyor, üstlerinde neyin eksik olduğu yazılı.
+    # Sayfa hazır olunca <span> yerine <a href="..."> gelecek.
+    p.append('      <div class="m-cagri" data-eksik="true">')
+    for anahtar in ("m_orgutlen", "m_nasil"):
+        p.append(f'        <span class="m-dugme">{S(dil, anahtar)}</span>')
+    p.append(f'        <p class="m-cagri-not">{S(dil, "m_cagri_not")}</p>')
+    p.append('      </div>')
     p += ['    </div>', '  </div>']
     return "\n".join(p)
 
