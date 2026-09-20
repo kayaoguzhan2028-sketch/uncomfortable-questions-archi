@@ -1258,6 +1258,56 @@ main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
 }
 .oge:hover .oge-tip { color: var(--accent); }
 
+/* Kalın satır kaydın ADI; uzun başlık kartı şişirmesin diye kesiliyor.
+   Ok sağda sabit kalsın diye başlıkla aynı satırda büyümüyor. */
+.oge-tip { align-items: start; }
+.oge-tip > .oge-ok { flex: none; }
+.izgara--iri .oge-tip,
+.izgara--orta .oge-tip { font-size: var(--tip-govde); line-height: 1.3; }
+
+/* Kartın en altı: kaydın temaları. Kart neye dair olduğunu kendi söylüyor —
+   ızgarada gezerken gruba bakmak gerekmiyor. */
+.oge-temalar { display: flex; flex-wrap: wrap; gap: 0.3em; margin-top: 0.5em; }
+.oge-tema {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+  padding: 0.1em 0.5em;
+  white-space: nowrap;
+}
+.oge:hover .oge-tema { border-color: var(--text-faint); }
+/* Sığmayan etiketlerin sayısı: çerçevesiz, sayı olduğu belli olsun */
+.oge-tema--daha { border-color: transparent; color: var(--text-faint); padding-inline: 0.2em; }
+
+/* KATLANIR BLOK ---------------------------------------------------------- */
+/* Taksonomi grupları (etkinlik tipleri, ileride arşiv de). Hepsi birden
+   açıkken sayfa metrelerce uzuyordu. Akordeondaki gibi <details>: açılması
+   tarayıcının işi, JavaScript yok, klavyeyle de açılıyor. */
+
+.blok--katlanir { display: block; margin-bottom: var(--space-md); }
+.blok--katlanir > summary {
+  display: grid;
+  grid-template-columns: var(--etiket-kolon) minmax(0, 1fr) auto;
+  gap: var(--space-md);
+  align-items: baseline;
+  padding: var(--space-sm) var(--wrap-ic);
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  list-style: none;
+}
+.blok--katlanir > summary::-webkit-details-marker { display: none; }
+.blok--katlanir > summary:hover .blok-etiket { color: var(--accent); }
+.blok--katlanir .blok-not { margin-top: 0; }
+.blok--katlanir > summary .blok-arti::before {
+  content: "+";
+  font-size: 1.2em;
+  color: var(--text-soft);
+}
+.blok--katlanir[open] > summary .blok-arti::before { content: "–"; }
+/* Başlık ile ızgara arasında nefes payı */
+.blok--katlanir > .izgara { margin-top: var(--space-sm); }
+
 
 /* AKORDEON --------------------------------------------------------------- */
 /* <details>/<summary> kullanıyoruz: açılıp kapanması tarayıcının kendi işi,
@@ -1297,6 +1347,19 @@ main > .ana-akis > .blok { scroll-margin-top: var(--space-lg); }
 .akordeon summary::after { content: "+"; font-weight: 400; font-size: 1.2em; color: var(--text-soft); }
 .akordeon details[open] summary::after { content: "–"; }
 .akordeon summary:hover { color: var(--accent); }
+
+/* Tema satırındaki küçük kapak. Temanın kendi görseli yok: o temadaki en
+   yeni kaydın kapağı duruyor. Görsel yoksa kutu boş ama yerinde kalır —
+   beş satırın metni aynı hizada başlasın diye. */
+.akordeon-kapak {
+  flex: none;
+  width: 3.25rem;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-alt);
+  overflow: hidden;
+}
+.akordeon-kapak img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.akordeon summary > span:not(.akordeon-kapak) { flex: 1; }
 
 .akordeon-govde { padding: 0 0 var(--wrap-ic); }
 .akordeon-govde ul { list-style: none; }

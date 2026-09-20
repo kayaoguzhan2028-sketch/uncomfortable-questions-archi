@@ -571,14 +571,27 @@ def kart(dil, kayit, derinlik: int) -> str:
     gorsel = KOK / kayit.kaynak / "kapak.webp"
     ic = (f'<img src="{k}{kayit.kaynak.as_posix()}/kapak.webp" alt="" loading="lazy">'
           if gorsel.exists() else IKON)
-    tip = " / ".join(kayit.tipler) or "—"
+    # Kalın satır kaydın ADI. (Önce tipi yazıyordu: ızgarada yan yana on
+    # kart "Açık Ders / Atölye" diyordu, hangisi olduğu okunmuyordu. Tip
+    # zaten grubun başlığı — kartta tekrar etmesine gerek yok.)
+    # En altta temaların etiketleri: kart neye dair olduğunu kendi söylüyor.
+    # Excel'in tema sütununda sitenin beş teması dışında serbest etiketler de
+    # var (Örgütlenme, Kent, Mekan…) ve dokuz kayıtta beş-yedi tanesi birden.
+    # Hepsini basmak kartı etiket yığınına çeviriyordu: önce sitenin kendi
+    # temaları, sonra ötekiler; üçten fazlası "+n" olarak sayılıyor.
+    resmi = [a for a, _ in TEMALAR]
+    sirali = sorted(kayit.temalar, key=lambda t: (t not in resmi, kayit.temalar.index(t)))
+    etiketler = "".join(f'<span class="oge-tema">{html.escape(t)}</span>'
+                        for t in sirali[:3])
+    if len(sirali) > 3:
+        etiketler += f'<span class="oge-tema oge-tema--daha">+{len(sirali) - 3}</span>'
+    tema_satiri = f'\n          <span class="oge-temalar">{etiketler}</span>' if etiketler else ""
     return f"""      <li class="oge">
         <a href="{sayfa}">
           <span class="oge-gorsel">{ic}</span>
-          <span class="oge-tip">{html.escape(tip)}
+          <span class="oge-tip">{html.escape(kayit.baslik)}
             <span class="oge-ok" aria-hidden="true">→</span></span>
-          <span class="oge-tarih">{html.escape(kayit.tarih.yazi())}</span>
-          <span class="oge-metin">{html.escape(kayit.baslik)}</span>
+          <span class="oge-tarih">{html.escape(kayit.tarih.yazi())}</span>{tema_satiri}
         </a>
       </li>"""
 
@@ -592,8 +605,17 @@ def tema_akordeonu(dil, ev, pr, derinlik):
     for (ad, slug), (no, _b, _i, _s) in zip(TEMALAR, TEMA_GORUNEN):
         e = [x for x in ev if ad in x.temalar]
         u = [x for x in pr if ad in x.temalar]
+        # Summary'deki küçük kapak: temanın KENDİ görseli yok — o temadaki
+        # en yeni kaydın kapağını gösteriyoruz. Yani temayı temsil etmiyor,
+        # "bu temada en son şu yapıldı" diyor. Temaya ait bir görsel
+        # üretilirse burası ona bakacak şekilde değişir.
+        kapakli = next((x for x in (e + u)
+                        if (KOK / x.kaynak / "kapak.webp").exists()), None)
+        kucuk = (f'<span class="akordeon-kapak">'
+                 f'<img src="{k}{kapakli.kaynak.as_posix()}/kapak.webp" alt="" loading="lazy">'
+                 f'</span>' if kapakli else '<span class="akordeon-kapak"></span>')
         p.append(f'        <details id="tema-{slug}">')
-        p.append(f'          <summary><span>{no} &nbsp; {html.escape(ad)}</span></summary>')
+        p.append(f'          <summary>{kucuk}<span>{no} &nbsp; {html.escape(ad)}</span></summary>')
         p.append('          <div class="akordeon-govde">')
         metin = TEMA_METIN.get(ad, "")
         if metin:
@@ -961,16 +983,22 @@ def taksonomi(dil, kayitlar, derinlik, anahtar):
         for e in (anahtar(x) or [S(dil, "siniflanmamis")]):
             gruplar[e].append(x)
 
+    # Her grup açılıp kapanıyor: 20 grubun hepsi birden açıkken sayfa
+    # metrelerce uzuyordu, aranan tip görünmüyordu. <details> ile —
+    # akordeondaki gibi tarayıcının kendi işi, JavaScript yok, klavyeyle
+    # de açılıyor. En kalabalık grup açık başlıyor ki sayfa boş görünmesin.
     p = []
-    for ad in sorted(gruplar, key=lambda a: (-len(gruplar[a]), a)):
+    for i, ad in enumerate(sorted(gruplar, key=lambda a: (-len(gruplar[a]), a))):
         icinde = gruplar[ad]
-        p.append('    <div class="blok">')
-        p.append(f'      <div><h2 class="blok-etiket">{html.escape(ad)}</h2>'
-                 f'<p class="blok-not">{len(icinde)} {S(dil, "kayit")}</p></div>')
-        p.append('      <ul class="izgara izgara--sik">')
+        acik = " open" if i == 0 else ""
+        p.append(f'    <details class="blok blok--katlanir"{acik}>')
+        p.append(f'      <summary><h2 class="blok-etiket">{html.escape(ad)}</h2>'
+                 f'<p class="blok-not">{len(icinde)} {S(dil, "kayit")}</p>'
+                 f'<span class="blok-arti" aria-hidden="true"></span></summary>')
+        p.append('      <ul class="izgara izgara--orta">')
         p += [kart(dil, x, derinlik) for x in icinde]
         p.append('      </ul>')
-        p.append('    </div>')
+        p.append('    </details>')
     return "\n".join(p)
 
 
