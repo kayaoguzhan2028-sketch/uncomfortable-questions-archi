@@ -157,10 +157,13 @@ UST, ALT, SURUM = _sablon()
 
 
 def ust_nav(bolum: str) -> str:
-    """Nav'da aktif sekme: üretimde arşiv, etkinlikte etkinlikler."""
+    """Nav'da aktif sekme örneklemin kendisi — ziyaretçi orada.
+
+    (Nav'da örneklem sekmesi yokken burası arşiv/etkinlikler sekmesini
+    işaretliyordu: sayfa tipinin yayında nereye düşeceğini göstersin diye.
+    Sekme gelince bu yanlış oldu — aria-current bulunulan sayfayı söyler.)"""
     nav = UST.replace(' aria-current="page"', "")
-    capa = "#archive" if bolum == "uretim" else "#activity"
-    return nav.replace(f'index.html{capa}">', f'index.html{capa}" aria-current="page">', 1)
+    return nav.replace('orneklem/index.html">', 'orneklem/index.html" aria-current="page">', 1)
 
 
 def sayfa(dosya: str, baslik: str, ozet: str, serit: str, govde: str, bolum: str = "uretim",

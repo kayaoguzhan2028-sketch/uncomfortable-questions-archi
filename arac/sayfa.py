@@ -151,6 +151,7 @@ METIN = {
         "n_archive": "arşiv",
         "n_sorular": "sorular",
         "n_contact": "iletişim",
+        "n_orneklem": "örneklem",
         "n_menu": "menü",
         "n_sartlar": "Koşullar",
         "ag_gorsel_notu": "Buraya ağ diyagramı görseli gelecek.",
@@ -234,6 +235,7 @@ METIN = {
         "n_archive": "archive",
         "n_sorular": "questions",
         "n_contact": "connect",
+        "n_orneklem": "samples",
         "n_menu": "menu",
         "n_sartlar": "Terms &amp; Conditions",
         "ag_gorsel_notu": "The network diagram image goes here.",
@@ -308,7 +310,10 @@ IKON = ('<svg class="site-ikon" viewBox="0 0 24 32" aria-hidden="true" focusable
 # kendisi küçük yazılı (büyük harfe çevirmek Türkçe'de i/İ'yi bozuyor).
 # İlk ikisi ve sonuncusu ana sayfadaki bölüme iniyor, ayrı sayfa yok.
 # İlk dördü ana sayfadaki sekme, beşincisi gerçek sayfa.
-NAV = [(anahtar, f"index.html#{capa}", capa) for anahtar, capa in SEKMELER]
+NAV = ([(anahtar, f"index.html#{capa}", capa) for anahtar, capa in SEKMELER]
+       # Örneklem sitenin kökünde, dil ağacının dışında: tek kopya,
+       # tr/ ve en/ aynı sayfaya bağlanıyor. Yolun başındaki "/" bunu söylüyor.
+       + [("n_orneklem", "/orneklem/index.html", "orneklem")])
 
 # Sağ üstteki "menu" panelinde duranlar — nav'a sığmayan her şey.
 MENU = [
@@ -320,6 +325,7 @@ MENU = [
     ("n_network", "index.html#network"),
     ("n_archive", "index.html#archive"),
     ("n_contact", SAYFA_ILETISIM),
+    ("n_orneklem", "/orneklem/index.html"),
 ]
 
 TEMALAR = [
@@ -481,6 +487,10 @@ def ust(dil: str, aktif: str, derinlik: int, yol: str) -> str:
         '../tr/index.html#temalar' yazarsak tarayıcı bunu yeni bir adres
         sayıp sayfayı baştan yüklüyor: tıklayınca sayfa kaydırmak yerine
         sıfırlanıyor ve bir an ham HTML görünüyor."""
+        # "/" ile başlayan hedef dil ağacının DIŞINDA, sitenin kökünde
+        # (örneklem böyle: tek kopya, tr/ ve en/ ikisi de ona bağlanıyor).
+        if hedef_yol.startswith("/"):
+            return f"{k}{hedef_yol[1:]}"
         dosya, _, capa = hedef_yol.partition("#")
         if (dosya or "index.html") == bu_sayfa:
             return f"#{capa}" if capa else "#"
