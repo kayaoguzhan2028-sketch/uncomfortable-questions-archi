@@ -22,6 +22,10 @@ KOK = Path(__file__).resolve().parent.parent
 # metin, ham fotoğraf ve webp burada tek kopya durur.
 KAYNAK_KOK = "kayit"
 EXCEL = KOK / "Activity List last.xlsx"
+# Aynı tablonun .ods kopyası. Hücre renkleri SADECE burada duruyor:
+# .xlsx dışa aktarımı karartmaları taşımıyor. Siyah = "bu satırı
+# sayma" (aşağıda siyah_basliklar).
+ODS = KOK / "Activity List last.ods"
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 
@@ -241,6 +245,10 @@ class Kayit:
     podcast_link: str = ""
     video: str = ""               # YouTube video kimliği (11 karakter)
     slug: str = ""
+    # .ods'de karartılmış satır: kendi sayfası olmayacak, listelerde
+    # görünmeyecek. Malzemesi ait olduğu kaydın sayfasında geçiyor,
+    # o yüzden kayıt silinmiyor, işaretleniyor.
+    gizli: bool = False
 
     @property
     def klasor(self) -> Path:
@@ -294,6 +302,42 @@ def _satirlar(z: zipfile.ZipFile, yol: str, ss: list[str]) -> list[dict]:
         if hucre:
             out.append(hucre)
     return out
+
+
+def siyah_basliklar(ods: Path = ODS) -> set[str]:
+    """Tabloda karartılmış satırların başlıkları.
+
+    Kolektif, kendi başına sayfası olmayacak satırları .ods'de siyaha
+    boyuyor: bir atölyenin tek tek katılımcı kayıtları, bir sunumun
+    parçaları… Bunlar ayrı bir üretim değil, baştaki onaylı satırın
+    malzemesi. Listelerde ve sayfalarda görünmüyorlar; malzemeleri ait
+    oldukları kaydın sayfasında duruyor.
+
+    Renk .xlsx'e geçmiyor, o yüzden bu bilgi .ods'den okunuyor. Dosya
+    yoksa hiçbir satır karartılmamış sayılır — üretim durmaz, sadece
+    karartmalar uygulanmaz."""
+    if not ods.exists():
+        print(f"  uyarı: {ods.name} yok — karartılmış satırlar ayırt edilemiyor")
+        return set()
+    S = "{urn:oasis:names:tc:opendocument:xmlns:style:1.0}"
+    T = "{urn:oasis:names:tc:opendocument:xmlns:table:1.0}"
+    kok = ET.fromstring(zipfile.ZipFile(ods).read("content.xml"))
+    siyah_stil = {st.get(S + "name") for st in kok.iter(S + "style")
+                  for pr in st for anahtar, deger in pr.attrib.items()
+                  if anahtar.endswith("background-color") and deger.lower() == "#000000"}
+    basliklar = set()
+    for tablo in kok.iter(T + "table"):
+        for satir in tablo.iter(T + "table-row"):
+            hucreler = list(satir)
+            if not any(h.get(T + "style-name") in siyah_stil for h in hucreler):
+                continue
+            # B sütunu: kaydın adı. Eşleştirme başlıkla yapılıyor, satır
+            # numarasıyla değil — iki dosyanın satır sırası kayabilir.
+            if len(hucreler) > 1:
+                ad = "".join(hucreler[1].itertext()).strip()
+                if ad:
+                    basliklar.add(ad)
+    return basliklar
 
 
 def oku(excel: Path = EXCEL) -> tuple[list[Kayit], list[Kayit]]:
@@ -372,6 +416,10 @@ def oku(excel: Path = EXCEL) -> tuple[list[Kayit], list[Kayit]]:
     #
     # Sadece TEK tipi "Podcast" olanlar taşınıyor. Hem podcast hem başka bir
     # şey olan bir kayıt gerçekten de iki şey birden olurdu; öylesi yok.
+    karartilmis = siyah_basliklar()
+    for k in etkinlikler + uretimler:
+        k.gizli = k.baslik.strip() in karartilmis
+
     podcastler = [k for k in etkinlikler if k.tipler == ["Podcast"]]
     for k in podcastler:
         etkinlikler.remove(k)
