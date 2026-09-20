@@ -3,7 +3,7 @@
    --------------------------------------------------------------------------
    main.js'in kuralı burada da geçerli: sayfa JavaScript olmadan da okunur.
    Kitapçık açılmazsa kapak görünür; slayt açılmazsa ilk slayt görünür;
-   indir düğmesi, metin ve bağlantılar yerinde kalır.
+   metin ve bağlantılar yerinde kalır.
    Bileşenler onaylanınca buradaki bölümler (ALAN ETİKETLERİ hariç)
    main.js'e taşınır.
    ========================================================================== */
@@ -25,8 +25,8 @@
 })();
 
 /* PENCERE ------------------------------------------------------------------
-   [data-pencere="id"] düğmesi o <dialog>'u açar. Şimdilik indir ve anket
-   düğmeleri bunu kullanıyor: gerçek bağlantı yerine bir açıklama.
+   [data-pencere="id"] düğmesi o <dialog>'u açar. Şimdilik duyurudaki
+   "takvime ekle" bunu kullanıyor: gerçek dosya yerine bir açıklama.
    Altyapı kurulunca <button> yerine <a href="..."> gelecek. */
 (function () {
   document.addEventListener("click", function (olay) {

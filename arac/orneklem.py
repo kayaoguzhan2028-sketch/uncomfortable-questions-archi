@@ -313,15 +313,6 @@ def pencere(kimlik: str, baslik: str, metin: str) -> str:
     </dialog>"""
 
 
-def indir(kimlik: str, etiket: str, bilgi: str, alan: str = "M · pdf linki") -> str:
-    return f"""
-    <div class="indir" data-alan="{alan}">
-      <button class="indir-dugme" type="button" data-pencere="{kimlik}">{e(etiket)}</button>
-      <span class="indir-bilgi">{e(bilgi)}</span>
-    </div>""" + pencere(kimlik, etiket, "Bu düğmeye tıklayınca dosya indirilecek. "
-                                         "İndirme bağlantısı site yayına alınırken eklenecek.")
-
-
 def post_nav(onceki: tuple[str, str] | None, sonraki: tuple[str, str] | None) -> str:
     parca = []
     if onceki:
@@ -329,11 +320,6 @@ def post_nav(onceki: tuple[str, str] | None, sonraki: tuple[str, str] | None) ->
     if sonraki:
         parca.append(f'      <a class="sonraki" href="{sonraki[0]}">\n        <span class="yon">Sonraki örnek →</span>\n        {e(sonraki[1])}\n      </a>')
     return '\n    <nav class="post-nav">\n' + "\n".join(parca) + "\n    </nav>\n"
-
-
-def mb(dosya: Path) -> str:
-    boyut = dosya.stat().st_size / 1e6
-    return f"{boyut:.0f} MB" if boyut >= 10 else f"{boyut:.1f} MB".replace(".", ",")
 
 
 # --------------------------------------------------------------------------
@@ -559,7 +545,6 @@ def main() -> None:
     govde = (post_head(k, ", ".join(k.tipler), meta=f"{tarih_html(k)} · Türkçe baskı")
              + kitapcik_html("fanzin-kitap", "fanzin-1", sayfalar, "Fanzin #1",
                              "İçerik · PDF sayfaları (ham/ klasöründen)")
-             + indir("indir-pencere", "PDF'i indir", f"Türkçe · {len(sayfalar)} sayfa · {mb(pdf)}")
              + "\n" + uzun_html(k.uzun) + "\n" + temalar_html(k) + "\n"
              + uretim_kunye(k, [("Biçim", f"Fanzin, {len(sayfalar)} sayfa, A5")]) + nav("fanzin.html"))
     sayfa("fanzin.html", k.baslik, k.ozet, "Üretim tipi: Fanzin (kitapçık)", govde, pageflip=True)
@@ -581,12 +566,10 @@ def main() -> None:
     </div>
     <div class="dil-blok" data-dil="tr">"""
              + kitapcik_html("rapor-tr-kitap", "rapor-tr", s_tr, "Rapor (TR)", "İçerik · Rapor (TR) PDF sayfaları")
-             + indir("indir-tr", "PDF'i indir", f"Türkçe · {len(s_tr)} sayfa · {mb(pdf_tr)}")
              + """
     </div>
     <div class="dil-blok" data-dil="en" hidden>"""
              + kitapcik_html("rapor-en-kitap", "rapor-en", s_en, "Report (EN)", "İçerik · Rapor (EN) PDF sayfaları")
-             + indir("indir-en", "Download PDF", f"English · {len(s_en)} pages · {mb(pdf_en)}")
              + """
     </div>
     <div class="baglar" data-alan="Anket Formu kaydı · O · anket linki">
@@ -608,7 +591,6 @@ def main() -> None:
     <section class="metin-bolum" data-alan="Etkinliğin malzemesi · Üretimler: “Kurultayı XIII — Sunum” (pptx)">
       <h2 class="metin-baslik">Sunum <span>· Nihal Evirgen</span></h2>
 {slayt_html("sunum-slayt", "sunum-kurultay", slaytlar, "Kurultay sunumu")}
-{indir("indir-sunum", "Sunumu indir (PDF)", f"{len(slaytlar)} slayt · PowerPoint'ten PDF", "Sunum dosyası")}
     </section>
 """
 
@@ -904,7 +886,7 @@ def main() -> None:
 
 def liste(sira) -> None:
     notlar = {
-        "fanzin.html": ("Rahatsız Edici Sorular Fanzin #1", "Kitapçık: PDF sayfaları çevrilerek okunur, tam ekran, indir düğmesi."),
+        "fanzin.html": ("Rahatsız Edici Sorular Fanzin #1", "Kitapçık: PDF sayfaları çevrilerek okunur, tam ekran."),
         "rapor.html": ("Mimarlar Ne Kadar Kazanıyor?", "Kitapçık (A4), Türkçe / English geçişi, anket bağlantısı."),
         "album.html": ("Güç Haritası - Yeditepe Üniversitesi", "Katılımcı işlerinden galeri; tıklayınca büyür."),
         "gorsel.html": ("Zihin Akış Bezi — ODTÜ", "Tek büyük görsel; tıklayınca büyür, yakınlaşır."),

@@ -102,7 +102,7 @@
 }
 
 /* JS çalışmazsa ya da kütüphane inmezse: sadece kapak görünür,
-   altında indir düğmesi yine çalışır. */
+   altındaki metin yine okunur. */
 .kitapcik-sahne .sayfa { display: none; }
 .kitapcik-sahne .sayfa:first-child { display: block; max-width: 380px; margin: 0 auto; }
 .kitapcik-hazir .kitapcik-sahne .sayfa { display: block; max-width: none; margin: 0; }
@@ -241,61 +241,6 @@
   width: min(100%, 1000px);
   margin: 0 auto;
 }
-
-
-/* İNDİR -------------------------------------------------------------------
-   Dosyanın tamamı. Şimdilik bir açıklama penceresi açıyor; indirme
-   altyapısı (GitHub Releases vb.) kurulunca gerçek bağlantı olacak. */
-
-.indir {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xs) var(--space-sm);
-  margin: var(--space-sm) 0 var(--space-md);
-}
-
-.indir-dugme {
-  font-family: var(--font-ui);
-  font-size: var(--tip-govde);
-  font-weight: 500;
-  color: var(--bg);
-  background: var(--text);
-  border: 1px solid var(--text);
-  padding: 0.7em 1.3em;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-.indir-dugme::after { content: " ↓"; }
-.indir-dugme:hover { background: var(--accent); border-color: var(--accent); }
-.indir-dugme:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-.indir-bilgi {
-  font-family: var(--font-ui);
-  font-size: var(--tip-author);
-  color: var(--text-faint);
-}
-
-.pencere {
-  max-width: min(28rem, 100vw - 2 * var(--space-sm));
-  border: 1px solid var(--text);
-  padding: var(--space-md);
-  background: var(--bg);
-  color: var(--text);
-}
-.pencere::backdrop { background: rgba(12, 12, 12, 0.45); }
-.pencere h2 { font-size: var(--tip-h3); margin: 0 0 var(--space-xs); }
-.pencere p { font-size: var(--tip-govde); color: var(--text-soft); }
-.pencere form { margin-top: var(--space-sm); }
-.pencere button {
-  font-family: var(--font-ui);
-  font-size: var(--tip-author);
-  background: none;
-  border: 1px solid var(--border);
-  padding: 0.45em 1em;
-  cursor: pointer;
-}
-.pencere button:hover { border-color: var(--accent); color: var(--accent); }
 
 
 /* UZUN YAZIDAKİ TEMA LİSTESİ ----------------------------------------------
