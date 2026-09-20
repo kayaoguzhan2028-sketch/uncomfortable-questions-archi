@@ -686,3 +686,130 @@
 
 /* İndir + anket gibi yan yana bağlantılar */
 .baglar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-sm); margin: var(--space-sm) 0; }
+
+
+/* DUYURU -------------------------------------------------------------------
+   Etkinlik sayfasının olay olmadan önceki hali. Fotoğraf, video, uzun yazı
+   yokken sayfayı iki şey taşıyor: afiş ve "ne zaman, nerede".
+
+   Yeni bir iskelet değil — post-head, prose, tags, credits hepsi aynı.
+   Buradaki kurallar sadece o iki parça için. */
+
+/* Görsel: kitapçık/video gibi okuma kolonunun içinde. Afiş dikey, kapak
+   fotoğrafı yatay — ikisi de kendi oranıyla durur, kırpılmaz. */
+.duyuru-afis {
+  width: 100%;
+  margin: var(--space-md) 0 var(--space-sm);
+}
+.duyuru-afis img { width: 100%; height: auto; display: block; }
+.afis-bos { width: 100%; height: auto; display: block; }
+
+/* Ne zaman, nerede — duyuruda aranan tek bilgi. Künyeden ayrı ve iri:
+   etiketler solda sabit kolonda, değerler onların hizasında. */
+.duyuru-bilgi {
+  margin: var(--space-md) 0;
+  border-top: 2px solid var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.duyuru-bilgi > div {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: var(--space-sm);
+  padding: 0.7rem 0;
+}
+.duyuru-bilgi > div + div { border-top: 1px solid var(--border); }
+.duyuru-bilgi dt {
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-soft);
+  padding-top: 0.25em;
+}
+.duyuru-bilgi dd { margin: 0; font-size: var(--tip-h3); font-weight: 500; }
+.duyuru-eksik {
+  font-size: var(--tip-govde);
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+/* Katılmak isteyen ne yapacak: takvime ekle · gönderi · iletişim. */
+.duyuru-cagri {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  margin: var(--space-md) 0;
+}
+.duyuru-dugme {
+  font: inherit;
+  font-family: var(--font-ui);
+  font-size: var(--tip-author);
+  padding: 0.55em 1.1em;
+  border: 1px solid var(--text);
+  background: none;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+}
+.duyuru-dugme:hover { background: var(--bg-alt); }
+.duyuru-dugme--ana { background: var(--text); color: var(--bg); }
+.duyuru-dugme--ana:hover { background: var(--accent); border-color: var(--accent); }
+.duyuru-dugme--yok {
+  border-style: dashed;
+  border-color: var(--border);
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* Sayfanın sonundaki açıklama — duyurunun arşive dönüşmesi. */
+.duyuru-not {
+  font-size: var(--tip-author);
+  color: var(--text-soft);
+  border-left: 2px solid var(--border);
+  padding-left: var(--space-sm);
+  margin: var(--space-md) 0;
+}
+.duyuru-not--uyari { border-left-color: var(--accent); }
+
+/* LİSTE: ana sayfadaki .oge ızgarasının aynısı, görsel kutusunu afiş
+   dolduruyor. Kutu dikey olduğu için ızgara da daha az sütunlu. */
+.duyuru-izgara { margin: var(--space-md) 0; }
+.oge-gorsel--afis {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  padding: 0;
+}
+.duyuru-rozet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: var(--tip-ref);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  padding: 0.25em 0.7em;
+}
+
+/* Örneklem listesindeki grup açıklaması */
+.orneklem-aciklama {
+  font-size: var(--tip-author);
+  color: var(--text-soft);
+  max-width: var(--kolon-yazi);
+  margin-top: var(--space-xs);
+}
+
+/* Tek duyuru sayfasında rozet metnin içinde akar, kartta afişin üstüne biner. */
+.duyuru-durum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-size: var(--tip-author);
+  color: var(--text-soft);
+  margin: var(--space-sm) 0 0;
+}
+.duyuru-durum .duyuru-rozet { position: static; }

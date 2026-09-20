@@ -26,6 +26,7 @@ PowerPoint (PPTX → görsel; sadece Windows, COM üzerinden).
 """
 
 import argparse
+import datetime
 import html
 import os
 import re
@@ -419,6 +420,104 @@ def figur(klasor: str, webp: Path, alt: str, grup: str, altyazi: str = "") -> st
 
 
 # --------------------------------------------------------------------------
+# DUYURU
+# --------------------------------------------------------------------------
+# Duyuru yeni bir sayfa tipi değil: etkinlik sayfasının olay OLMADAN önceki
+# hali. Aynı kayıt, aynı adres. Elde fotoğraf, video, uzun yazı yokken sayfayı
+# afiş taşır; etkinlik geçince afişin altına fotoğraflar ve yazı girer,
+# "yaklaşan" rozeti düşer, sayfa kendiliğinden arşiv kaydı olur.
+#
+# Afiş kolektifin Instagram için zaten ürettiği görsel — siteye giren tek yeni
+# malzeme o. Excel'de sütunu yok; ham/afis.jpg bekleniyor. Yoksa yer tutucu.
+
+def afis_yer_tutucu(oran: str = "4 / 3") -> str:
+    """Görsel gelene kadar duracak kutu. Dosya üretmiyoruz: ikon.svg'nin soru
+    işareti + ne beklendiğini yazan tek bir inline SVG, her boyutta keskin."""
+    return f"""<svg class="afis-bos" viewBox="0 0 400 300" style="aspect-ratio: {oran}"
+         role="img" aria-label="Görsel henüz yok">
+      <rect width="400" height="300" fill="var(--bg-alt)"></rect>
+      <rect x="6" y="6" width="388" height="288" fill="none" stroke="var(--border)"
+            stroke-width="3" stroke-dasharray="14 10"></rect>
+      <g transform="translate(166 78) scale(2.2)" fill="var(--border)">
+        <path d="M0 0 H24 V23 H15 V26 H9 V17 H18 V7 H7 V13 H0 Z"></path>
+        <rect x="9" y="29" width="6" height="3"></rect>
+      </g>
+      <text x="200" y="228" text-anchor="middle" fill="var(--text-faint)"
+            font-size="19" font-weight="700">GÖRSEL YOK</text>
+      <text x="200" y="254" text-anchor="middle" fill="var(--text-faint)"
+            font-size="14">ham/afis.jpg ya da ham/kapak.jpg bekleniyor</text>
+    </svg>"""
+
+
+def afis(k: Kayit, kucuk: bool = False) -> str:
+    """Duyurunun görseli. Sırayla aranıyor:
+
+        ham/afis.<uzantı>    etkinliğin afişi — duyuru için doğrusu bu
+        ham/kapak.<uzantı>   kapak fotoğrafı — afiş yoksa
+        (yoksa)              yer tutucu
+
+    Afiş etkinlikten ÖNCE, kapak fotoğrafı SONRA var oluyor. Geçmiş
+    etkinliklerde elde sadece kapak olduğu için sıralama böyle: duyuru
+    afişle çıkar, arşive dönerken görseli kapak fotoğrafı olur."""
+    ham_kok = KAYIT / k.klasor / "ham"
+    kaynak = next((p for ad in ("afis.*", "kapak.*") for p in sorted(ham_kok.glob(ad))
+                   if p.suffix.lower() in FOTO_UZANTI), None)
+    if not kaynak:
+        return afis_yer_tutucu()
+    boyut = "600x600>" if kucuk else "1400x1400>"
+    w = magick(kaynak, GORSEL / "duyuru" / f"{k.slug}{'-k' if kucuk else ''}.webp", boyut)
+    en, boy = olcu(w)
+    return (f'<img src="gorsel/duyuru/{w.name}" alt="{e(k.baslik)} afişi" '
+            f'width="{en}" height="{boy}" loading="lazy">')
+
+
+def duyuru_bilgi(k: Kayit) -> str:
+    """Duyuruda insanın aradığı tek şey: ne zaman, nerede. Başlığın hemen
+    altında, iri ve ayrı. Saatin Excel'de sütunu yok — eksikliği gizlemiyoruz."""
+    yer = " · ".join(e(p) for p in (k.mekan, k.sehir) if p and p != "-")
+    satir = [("Tarih", f'<time datetime="{k.tarih.iso()}">{k.tarih.yazi()}</time>', "C · Tam Tarih · D · bitiş"),
+             ("Saat", '<span class="duyuru-eksik">Excel\'de saat sütunu yok — eklenecek</span>', "— · eksik sütun"),
+             ("Yer", yer or '<span class="duyuru-eksik">Girilmemiş</span>', "E · Şehir · F · Mekan"),
+             ("Tür", e(" / ".join(k.tipler)), "G · Etkinlik Tipi")]
+    ogeler = "\n".join(
+        f'      <div data-alan="{alan}">\n        <dt>{ad}</dt>\n        <dd>{deger}</dd>\n      </div>'
+        for ad, deger, alan in satir)
+    return f'    <dl class="duyuru-bilgi">\n{ogeler}\n    </dl>'
+
+
+def duyuru_cagri(k: Kayit) -> str:
+    """Duyurunun bittiği yer: katılmak isteyen ne yapacak. Takvim dosyası
+    sayfa yayına alınırken üretilir; örneklemde düğme açıklama penceresi."""
+    ig = (f'      <a class="duyuru-dugme" href="{e(k.ig_link)}">Instagram gönderisi ↗</a>'
+          if k.ig_link else
+          '      <span class="duyuru-dugme duyuru-dugme--yok">Instagram gönderisi — link girilmemiş</span>')
+    return f"""
+    <div class="duyuru-cagri" data-alan="M · IG Link">
+      <button class="duyuru-dugme duyuru-dugme--ana" type="button" data-pencere="takvim-pencere">Takvime ekle</button>
+{ig}
+      <a class="duyuru-dugme" href="../tr/contact.html">Soru sor / katıl</a>
+    </div>""" + pencere("takvim-pencere", "Takvime ekle",
+                        "Bu düğme etkinliğin .ics dosyasını indirecek — tarih, saat ve yer "
+                        "takvim uygulamasına doğrudan geçsin diye. Dosya sayfa yayına "
+                        "alınırken Excel'deki tarihten üretilir.")
+
+
+def duyuru_kart(k: Kayit, dosya: str, yaklasan: bool) -> str:
+    """Duyuru listesindeki kart: afiş + tarih + tür + başlık. Ana sayfadaki
+    .oge ızgarasının aynısı; tek farkı görsel kutusunu afişin doldurması."""
+    rozet = '<span class="duyuru-rozet">yaklaşan</span>' if yaklasan else ""
+    return f"""      <li class="oge oge--duyuru">
+        <a href="{dosya}">
+          <span class="oge-gorsel oge-gorsel--afis">{afis(k, kucuk=True)}{rozet}</span>
+          <span class="oge-tip">{e(" / ".join(k.tipler))}
+            <span class="oge-ok" aria-hidden="true">→</span></span>
+          <span class="oge-tarih">{e(k.tarih.yazi())}</span>
+          <span class="oge-metin">{e(k.baslik)}</span>
+        </a>
+      </li>"""
+
+
+# --------------------------------------------------------------------------
 # ÖRNEKLER
 # --------------------------------------------------------------------------
 
@@ -442,6 +541,7 @@ def main() -> None:
         ("video.html", "Video"), ("etkinlik-podcast.html", "Etkinlik · Podcast"),
         ("etkinlik-fotograf.html", "Etkinlik · Fotoğraflı"), ("etkinlik-video.html", "Etkinlik · Videolu"),
         ("etkinlik-akea.html", "Etkinlik · Konferans"), ("etkinlik-kurultay.html", "Etkinlik · Kurultay"),
+        ("duyuru.html", "Duyuru · Tek etkinlik"), ("duyurular.html", "Duyuru · Liste"),
     ]
 
     def nav(dosya):
@@ -721,6 +821,79 @@ def main() -> None:
     sayfa("etkinlik-kurultay.html", k.baslik, k.ozet, "Etkinlik: Kurultay + sunum (slayt)", govde,
           bolum="etkinlik", swiper=True)
 
+    # ---- DUYURU · TEK ETKİNLİK --------------------------------------------
+    # Excel'deki en yeni etkinlik. Duyuru sayfası onun olay olmadan önceki
+    # hali: fotoğraf yok, video yok; sayfayı afiş ve "ne zaman, nerede" taşıyor.
+    d = ev[0]
+    govde = (post_head(d, ", ".join(d.tipler), meta=etkinlik_meta(d), label_alan="G · Etkinlik Tipi")
+             + f"""
+    <p class="duyuru-durum" data-alan="C · Tam Tarih — tarih geçmediyse">
+      <span class="duyuru-rozet">yaklaşan</span>
+      Bu etkinlik henüz olmadı. Sayfada fotoğraf, video ve etkinlik yazısı
+      yerine afiş ve katılım bilgisi var.
+    </p>
+
+    <!-- İÇERİK: afiş. Kolektifin Instagram için ürettiği görsel; siteye giren
+         tek yeni malzeme. Excel'de sütunu yok — kayıt klasöründe ham/afis.jpg
+         aranır, yoksa aşağıdaki yer tutucu durur. -->
+    <figure class="duyuru-afis" data-alan="İçerik · afiş (ham/afis.jpg)">
+      {afis(d)}
+    </figure>
+{duyuru_bilgi(d)}
+{duyuru_cagri(d)}
+""" + uzun_html(d.uzun, "Duyuru metni boş — Excel'de L sütunu doldurulunca burada görünür.")
+             + "\n" + temalar_html(d) + "\n" + etkinlik_kunye(d) + f"""
+    <p class="duyuru-not">
+      <strong>Etkinlik geçince bu sayfa silinmiyor.</strong> Aynı adres kalır:
+      “yaklaşan” rozeti düşer, afişin altına fotoğraflar, video ve etkinlik
+      yazısı girer — sayfa kendiliğinden arşiv kaydına döner. Duyuru ile arşiv
+      kaydı iki ayrı sayfa değil, aynı sayfanın iki hali.
+    </p>
+    <p class="duyuru-not duyuru-not--uyari">
+      Örnekteki özet ve yazı arşivden geliyor, o yüzden geçmiş zamanda
+      (“katıldık”). Gerçek duyuruda aynı sütunlar etkinlikten önce, gelecek
+      zamanda yazılır.
+    </p>
+""" + nav("duyuru.html"))
+    sayfa("duyuru.html", d.baslik, d.ozet, "Duyuru: tek etkinlik (yaklaşan)", govde, bolum="etkinlik")
+
+    # ---- DUYURU · LİSTE ---------------------------------------------------
+    # Yayında liste tarihi geçmemiş etkinliklerden kurulur. Excel şu an
+    # geçmişin arşivi; ileri tarihli tek kayıt var. Örneklemin ızgarası boş
+    # kalmasın diye en yeni altı etkinlik gösteriliyor, hangisinin gerçekten
+    # yaklaşan olduğu rozetten okunuyor.
+    b = datetime.date.today()
+    bugun = (b.year, b.month, b.day)
+
+    def yaklasan_mi(k: Kayit) -> bool:
+        """Çok günlü etkinlik son günü bitene kadar duyuruda kalır: kartı
+        ilk günü geçti diye düşmez."""
+        return max(k.tarih.sirala(), k.tarih.bitis or (0, 0, 0)) >= bugun
+
+    kartlar = "\n".join(duyuru_kart(k, "duyuru.html", yaklasan_mi(k)) for k in ev[:6])
+    sayi = sum(1 for k in ev if yaklasan_mi(k))
+    govde = f"""
+    <header class="post-head">
+      <p class="label">Duyurular</p>
+      <h1>Yaklaşan etkinlikler</h1>
+      <p class="subtitle">Tarihi gelmemiş her etkinlik burada bir kartla duruyor: afişi, tarihi, türü. Karta tıklayınca etkinliğin kendi duyuru sayfası açılıyor.</p>
+    </header>
+
+    <ul class="izgara izgara--orta duyuru-izgara" data-alan="Excel · tarihi geçmemiş etkinlik satırları">
+{kartlar}
+    </ul>
+
+    <div class="prose">
+      <p class="duyuru-not">Liste elle yazılmıyor: Excel'de tarihi bugünden ileri olan
+        her etkinlik satırı kendiliğinden buraya düşüyor, tarih geçince kartı
+        arşive geçiyor. Şu an Excel'de tarihi geçmemiş <strong>{sayi} etkinlik</strong> var;
+        ızgara boş görünmesin diye örnekte en yeni altı etkinlik gösteriliyor,
+        gerçekten yaklaşan olan “yaklaşan” rozetini taşıyor.</p>
+    </div>
+""" + nav("duyurular.html")
+    sayfa("duyurular.html", "Yaklaşan etkinlikler", "Tarihi gelmemiş etkinliklerin duyuruları",
+          "Duyuru: liste (kapak + alt sayfa)", govde, bolum="etkinlik")
+
     # ---- LİSTE ------------------------------------------------------------
     liste(SIRA)
 
@@ -737,15 +910,19 @@ def liste(sira) -> None:
         "etkinlik-video.html": ("Venedik Bienali — Mimarlık İşçileri Buluşması", "YouTube + Instagram bağlantısı."),
         "etkinlik-akea.html": ("AKEA — Atina, 8 Şubat 2026", "Fotoğraflar, etkinlik yazısı, altında konuşma metni (Türkçe özet + İngilizce tam metin)."),
         "etkinlik-kurultay.html": ("Mimarlık ve Eğitim Kurultayı XIII", "Fotoğraflar, etkinlik yazısı, altında sunumun slaytları (tam ekran)."),
+        "duyuru.html": ("Situated Architectural Pedagogies of Co-making / Becoming", "Afiş, “ne zaman nerede” bloğu, takvime ekle. Etkinlik geçince aynı sayfa arşiv kaydı olur."),
+        "duyurular.html": ("Yaklaşan etkinlikler", "Duyuru kartları: afiş + tarih + tür; karta tıklayınca duyuru sayfası."),
     }
 
     def li(dosya, tip):
         ad, not_ = notlar[dosya]
-        return (f'      <li><a href="{dosya}"><span class="orneklem-tip">{e(tip.replace("Etkinlik · ", ""))}</span>'
+        return (f'      <li><a href="{dosya}"><span class="orneklem-tip">{e(tip.split(" · ")[-1])}</span>'
                 f'<span><span class="orneklem-ad">{e(ad)}</span><span class="orneklem-not">{e(not_)}</span></span></a></li>')
 
-    uretim = "\n".join(li(d, t) for d, t in sira if not d.startswith("etkinlik"))
+    uretim = "\n".join(li(d, t) for d, t in sira
+                       if not d.startswith(("etkinlik", "duyuru")))
     etkinlik = "\n".join(li(d, t) for d, t in sira if d.startswith("etkinlik"))
+    duyuru = "\n".join(li(d, t) for d, t in sira if d.startswith("duyuru"))
     govde = f"""
     <header class="post-head">
       <p class="label">Örneklem</p>
@@ -770,6 +947,16 @@ def liste(sira) -> None:
       <h2>Etkinlikler</h2>
       <ul class="orneklem-liste">
 {etkinlik}
+      </ul>
+    </section>
+
+    <section class="orneklem-grup">
+      <h2>Duyurular</h2>
+      <p class="orneklem-aciklama">Etkinlik sayfasının olay olmadan önceki hali.
+        Ayrı bir kayıt değil: aynı satır, aynı adres. Etkinlik geçince afişin
+        altına fotoğraflar ve yazı girer, sayfa arşiv kaydına döner.</p>
+      <ul class="orneklem-liste">
+{duyuru}
       </ul>
     </section>
 """
