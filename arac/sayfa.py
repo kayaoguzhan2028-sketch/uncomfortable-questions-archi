@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from veri import KOK, oku, slug  # noqa: E402
+from veri import KOK, oku  # noqa: E402
 
 # Kolektifin adı iki dilde. İngilizcesi "disturbing" DEĞİL — kolektifin
 # kendi kullandığı ad "Uncomfortable Questions in Architecture".
@@ -151,11 +151,6 @@ METIN = {
         "n_archive": "üretimler",
         "n_sorular": "sorular",
         "n_contact": "iletişim",
-        "suz_tip": "tür",
-        "suz_hepsi": "hepsi",
-        "suz_sirala": "sırala",
-        "suz_tarih": "tarih",
-        "suz_tema": "tema",
         "n_orneklem": "örneklem",
         "n_menu": "menü",
         "n_sartlar": "Koşullar",
@@ -240,11 +235,6 @@ METIN = {
         "n_archive": "works",
         "n_sorular": "questions",
         "n_contact": "connect",
-        "suz_tip": "type",
-        "suz_hepsi": "all",
-        "suz_sirala": "sort",
-        "suz_tarih": "date",
-        "suz_tema": "theme",
         "n_orneklem": "samples",
         "n_menu": "menu",
         "n_sartlar": "Terms &amp; Conditions",
@@ -571,15 +561,11 @@ def alt(dil: str, derinlik: int) -> str:
 """
 
 
-def kart(dil, kayit, derinlik: int, siralar: dict | None = None) -> str:
+def kart(dil, kayit, derinlik: int) -> str:
     """Izgaradaki tek kayıt.
 
     Sayfa tr/ ve en/ altında, FOTOĞRAF kayit/ altında: fotoğraf iki dilde
-    de aynı, repoda tek kopya duruyor.
-
-    siralar: {"tarih": n, "tip": n, "tema": n} — kartın üç sıralamadaki yeri.
-    CSS'in order'ı bu sayıları okuyor, böylece sıralama değişirken kart
-    yeniden basılmıyor, sadece yeri değişiyor."""
+    de aynı, repoda tek kopya duruyor."""
     k = kac(derinlik)
     sayfa = f"{k}{dil}/{sayfa_yolu(kayit)}"
     gorsel = KOK / kayit.kaynak / "kapak.webp"
@@ -598,16 +584,7 @@ def kart(dil, kayit, derinlik: int, siralar: dict | None = None) -> str:
     etiketler = "".join(f'<span class="oge-tema">{html.escape(t)}</span>'
                         for t in sirali)
     tema_satiri = f'\n          <span class="oge-temalar">{etiketler}</span>' if etiketler else ""
-    # Tip sınıfları süzgeç için: kart hangi tiplerdeyse o sınıfları taşıyor,
-    # süzgeç eşleşmeyeni gizliyor. Kayıt ızgarada TEK KERE duruyor — üç tipi
-    # olan bir etkinlik üç kere basılmıyor, üç süzgeçte de görünüyor.
-    sinif = " ".join(["oge"] + [f"t-{tip_slug(t)}" for t in kayit.tipler])
-    if siralar:
-        stil = (' style="--o-tarih:{tarih};--o-tip:{tip};--o-tema:{tema}"'
-                .format(**siralar))
-    else:
-        stil = ""
-    return f"""      <li class="{sinif}"{stil}>
+    return f"""      <li class="oge">
         <a href="{sayfa}">
           <span class="oge-gorsel">{ic}</span>
           <span class="oge-tip">{html.escape(kayit.baslik)}
@@ -991,101 +968,19 @@ def gorunum(capa, baslik, icerik, dil, k) -> str:
     ])
 
 
-def tip_slug(ad: str) -> str:
-    """Tip adını CSS sınıfına çevirir: 'Açık Ders' -> 'acik-ders'."""
-    return slug(ad)
+def ana_tip(kayit) -> list[str]:
+    """Kaydın TEK grubu: Excel'de ilk yazılan tipi.
 
+    Bir kaydın birden fazla tipi olabiliyor ('Açık Ders / Atölye / Sunum').
+    Hepsinin grubuna koyunca aynı kayıt ızgarada birkaç kere görünüyordu —
+    48 etkinlik 90 kart oluyordu. Artık her kayıt bir kere, ilk tipinde.
 
-def suzgecli_izgara(dil, kayitlar, derinlik, on_ek: str) -> str:
-    """Kayıtların TEK ızgarası, üstünde tip süzgeci ve sıralama.
-
-    NEDEN BÖYLE
-      Önce tip tip gruplara bölünüyordu. Bir kaydın birden fazla tipi
-      olabildiği için (bir etkinlik hem 'Açık Ders' hem 'Atölye') aynı kayıt
-      birkaç grupta birden duruyordu: 48 etkinlik ızgarada 90 kart oluyordu.
-      Artık kayıt bir kere basılıyor; tip bir GRUPLAMA değil, bir SÜZGEÇ.
-
-    JAVASCRIPT YOK
-      Gizli radio + label ile. Görünümler (#activity) :target ile açıldığı
-      için süzgeci bağlantıyla yapamıyoruz — adres çubuğunda tek hedef
-      olabiliyor, #tip-atolye'ye gitmek görünümü kapatırdı.
-      Bedeli: seçim paylaşılabilir bir adres değil ve sayfa yenilenince
-      başa dönüyor. Süzgeç için kabul edilebilir.
-
-    SIRALAMA
-      Kartlar CSS order'ı ile yer değiştiriyor, yeniden basılmıyor. Her kart
-      üç sıradaki yerini kendi üstünde taşıyor (--o-tarih, --o-tip, --o-tema).
-
-    on_ek: aynı sayfada iki süzgeç var (etkinlik, üretim); radio isimleri
-    ve id'leri çakışmasın diye ayrı önek alıyorlar.
+    "İlk" demek Excel'deki yazım sırası demek; kolektif tipi oraya önem
+    sırasıyla yazmış sayıyoruz. Bir kaydı başka bir grupta görmek isteyen
+    Excel'de tiplerin sırasını değiştirir. Kaydın öteki tipleri kaybolmuyor,
+    kendi sayfasında duruyor.
     """
-    # Üç sıralamanın her biri için kaydın kaçıncı sırada olduğu
-    tarih_s = sorted(kayitlar, key=lambda x: x.tarih.sirala(), reverse=True)
-    tip_s = sorted(kayitlar, key=lambda x: ((x.tipler or ["zzz"])[0],
-                                            [-n for n in x.tarih.sirala()]))
-    resmi = [a for a, _ in TEMALAR]
-    def tema_anahtar(x):
-        t = [a for a in resmi if a in x.temalar] or sorted(x.temalar) or ["zzz"]
-        return (t[0], [-n for n in x.tarih.sirala()])
-    tema_s = sorted(kayitlar, key=tema_anahtar)
-    sira = {id(x): {"tarih": tarih_s.index(x), "tip": tip_s.index(x),
-                    "tema": tema_s.index(x)} for x in kayitlar}
-
-    # Tipler, kalabalıktan seyreğe. Tipsiz kayıtlar da bir düğmeye girsin.
-    sayim = collections.Counter(t for x in kayitlar for t in (x.tipler or []))
-    tipler = [t for t, _ in sorted(sayim.items(), key=lambda a: (-a[1], a[0]))]
-
-    p = [f'    <div class="suzgec-alan">']
-    # Radio'lar ızgaranın KARDEŞİ olmalı: CSS ~ ile karta ulaşıyor.
-    p.append(f'      <input type="radio" name="{on_ek}-tip" id="{on_ek}-tip-hepsi" class="suz-radio" checked>')
-    for t in tipler:
-        p.append(f'      <input type="radio" name="{on_ek}-tip" id="{on_ek}-tip-{tip_slug(t)}" class="suz-radio">')
-    for ad in ("tarih", "tip", "tema"):
-        secili = " checked" if ad == "tarih" else ""
-        p.append(f'      <input type="radio" name="{on_ek}-sira" id="{on_ek}-sira-{ad}" class="suz-radio"{secili}>')
-
-    p.append('      <div class="suzgec">')
-    p.append(f'        <span class="suzgec-ad">{S(dil, "suz_tip")}</span>')
-    p.append(f'        <label for="{on_ek}-tip-hepsi">{S(dil, "suz_hepsi")}'
-             f' <span class="suzgec-sayi">{len(kayitlar)}</span></label>')
-    for t in tipler:
-        p.append(f'        <label for="{on_ek}-tip-{tip_slug(t)}">{html.escape(t)}'
-                 f' <span class="suzgec-sayi">{sayim[t]}</span></label>')
-    p.append('      </div>')
-    p.append('      <div class="suzgec suzgec--sira">')
-    p.append(f'        <span class="suzgec-ad">{S(dil, "suz_sirala")}</span>')
-    for ad in ("tarih", "tip", "tema"):
-        p.append(f'        <label for="{on_ek}-sira-{ad}">{S(dil, "suz_" + ad)}</label>')
-    p.append('      </div>')
-
-    p.append('      <ul class="izgara izgara--orta">')
-    p += [kart(dil, x, derinlik, sira[id(x)]) for x in tarih_s]
-    p.append('      </ul>')
-    p.append('    </div>')
-    return "\n".join(p)
-
-
-def suzgec_stil(gruplar: list[tuple[str, list]]) -> str:
-    """Süzgecin tipe BAĞLI kuralları. Tipler veriden geldiği için bu blok
-    da veriden üretiliyor; tipten bağımsız olanlar main.style.css'te.
-
-    gruplar: [(önek, kayıtlar), …] — "ev" etkinlikler, "ur" üretimler."""
-    satir = []
-    for on_ek, kayitlar in gruplar:
-        tipler = {t for x in kayitlar for t in x.tipler}
-        for t in sorted(tipler):
-            sl = tip_slug(t)
-            satir.append(f'#{on_ek}-tip-{sl}:checked ~ .izgara > .oge:not(.t-{sl})'
-                         '{display:none}')
-        # Seçili düğme: radio ile label kardeş değil, o yüzden id id yazılıyor
-        for kimlik in [f"{on_ek}-tip-hepsi"] + [f"{on_ek}-tip-{tip_slug(t)}" for t in sorted(tipler)]                 + [f"{on_ek}-sira-{a}" for a in ("tarih", "tip", "tema")]:
-            satir.append(f'#{kimlik}:checked ~ .suzgec label[for="{kimlik}"]'
-                         '{font-weight:700;border-bottom-color:currentColor}')
-        # Sıralama: kartın order'ı hangi sayıyı okuyacak
-        for ad in ("tip", "tema"):
-            satir.append(f'#{on_ek}-sira-{ad}:checked ~ .izgara > .oge'
-                         '{order:var(--o-' + ad + ')}')
-    return "<style>\n" + "\n".join(satir) + "\n</style>"
+    return kayit.tipler[:1]
 
 
 def taksonomi(dil, kayitlar, derinlik, anahtar):
@@ -1208,10 +1103,6 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
     p.append('</div>')
 
     # ===================== GÖRÜNÜMLER =====================
-    # Süzgecin tipe bağlı kuralları. Sayfayla birlikte üretiliyor çünkü
-    # hangi tiplerin olduğunu Excel söylüyor (bkz. suzgec_stil).
-    p.append(suzgec_stil([("ev", ev), ("ur", pr)]))
-
     tema_ic = "\n".join([
         tema_listesi(dil, derinlik),
         '    <div class="blok">', '      <div></div>', '      <div>',
@@ -1224,12 +1115,12 @@ def ana_sayfa(dil, ev, pr, derinlik=1):
                      manifesto_bolumu(dil), dil, k))
 
     p.append(gorunum("activity", S(dil, "b_activity"),
-                     suzgecli_izgara(dil, ev, derinlik, "ev"), dil, k))
+                     taksonomi(dil, ev, derinlik, ana_tip), dil, k))
 
     p.append(gorunum("network", S(dil, "ag_uluslararasi"),
                      ag_listesi(dil), dil, k))
 
-    arsiv_ic = suzgecli_izgara(dil, pr, derinlik, "ur")
+    arsiv_ic = taksonomi(dil, pr, derinlik, ana_tip)
     p.append(gorunum("archive", S(dil, "b_archive"), arsiv_ic, dil, k))
 
     p.append('</main>')
