@@ -29,3 +29,6 @@ __pycache__/
 
 # Kayitlarin calisma tablosu - uretilir, kaynak Excel
 durum.csv
+
+# lab haritasi ham verisi (harita.py indirir)
+lab/.ne/
