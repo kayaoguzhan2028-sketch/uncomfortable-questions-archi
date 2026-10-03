@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Places. lat / lon come from Google Maps (right click on the spot). side: 'r' / 'l' puts the name on the right / left.
   // map: clicking the pin opens that city's own map. in: the place sits on that city's map.
-  // hub: the centre of its map; every other place there gets an arc from it.
+  // hub: the centre of its map; every other place there gets an arc from it. big: a larger pin.
   const places = {
     ankara:    { city: 'Ankara', lat: 39.93, lon: 32.86, side: 'r', map: 'ankara', hub: true },
     istanbul:  { city: 'İstanbul', lat: 41.01, lon: 28.98, side: 'l', map: 'istanbul' },
@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     londra:    { city: 'Londra', lat: 51.51, lon: -0.13 },
 
     odtu:      { city: 'ODTÜ', lat: 39.8899, lon: 32.7798, in: 'ankara', hub: true },
+    ofis:      { city: 'Ofisimiz', lat: 39.903242, lon: 32.861651, in: 'ankara', side: 'r', big: true },
     bilkent:   { city: 'Bilkent', lat: 39.8686, lon: 32.7490, in: 'ankara', side: 'l' },
     gazi:      { city: 'Gazi', lat: 39.9268, lon: 32.8328, in: 'ankara' },
     ted:       { city: 'TED', lat: 39.9229, lon: 32.8616, in: 'ankara', side: 'r' },
@@ -87,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Events. To add one: copy a line and change it. type: 'visit' or 'contact'.
   const events = [
     { at: 'odtu', name: 'Toplantılar, atölyeler, açık dersler, okuma buluşmaları, sergiler', date: '2024–2026' },
+    { at: 'ofis', type: 'visit', name: 'Mimarlık İşçileri Buluşması', date: '19.04.2026' },
     { at: 'bilkent', type: 'visit', name: 'Üniversite Etkinliği: Mimarlık ve Pedagoji', date: '22.10.2024' },
     { at: 'gazi', type: 'visit', name: 'Üniversite Etkinliği: Stüdyo Kültürü', date: '05.11.2024' },
     { at: 'ted', type: 'visit', name: 'Üniversite Etkinliği: Müfredat Teşhiri', date: '19.11.2024' },
@@ -198,11 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
       out += `<path class="uqa-line${off.has(t) ? ' uqa-off' : ''}" d="${arc([hub.x, hub.y], [places[id].x, places[id].y], n)}" fill="none" stroke="${TYPES[t].color}" stroke-width="${1.2 * s}" stroke-dasharray="${4 * s},${6 * s}"/>`));
     // A name is left out while its pin sits on top of a busier one (city pins first); zooming in brings it back
     const named = [];
-    [...here].sort((a, b) => !!places[b].hub - !!places[a].hub || !!places[b].map - !!places[a].map || places[b].own.length - places[a].own.length).forEach(id => {
+    [...here].sort((a, b) => !!places[b].hub - !!places[a].hub || !!(places[b].map || places[b].big) - !!(places[a].map || places[a].big) || places[b].own.length - places[a].own.length).forEach(id => {
       const p = places[id], { x, y } = p, side = { r: 1, l: -1 }[p.side] || 0;
       const crowded = named.some(q => Math.hypot(q.x - x, q.y - y) < 14 * s);
       if (!crowded) named.push(p);
-      const [r1, r2, r3, ty] = (p.hub ? [14, 8, 4.5, 21] : p.map || p.own.length > 1 ? [11, 5.5, 3, 17] : [10, 5, 2.5, 16]).map(v => v * s);
+      const [r1, r2, r3, ty] = (p.hub ? [14, 8, 4.5, 21] : p.map || p.big || p.own.length > 1 ? [11, 5.5, 3, 17] : [10, 5, 2.5, 16]).map(v => v * s);
       const c = p.hub || !p.types.length ? THEME.accent : TYPES[p.types[0]].color;
       const dim = p.types.length && p.types.every(t => off.has(t)) ? ' uqa-dim' : '';
       out += `<g class="uqa-pin${dim}" data-id="${id}">
