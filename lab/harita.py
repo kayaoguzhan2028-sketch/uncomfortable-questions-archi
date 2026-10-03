@@ -26,6 +26,7 @@ SEHIRLER = {
 }
 KUTU = {"ankara": (32.2, 39.2, 33.3, 40.3), "istanbul": (27.9, 40.7, 29.95, 41.7)}  # aynı adlı ilçeler karışmasın
 TOL_SEHIR = 0.0004                        # derece (~40 m) sadeleştirme
+TOL_DIS = 0.004                           # dış sınır dünya ölçeğinde görünür, kaba olabilir
 
 K = 10                                    # 1 derece = 10 birim -> dünya 3600 birim genişlik
 TOP, BOTTOM = 84, -56                     # Antarktika dışarıda
@@ -130,15 +131,17 @@ def main():
 
 def sehirler():
     from shapely.geometry import shape  # pip install shapely
+    from shapely.ops import unary_union
     ilceler = load("tur_adm2", ILCE_URL)["features"]
     for ad, liste in SEHIRLER.items():
         x0, y0, x1, y1 = KUTU[ad]
-        paths, xs, ys = [], [], []
+        paths, xs, ys, hepsi = [], [], [], []
         for f in ilceler:
             g = shape(f["geometry"])
             c = g.representative_point()
             if f["properties"]["shapeName"] not in liste or not (x0 < c.x < x1 and y0 < c.y < y1):
                 continue
+            hepsi.append(g)
             g = g.simplify(TOL_SEHIR)
             for poly in getattr(g, "geoms", [g]):
                 if poly.area < TOL_SEHIR ** 2 * 4:
@@ -149,10 +152,15 @@ def sehirler():
                     pts.append((round(x, 4), round(y, 4)))
                     xs.append(x); ys.append(y)
                 paths.append(d(pts, True))
+        # Şehrin dış sınırı: dünya haritasında tıklanacak alan olarak kullanılır, şehir haritasında görünmez
+        dis = unary_union(hepsi).simplify(TOL_DIS)
+        sinir = "".join(d([tuple(round(v, 3) for v in xy(lon, lat)) for lon, lat in poly.exterior.coords], True)
+                        for poly in getattr(dis, "geoms", [dis]) if poly.area > TOL_DIS ** 2 * 4)
         vb = "%g %g %g %g" % (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
         svg = (
             f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}">'
             f'<path fill="{LAND}" stroke="{BORDER}" stroke-width="{BORDER_W}" vector-effect="non-scaling-stroke" stroke-linejoin="round" d="{"".join(paths)}"/>'
+            f'<path id="sinir" fill="none" d="{sinir}"/>'
             "</svg>\n"
         )
         open(os.path.join(HERE, ad + ".svg"), "w", encoding="utf-8", newline="\n").write(svg)

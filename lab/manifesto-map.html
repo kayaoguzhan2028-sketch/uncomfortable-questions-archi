@@ -138,13 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const svg = document.createElementNS(NS, 'svg');
   svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab';
   // Each map is read into the page so its borders stay thin at every zoom; if that fails it is shown as an image
-  const maps = {};
+  const maps = {}, texts = {};
+  const getText = v => texts[v] = texts[v] || fetch(MAPS[v]).then(r => r.ok ? r.text() : Promise.reject());
   const loadMap = v => {
     if (maps[v]) return;
     const g = maps[v] = document.createElementNS(NS, 'g');
     g.style.pointerEvents = 'none';
-    svg.insertBefore(g, layer);
-    fetch(MAPS[v]).then(r => r.ok ? r.text() : Promise.reject()).then(t => {
+    svg.insertBefore(g, areas);
+    getText(v).then(t => {
       g.innerHTML = t.replace(/<\/?svg[^>]*>/g, '');
       g.w = +(t.match(/viewBox="[^"]*?([\d.]+) [\d.]+"/) || [])[1] || 0; // map width, so a city opens wide enough to be recognised
       if (v === view && v !== 'world') { base = fit(); reset(); }
@@ -152,8 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (v === 'world') g.innerHTML = `<image href="${MAPS[v]}" width="3600" height="1775"/>`;
     });
   };
-  const layer = document.createElementNS(NS, 'g');
-  svg.append(layer);
+  // City outlines on the world map: they light up under the mouse, pulse on phones, and open the city when clicked
+  const areas = document.createElementNS(NS, 'g'), layer = document.createElementNS(NS, 'g');
+  svg.append(areas, layer);
+  ids.filter(id => places[id].map).forEach(id => getText(places[id].map).then(t => {
+    const m = t.match(/id="sinir"[^>]* d="([^"]*)"/);
+    if (m) areas.insertAdjacentHTML('beforeend', `<path class="uqa-area" data-id="${id}" d="${m[1]}"/>`);
+  }).catch(() => {}));
 
   let view = 'world', here = [], base, cur;
   const off = new Set();
@@ -190,9 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const hub = here.map(id => places[id]).find(p => p.hub);
     if (hub) here.forEach(id => places[id] !== hub && places[id].types.forEach((t, n) =>
       out += `<path class="uqa-line${off.has(t) ? ' uqa-off' : ''}" d="${arc([hub.x, hub.y], [places[id].x, places[id].y], n)}" fill="none" stroke="${TYPES[t].color}" stroke-width="${1.2 * s}" stroke-dasharray="${4 * s},${6 * s}"/>`));
-    // A name is left out while its pin sits on top of a busier one; zooming in brings it back
+    // A name is left out while its pin sits on top of a busier one (city pins first); zooming in brings it back
     const named = [];
-    [...here].sort((a, b) => !!places[b].hub - !!places[a].hub || places[b].own.length - places[a].own.length).forEach(id => {
+    [...here].sort((a, b) => !!places[b].hub - !!places[a].hub || !!places[b].map - !!places[a].map || places[b].own.length - places[a].own.length).forEach(id => {
       const p = places[id], { x, y } = p, side = { r: 1, l: -1 }[p.side] || 0;
       const crowded = named.some(q => Math.hypot(q.x - x, q.y - y) < 14 * s);
       if (!crowded) named.push(p);
@@ -200,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const c = p.hub || !p.types.length ? THEME.accent : TYPES[p.types[0]].color;
       const dim = p.types.length && p.types.every(t => off.has(t)) ? ' uqa-dim' : '';
       out += `<g class="uqa-pin${dim}" data-id="${id}">
-        <circle cx="${x}" cy="${y}" r="${r1}" fill="${c}" opacity="0.15"/>
+        <circle cx="${x}" cy="${y}" r="${r1}" fill="${c}" opacity="${p.map ? 0 : 0.15}"/>
         <circle cx="${x}" cy="${y}" r="${r2}" fill="${c}" opacity="0.4"/>
         <circle cx="${x}" cy="${y}" r="${r3}" fill="${c}"/>
         <text${crowded ? ' display="none"' : ''} x="${x + side * (r1 + 2 * s)}" y="${side ? y + 3 * s : y + ty}" text-anchor="${['end', 'middle', 'start'][side + 1]}" font-family="Space Mono, monospace" font-size="${(p.hub ? 10 : 8) * s}" font-weight="700" fill="${p.hub ? THEME.accent : THEME.label}" letter-spacing="0.05em">${p.city.toLocaleUpperCase('tr')}</text>
@@ -231,6 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .uqa-line { opacity: 0.6; transition: opacity 0.3s; }
     .uqa-off { opacity: 0 !important; }
     .uqa-pin.uqa-dim { opacity: 0.25; }
+    .uqa-area { fill: ${THEME.accent}; fill-opacity: 0.12; stroke: ${THEME.accent}; stroke-opacity: 0.6; stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill-opacity 0.25s; }
+    .uqa-area:hover, .uqa-area.uqa-hot { fill-opacity: 0.4; }
+    @media (hover: none) { .uqa-area { animation: uqa-pulse 1.8s ease-in-out infinite; } }
+    @keyframes uqa-pulse { 50% { fill-opacity: 0.45; } }
     .uqa-ui { position: absolute; display: flex; gap: 0.3rem; z-index: 5; }
     .uqa-ui button { display: flex; align-items: center; gap: 0.5rem; background: ${THEME.tipBg}; border: 1px solid #ddd; padding: 0.25rem 0.6rem; font: 0.6rem 'Space Mono', monospace; color: ${THEME.tipText}; cursor: pointer; }
     .uqa-ui button i { width: 1.4rem; height: 4px; }
@@ -265,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     here = ids.filter(id => places[id].view === v);
     loadMap(v);
     Object.entries(maps).forEach(([k, g]) => g.style.display = k === v ? '' : 'none');
+    areas.style.display = v === 'world' ? '' : 'none';
     back.style.display = v === 'world' ? 'none' : '';
     tip.classList.remove('visible');
     base = fit();
@@ -296,9 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
     tip.style.top = Math.max(10, Math.min(top, b.height - tip.offsetHeight - 10)) + 'px';
     tip.classList.add('visible');
   };
-  const pinOf = e => e.target.closest && e.target.closest('.uqa-pin');
-  svg.addEventListener('mouseover', e => pinOf(e) && show(pinOf(e)));
-  svg.addEventListener('mouseout', e => pinOf(e) && tip.classList.remove('visible'));
+  const pinOf = e => e.target.closest && e.target.closest('.uqa-pin, .uqa-area');
+  const hot = (pin, on) => areas.querySelectorAll(`[data-id="${pin.dataset.id}"]`).forEach(a => a.classList.toggle('uqa-hot', on));
+  svg.addEventListener('mouseover', e => { const pin = pinOf(e); if (pin) { show(pin); hot(pin, true); } });
+  svg.addEventListener('mouseout', e => { const pin = pinOf(e); if (pin) { tip.classList.remove('visible'); hot(pin, false); } });
   svg.addEventListener('click', e => {
     const pin = pinOf(e);
     if (!pin) return;
