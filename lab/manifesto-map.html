@@ -24,7 +24,7 @@ body { background: #ffffff; color: #0a0a0a; }
 </style>
 </head>
 <body>
-<nav class="lab-nav"><a href="index.html">← lab</a> · manifesto-map · <span>beyaz zemin, #uqa-map kutusu taklit · harita: dunya.svg</span></nav>
+<nav class="lab-nav"><a href="index.html">← lab</a> · manifesto-map · <span>beyaz zemin, #uqa-map kutusu taklit · haritalar: dunya.svg, ankara.svg, istanbul.svg</span></nav>
 <main class="lab-kutu">
   <div id="uqa-map"></div>
 </main>
@@ -35,81 +35,143 @@ document.addEventListener('DOMContentLoaded', () => {
   const box = document.getElementById('uqa-map');
   if (!box) return;
 
-  // World map image: upload dunya.svg to Webflow Assets and paste its link here
-  const MAP_URL = 'dunya.svg';
+  // Map images: upload dunya.svg, ankara.svg and istanbul.svg to Webflow Assets and paste their links here
+  const MAPS = { world: 'dunya.svg', ankara: 'ankara.svg', istanbul: 'istanbul.svg' };
 
   const THEME = { label: '#333333', accent: '#e03a2f', tipBg: '#ffffff', tipText: '#0a0a0a', tipMuted: '#888888' };
 
   // Line types: the buttons in the bottom right corner switch them on and off
   const TYPES = {
-    red:   { color: '#e03a2f', label: 'Meslek örgütleri' },
-    blue:  { color: '#2f6fd6', label: 'Uluslararası ağ' },
-    green: { color: '#2e9b5a', label: 'Üniversite atölyeleri' }
+    visit:   { color: '#e03a2f', label: 'Ziyaret ettiklerimiz' },
+    contact: { color: '#2f6fd6', label: 'İletişimde olduklarımız' }
   };
 
-  // Places. The first one is the centre; every event elsewhere gets an arc from it.
-  // lat / lon come from Google Maps (right click on the spot). side: 'r' / 'l' puts the name on the right / left.
+  // Places. lat / lon come from Google Maps (right click on the spot). side: 'r' / 'l' puts the name on the right / left.
+  // map: clicking the pin opens that city's own map. in: the place sits on that city's map.
+  // hub: the centre of its map; every other place there gets an arc from it.
   const places = {
-    ankara:    { city: 'Ankara', lat: 39.93, lon: 32.86, side: 'r' },
-    istanbul:  { city: 'İstanbul', lat: 41.01, lon: 28.98, side: 'l' },
+    ankara:    { city: 'Ankara', lat: 39.93, lon: 32.86, side: 'r', map: 'ankara', hub: true },
+    istanbul:  { city: 'İstanbul', lat: 41.01, lon: 28.98, side: 'l', map: 'istanbul' },
     gebze:     { city: 'Gebze', lat: 40.80, lon: 29.43, side: 'r' },
     eskisehir: { city: 'Eskişehir', lat: 39.78, lon: 30.52 },
     izmir:     { city: 'İzmir', lat: 38.42, lon: 27.14 },
     venedik:   { city: 'Venedik', lat: 45.44, lon: 12.33 },
-    atina:     { city: 'Atina', lat: 37.98, lon: 23.73 }
+    atina:     { city: 'Atina', lat: 37.98, lon: 23.73 },
+    londra:    { city: 'Londra', lat: 51.51, lon: -0.13 },
+
+    odtu:      { city: 'ODTÜ', lat: 39.8899, lon: 32.7798, in: 'ankara', hub: true },
+    bilkent:   { city: 'Bilkent', lat: 39.8686, lon: 32.7490, in: 'ankara', side: 'l' },
+    gazi:      { city: 'Gazi', lat: 39.9268, lon: 32.8328, in: 'ankara' },
+    ted:       { city: 'TED', lat: 39.9229, lon: 32.8616, in: 'ankara', side: 'r' },
+    atilim:    { city: 'Atılım', lat: 39.8157, lon: 32.7247, in: 'ankara' },
+    baskent:   { city: 'Başkent', lat: 39.8890, lon: 32.6530, in: 'ankara' },
+    tobb:      { city: 'TOBB ETÜ', lat: 39.9213, lon: 32.7985, in: 'ankara', side: 'l' },
+    unite:     { city: 'Unite', lat: 39.9015, lon: 32.8600, in: 'ankara', side: 'l' },
+    kennedy:   { city: 'Kennedy 41', lat: 39.8990, lon: 32.8635, in: 'ankara', side: 'r' },
+    kult:      { city: 'Kült Kavaklıdere', lat: 39.9050, lon: 32.8605, in: 'ankara', side: 'r' },
+    tandogan:  { city: 'Tandoğan', lat: 39.9300, lon: 32.8345, in: 'ankara', side: 'r' },
+    aoc:       { city: 'AOÇ Hangarlar', lat: 39.9440, lon: 32.7980, in: 'ankara', side: 'l' },
+    odasi:     { city: 'Mimarlar Odası', lat: 39.9200, lon: 32.8560, in: 'ankara' },
+    md1927:    { city: 'Mimarlar Derneği 1927', lat: 39.8990, lon: 32.8612, in: 'ankara', side: 'l' },
+    kent:      { city: 'Kent Enstitüleri', lat: 39.9155, lon: 32.8570, in: 'ankara', side: 'l' },
+    manuma:    { city: 'Manuma Studio', lat: 39.9170, lon: 32.8620, in: 'ankara', side: 'r' },
+
+    itu:       { city: 'İTÜ Taşkışla', lat: 41.0380, lon: 28.9905, in: 'istanbul', side: 'l' },
+    msgsu:     { city: 'MSGSÜ', lat: 41.0305, lon: 28.9890, in: 'istanbul', side: 'r' },
+    yeditepe:  { city: 'Yeditepe', lat: 40.9727, lon: 29.1530, in: 'istanbul', side: 'r' },
+    him:       { city: 'Herkes İçin Mimarlık', lat: 40.9880, lon: 29.0262, in: 'istanbul', side: 'r' }
   };
-  // The map also opens far enough to show these points (Britain)
+  // The world map also opens far enough to show these points (Britain)
   const SHOW_ALSO = [[58.6, -3], [50, -5.7]];
 
-  // Events. To add one: copy a line and change it.
+  // Events. To add one: copy a line and change it. type: 'visit' or 'contact'.
   const events = [
-    { at: 'ankara', name: 'ODTÜ, Bilkent, Gazi, TED, Atılım, Başkent, TOBB ETÜ, Unite, Kennedy 41, Mimarlar Derneği 1927 ve diğerleri', date: '2024–2026' },
-    { at: 'istanbul', type: 'red', name: 'Herkes İçin Mimarlık - Yaz Okulu', date: '05.08.2025' },
-    { at: 'istanbul', type: 'green', name: 'Mimarlıkta Rahatsız Edici Sorular: Yeditepe', date: '20–24.10.2025' },
-    { at: 'istanbul', type: 'red', name: 'Mimarlık ve Eğitim Kurultayı - XIII (MSGSÜ)', date: '14–15.11.2025' },
-    { at: 'istanbul', type: 'green', name: 'Situated Architectural Pedagogies of Co-making (İTÜ)', date: '19–20.09.2026' },
-    { at: 'gebze', type: 'green', name: 'PUPA: Mimarlıkta Rahatsız Edici Sorular (GTÜ)', date: '12.09.2025' },
-    { at: 'eskisehir', type: 'green', name: 'Atölye - Kabuk Fanzin (ESOGÜ)', date: '13.04.2026' },
-    { at: 'izmir', type: 'green', name: 'Open forum, DEU Architecture Faculty', date: '2025' },
-    { at: 'venedik', type: 'blue', name: 'Venedik Bienali - Mimarlık İşçileri Kolektifleri Buluşması', date: '08.07.2025' },
-    { at: 'atina', type: 'blue', name: 'AKEA Çalışan Mimarların Uluslararası Buluşması', date: '08.02.2026' }
+    { at: 'odtu', name: 'Toplantılar, atölyeler, açık dersler, okuma buluşmaları, sergiler', date: '2024–2026' },
+    { at: 'bilkent', type: 'visit', name: 'Üniversite Etkinliği: Mimarlık ve Pedagoji', date: '22.10.2024' },
+    { at: 'gazi', type: 'visit', name: 'Üniversite Etkinliği: Stüdyo Kültürü', date: '05.11.2024' },
+    { at: 'ted', type: 'visit', name: 'Üniversite Etkinliği: Müfredat Teşhiri', date: '19.11.2024' },
+    { at: 'atilim', type: 'visit', name: 'Üniversite Etkinliği: Sınıf ve Emek', date: '03.12.2024' },
+    { at: 'atilim', type: 'visit', name: 'Üniversite Etkinliği: Toplumsal Cinsiyet - 3', date: '22.05.2025' },
+    { at: 'baskent', type: 'visit', name: 'Üniversite Etkinliği: Toplumsal Cinsiyet', date: '24.12.2024' },
+    { at: 'tobb', type: 'visit', name: 'Üniversite Etkinliği: Toplumsal Cinsiyet - 2', date: '14.05.2025' },
+    { at: 'tobb', type: 'visit', name: 'Tamirhane Mimarlık Festivali', date: '06.06.2026' },
+    { at: 'unite', type: 'visit', name: 'Yeni Dönem Açılışı', date: '01.03.2025' },
+    { at: 'unite', type: 'visit', name: 'Boykot ve Ötesi', date: '13.04.2025' },
+    { at: 'unite', type: 'visit', name: 'Direniş Atölyesi I–IV', date: '11.05–26.06.2025' },
+    { at: 'kennedy', type: 'visit', name: 'Eleştirel Okuma Buluşmaları #4–5', date: '03–06.07.2025' },
+    { at: 'kult', type: 'visit', name: 'Kolektif Değerlendirme: Başlangıç/Bugün/Gelecek', date: '29.01.2026' },
+    { at: 'tandogan', type: 'visit', name: '1 Mayıs Emek ve Dayanışma Günü', date: '01.05.2025 · 01.05.2026' },
+    { at: 'aoc', type: 'visit', name: 'Sihirli Sözcükler Atölyesi (RoofCoLiving)', date: '02.11.2025' },
+    { at: 'odasi', type: 'contact', name: 'TMMOB Mimarlar Odası', date: '2025–2026' },
+    { at: 'md1927', type: 'visit', name: 'Mimarlıkta Rahatsız Edici Sorular: Bir Kolektifin Gündemi', date: '09.12.2025' },
+    { at: 'kent', type: 'visit', name: 'Nasıl Yoksullaştırılıyoruz', date: '22.06.2025' },
+    { at: 'manuma', type: 'visit', name: 'Ücretli Çalışan ve İşsiz Mimarlar ile Deneme Toplantısı', date: '28.07.2024' },
+    { at: 'him', type: 'visit', name: 'Herkes İçin Mimarlık - Yaz Okulu', date: '05.08.2025' },
+    { at: 'itu', type: 'visit', name: 'Situated Architectural Pedagogies of Co-making', date: '19–20.09.2026' },
+    { at: 'itu', type: 'contact', name: 'Taşkışla Direniş', date: '2025' },
+    { at: 'yeditepe', type: 'visit', name: 'Mimarlıkta Rahatsız Edici Sorular: Yeditepe', date: '20–24.10.2025' },
+    { at: 'msgsu', type: 'visit', name: 'Mimarlık ve Eğitim Kurultayı - XIII', date: '14–15.11.2025' },
+    { at: 'gebze', type: 'visit', name: 'PUPA: Mimarlıkta Rahatsız Edici Sorular (GTÜ)', date: '12.09.2025' },
+    { at: 'eskisehir', type: 'visit', name: 'Atölye - Kabuk Fanzin (ESOGÜ)', date: '13.04.2026' },
+    { at: 'izmir', type: 'visit', name: 'Karaburun', date: 'Yakında' },
+    { at: 'venedik', type: 'visit', name: 'Venedik Bienali - Mimarlık İşçileri Kolektifleri Buluşması', date: '08.07.2025' },
+    { at: 'atina', type: 'visit', name: 'AKEA Çalışan Mimarların Uluslararası Buluşması', date: '08.02.2026' },
+    { at: 'londra', type: 'contact', name: 'SAW - Section of Architectural Workers', date: '2025–2026' }
   ];
 
-  // Same projection as the map image (Miller, 10 units per degree). Change one, change both.
+  // Same projection as the map images (Miller, 10 units per degree). Change one, change all.
   const miller = lat => 1.25 * Math.log(Math.tan(Math.PI / 4 + 0.4 * lat * Math.PI / 180));
   const xy = (lat, lon) => [(lon + 180) * 10, (miller(84) - miller(lat)) * 1800 / Math.PI];
-  const ids = Object.keys(places), hub = places[ids[0]];
+  const ids = Object.keys(places);
   ids.forEach(id => {
     const p = places[id];
     [p.x, p.y] = xy(p.lat, p.lon);
-    p.events = events.filter(e => e.at === id);
-    p.types = [...new Set(p.events.map(e => e.type).filter(Boolean))];
+    p.view = p.in || 'world';
+    p.own = events.filter(e => e.at === id);
+    p.inside = ids.filter(k => places[k].in === id);
+    // A city pin on the world map also carries the line types of the places on its own map
+    p.types = [...new Set(events.filter(e => e.at === id || places[e.at].in === id).map(e => e.type).filter(Boolean))];
   });
   const extra = SHOW_ALSO.map(([la, lo]) => { const [x, y] = xy(la, lo); return { x, y }; });
 
-  const NS = 'http://www.w3.org/2000/svg', RATIO = 900 / 413, MIN_W = 130, MAX_W = 3600;
+  const NS = 'http://www.w3.org/2000/svg', RATIO = 900 / 413;
   const svg = document.createElementNS(NS, 'svg');
   svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab';
-  // The map is read into the page so its borders stay thin at every zoom; if that fails it is shown as an image
-  const map = document.createElementNS(NS, 'g');
-  map.style.pointerEvents = 'none';
-  fetch(MAP_URL).then(r => r.ok ? r.text() : Promise.reject()).then(t => map.innerHTML = t.replace(/<\/?svg[^>]*>/g, '')).catch(() => {
-    map.innerHTML = `<image href="${MAP_URL}" width="3600" height="1775"/>`;
-  });
+  // Each map is read into the page so its borders stay thin at every zoom; if that fails it is shown as an image
+  const maps = {};
+  const loadMap = v => {
+    if (maps[v]) return;
+    const g = maps[v] = document.createElementNS(NS, 'g');
+    g.style.pointerEvents = 'none';
+    svg.insertBefore(g, layer);
+    fetch(MAPS[v]).then(r => r.ok ? r.text() : Promise.reject()).then(t => {
+      g.innerHTML = t.replace(/<\/?svg[^>]*>/g, '');
+      g.w = +(t.match(/viewBox="[^"]*?([\d.]+) [\d.]+"/) || [])[1] || 0; // map width, so a city opens wide enough to be recognised
+      if (v === view && v !== 'world') { base = fit(); reset(); }
+    }).catch(() => {
+      if (v === 'world') g.innerHTML = `<image href="${MAPS[v]}" width="3600" height="1775"/>`;
+    });
+  };
   const layer = document.createElementNS(NS, 'g');
-  svg.append(map, layer);
+  svg.append(layer);
 
-  let base, cur;
+  let view = 'world', here = [], base, cur;
   const off = new Set();
 
-  // Frame: fits everything, and keeps the centre away from the edges
+  // Frame: fits every place on the current map, and keeps the centre away from the edges
   const fit = () => {
-    const pts = [...Object.values(places), ...extra].map(p => [p.x, p.y]), pad = 25;
-    let x0 = Math.min(...pts.map(p => p[0])) - pad, x1 = Math.max(...pts.map(p => p[0])) + pad;
-    let y0 = Math.min(...pts.map(p => p[1])) - pad, y1 = Math.max(...pts.map(p => p[1])) + pad;
-    x1 = Math.max(x1, hub.x + (hub.x - x0) * 0.45); x0 = Math.min(x0, hub.x - (x1 - hub.x) * 0.45);
-    y1 = Math.max(y1, hub.y + (hub.y - y0) * 0.45); y0 = Math.min(y0, hub.y - (y1 - hub.y) * 0.45);
-    const w = Math.max(x1 - x0, (y1 - y0) * RATIO, 220);
+    const world = view === 'world';
+    const pts = [...here.map(id => places[id]), ...(world ? extra : [])].map(p => [p.x, p.y]);
+    let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
+    let y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
+    const pad = world ? 25 : Math.max(x1 - x0, y1 - y0) * 0.2;
+    x0 -= pad; x1 += pad; y0 -= pad; y1 += pad;
+    const hub = here.map(id => places[id]).find(p => p.hub);
+    if (hub) {
+      x1 = Math.max(x1, hub.x + (hub.x - x0) * 0.45); x0 = Math.min(x0, hub.x - (x1 - hub.x) * 0.45);
+      y1 = Math.max(y1, hub.y + (hub.y - y0) * 0.45); y0 = Math.min(y0, hub.y - (y1 - hub.y) * 0.45);
+    }
+    const w = Math.max(x1 - x0, (y1 - y0) * RATIO, world ? 220 : (maps[view].w || 0) * 0.4);
     return [(x0 + x1 - w) / 2, (y0 + y1 - w / RATIO) / 2, w];
   };
 
@@ -125,18 +187,23 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.setAttribute('viewBox', `${vx} ${vy} ${w} ${w / RATIO}`);
     box.style.touchAction = w < base[2] * 0.99 ? 'none' : 'pan-y';
     let out = '';
-    ids.slice(1).forEach(id => places[id].types.forEach((t, n) =>
+    const hub = here.map(id => places[id]).find(p => p.hub);
+    if (hub) here.forEach(id => places[id] !== hub && places[id].types.forEach((t, n) =>
       out += `<path class="uqa-line${off.has(t) ? ' uqa-off' : ''}" d="${arc([hub.x, hub.y], [places[id].x, places[id].y], n)}" fill="none" stroke="${TYPES[t].color}" stroke-width="${1.2 * s}" stroke-dasharray="${4 * s},${6 * s}"/>`));
-    ids.forEach((id, i) => {
+    // A name is left out while its pin sits on top of a busier one; zooming in brings it back
+    const named = [];
+    [...here].sort((a, b) => !!places[b].hub - !!places[a].hub || places[b].own.length - places[a].own.length).forEach(id => {
       const p = places[id], { x, y } = p, side = { r: 1, l: -1 }[p.side] || 0;
-      const [r1, r2, r3, ty] = (i === 0 ? [14, 8, 4.5, 21] : p.events.length > 1 ? [11, 5.5, 3, 17] : [10, 5, 2.5, 16]).map(v => v * s);
-      const c = i === 0 || !p.types.length ? THEME.accent : TYPES[p.types[0]].color;
+      const crowded = named.some(q => Math.hypot(q.x - x, q.y - y) < 14 * s);
+      if (!crowded) named.push(p);
+      const [r1, r2, r3, ty] = (p.hub ? [14, 8, 4.5, 21] : p.map || p.own.length > 1 ? [11, 5.5, 3, 17] : [10, 5, 2.5, 16]).map(v => v * s);
+      const c = p.hub || !p.types.length ? THEME.accent : TYPES[p.types[0]].color;
       const dim = p.types.length && p.types.every(t => off.has(t)) ? ' uqa-dim' : '';
       out += `<g class="uqa-pin${dim}" data-id="${id}">
         <circle cx="${x}" cy="${y}" r="${r1}" fill="${c}" opacity="0.15"/>
         <circle cx="${x}" cy="${y}" r="${r2}" fill="${c}" opacity="0.4"/>
         <circle cx="${x}" cy="${y}" r="${r3}" fill="${c}"/>
-        <text x="${x + side * (r1 + 2 * s)}" y="${side ? y + 3 * s : y + ty}" text-anchor="${['end', 'middle', 'start'][side + 1]}" font-family="Space Mono, monospace" font-size="${(i === 0 ? 10 : 8) * s}" font-weight="700" fill="${i === 0 ? THEME.accent : THEME.label}" letter-spacing="0.05em">${p.city.toLocaleUpperCase('tr')}</text>
+        <text${crowded ? ' display="none"' : ''} x="${x + side * (r1 + 2 * s)}" y="${side ? y + 3 * s : y + ty}" text-anchor="${['end', 'middle', 'start'][side + 1]}" font-family="Space Mono, monospace" font-size="${(p.hub ? 10 : 8) * s}" font-weight="700" fill="${p.hub ? THEME.accent : THEME.label}" letter-spacing="0.05em">${p.city.toLocaleUpperCase('tr')}</text>
       </g>`;
     });
     layer.innerHTML = out;
@@ -147,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Zoom around a point given in pixels inside the box (the centre if none)
   const zoom = (f, px, py) => {
     const r = box.getBoundingClientRect(), [vx, vy, w] = cur;
-    const nw = Math.min(MAX_W, Math.max(MIN_W, w * f));
+    const [lo, hi] = view === 'world' ? [130, 3600] : [base[2] / 40, base[2] * 3];
+    const nw = Math.min(hi, Math.max(lo, w * f));
     px = px ?? r.width / 2; py = py ?? r.height / 2;
     cur = [vx + px / r.width * (w - nw), vy + py / r.height * (w - nw) / RATIO, nw];
     draw();
@@ -188,27 +256,39 @@ document.addEventListener('DOMContentLoaded', () => {
     return [...d.children];
   };
 
+  const tip = document.createElement('div');
+  tip.className = 'uqa-tip';
+
+  // Switches between the world map and a city map
+  const open = v => {
+    view = v;
+    here = ids.filter(id => places[id].view === v);
+    loadMap(v);
+    Object.entries(maps).forEach(([k, g]) => g.style.display = k === v ? '' : 'none');
+    back.style.display = v === 'world' ? 'none' : '';
+    tip.classList.remove('visible');
+    base = fit();
+    reset();
+  };
+
+  const [back] = panel('left:0.75rem;top:0.75rem', [['← Dünya', () => open('world')]]);
   panel('right:0.75rem;top:0.75rem;flex-direction:column', [['+', () => zoom(1 / 1.5)], ['−', () => zoom(1.5)], ['⟲', reset]]);
   panel('right:0.75rem;bottom:0.75rem;flex-direction:column', Object.entries(TYPES).map(([t, { color, label }]) => [`<i style="background:${color}"></i>${label}`, b => {
     off.has(t) ? off.delete(t) : off.add(t);
     b.setAttribute('aria-pressed', !off.has(t));
     draw();
   }])).forEach(b => b.setAttribute('aria-pressed', 'true'));
-
-  const tip = document.createElement('div');
-  tip.className = 'uqa-tip';
   box.appendChild(tip);
 
   const show = (pin) => {
     const p = places[pin.dataset.id];
     tip.innerHTML = '';
+    const line = (text, cls) => { const el = document.createElement('span'); el.textContent = text; el.style.display = 'block'; if (cls) el.className = cls; tip.append(el); };
     const name = document.createElement('strong'); name.textContent = p.city;
     tip.append(name);
-    p.events.forEach(e => {
-      const ev = document.createElement('span'); ev.textContent = e.name; ev.style.display = 'block';
-      const dt = document.createElement('span'); dt.className = 'uqa-tip-date'; dt.textContent = e.date;
-      tip.append(ev, dt);
-    });
+    if (p.inside.length) line(p.inside.map(id => places[id].city).join(', '));
+    p.own.forEach(e => { line(e.name); line(e.date, 'uqa-tip-date'); });
+    if (p.map) line('Haritayı açmak için tıklayın', 'uqa-tip-date');
     const b = box.getBoundingClientRect(), r = pin.getBoundingClientRect();
     let left = r.right - b.left + 8, top = r.top - b.top - 10;
     if (left + 270 > b.width) left = r.left - b.left - 270;
@@ -219,7 +299,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const pinOf = e => e.target.closest && e.target.closest('.uqa-pin');
   svg.addEventListener('mouseover', e => pinOf(e) && show(pinOf(e)));
   svg.addEventListener('mouseout', e => pinOf(e) && tip.classList.remove('visible'));
-  svg.addEventListener('click', e => pinOf(e) && show(pinOf(e))); // tap support on phones
+  svg.addEventListener('click', e => {
+    const pin = pinOf(e);
+    if (!pin) return;
+    const p = places[pin.dataset.id];
+    p.map ? open(p.map) : show(pin); // tap support on phones
+  });
 
   // Move the map by a number of pixels
   const pan = (dx, dy) => {
@@ -268,8 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: false });
   svg.addEventListener('touchend', () => { pinch = null; });
 
-  base = fit();
-  reset();
+  open('world');
 });
 </script>
 <!-- EMBED BİTİR -->

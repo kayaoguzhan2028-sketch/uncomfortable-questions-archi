@@ -1,6 +1,8 @@
-"""Dünya haritası SVG'sini üretir: python lab/harita.py  ->  lab/dunya.svg
+"""Harita SVG'lerini üretir: python lab/harita.py  ->  lab/dunya.svg, lab/ankara.svg, lab/istanbul.svg
 
-Veri: Natural Earth 1:50m (kamu malı). İlk çalışmada lab/.ne/ içine indirilir.
+Veri: Natural Earth 1:50m (kamu malı) dünya için; geoBoundaries TUR ADM2
+(OpenStreetMap, ODbL) şehirlerin ilçeleri için. İlk çalışmada lab/.ne/ içine indirilir.
+Şehir haritaları dünya haritasıyla aynı koordinatlarda; sayfa onları dünyanın yerine koyar.
 Projeksiyon: Miller. manifesto-map.html içindeki xy() ile AYNI formül; biri
 değişirse öbürü de değişmeli, yoksa noktalar haritadan kayar.
 
@@ -11,6 +13,19 @@ import json, math, os, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, ".ne")
 URL = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/%s.geojson"
+ILCE_URL = "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/TUR/ADM2/geoBoundaries-TUR-ADM2.geojson"
+
+# Şehir haritaları: hangi ilçeler girer. Ankara'da sadece merkez ilçeler (il çok büyük).
+SEHIRLER = {
+    "ankara": ["Altındağ", "Çankaya", "Etimesgut", "Gölbaşı", "Keçiören", "Mamak", "Pursaklar", "Sincan", "Yenimahalle"],
+    "istanbul": ["Adalar", "Prince Islands", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy",
+                 "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca",
+                 "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy",
+                 "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri",
+                 "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"],
+}
+KUTU = {"ankara": (32.2, 39.2, 33.3, 40.3), "istanbul": (27.9, 40.7, 29.95, 41.7)}  # aynı adlı ilçeler karışmasın
+TOL_SEHIR = 0.0004                        # derece (~40 m) sadeleştirme
 
 K = 10                                    # 1 derece = 10 birim -> dünya 3600 birim genişlik
 TOP, BOTTOM = 84, -56                     # Antarktika dışarıda
@@ -36,11 +51,11 @@ def xy(lon, lat):
     return (lon + 180) * K, (Y0 - miller(lat)) * SY
 
 
-def load(name):
+def load(name, url=None):
     os.makedirs(CACHE, exist_ok=True)
     p = os.path.join(CACHE, name + ".geojson")
     if not os.path.exists(p):
-        urllib.request.urlretrieve(URL % name, p)
+        urllib.request.urlretrieve(url or URL % name, p)
     return json.load(open(p, encoding="utf-8"))
 
 
@@ -113,5 +128,37 @@ def main():
     print("lab/dunya.svg: %d KB, %dx%d birim" % (len(svg) // 1024, W, H))
 
 
+def sehirler():
+    from shapely.geometry import shape  # pip install shapely
+    ilceler = load("tur_adm2", ILCE_URL)["features"]
+    for ad, liste in SEHIRLER.items():
+        x0, y0, x1, y1 = KUTU[ad]
+        paths, xs, ys = [], [], []
+        for f in ilceler:
+            g = shape(f["geometry"])
+            c = g.representative_point()
+            if f["properties"]["shapeName"] not in liste or not (x0 < c.x < x1 and y0 < c.y < y1):
+                continue
+            g = g.simplify(TOL_SEHIR)
+            for poly in getattr(g, "geoms", [g]):
+                if poly.area < TOL_SEHIR ** 2 * 4:
+                    continue
+                pts = []
+                for lon, lat in poly.exterior.coords:
+                    x, y = xy(lon, lat)
+                    pts.append((round(x, 4), round(y, 4)))
+                    xs.append(x); ys.append(y)
+                paths.append(d(pts, True))
+        vb = "%g %g %g %g" % (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
+        svg = (
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}">'
+            f'<path fill="{LAND}" stroke="{BORDER}" stroke-width="{BORDER_W}" vector-effect="non-scaling-stroke" stroke-linejoin="round" d="{"".join(paths)}"/>'
+            "</svg>\n"
+        )
+        open(os.path.join(HERE, ad + ".svg"), "w", encoding="utf-8", newline="\n").write(svg)
+        print("lab/%s.svg: %d KB, %d parça, kutu %s" % (ad, len(svg) // 1024, len(paths), vb))
+
+
 if __name__ == "__main__":
     main()
+    sehirler()
