@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>network-script</title>
+<!-- Önizleme: Webflow sitesinin Space Mono fontu varsayıldı -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ---- ÖNİZLEME KABUĞU: Webflow'a gitmez ---- */
+
+.lab-nav { font: 12px/1.4 "Space Mono", monospace; padding: 10px 16px; border-bottom: 1px dashed #999; opacity: .7; }
+.lab-nav a { color: inherit; }
+.lab-nav span { opacity: .6; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Space Mono", monospace; }
+
+:root { --brand--background: #ffffff; }
+body { background: var(--brand--background); color: #000; }
+.w-embed { max-width: 1400px; margin: 24px auto; padding: 0 16px; }
+
+</style>
+</head>
+<body>
+<nav class="lab-nav"><a href="index.html">← lab</a> · network-script · <span>kendi kutusunu getiriyor; --brand--background beyaz varsayıldı</span></nav>
+<div class="w-embed">
+<!-- EMBED BAŞLA -->
+<!-- ============================================ -->
+<!-- UQA Network Visualization — Webflow embed    -->
+<!-- Paste into an HTML embed block in Webflow    -->
+<!-- ============================================ -->
+
+<style>
+
+  .uqa-network-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: var(--brand--background);
+  }
+  .uqa-network-svg circle.uqa-node-dot { cursor: pointer; }
+</style>
+
+<section class="uqa-network-section">
+  <svg class="uqa-network-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+</section>
+
+<script>
+(function() {
+  const svg = document.currentScript.parentElement.querySelector('.uqa-network-svg');
+  const VIEWBOX_W = 1400;
+  const VIEWBOX_H = 900;
+  svg.setAttribute('viewBox', `0 0 ${VIEWBOX_W} ${VIEWBOX_H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  // Universities
+  const UNIVERSITIES = [
+    { id: 'metu',     name: 'ODTÜ',                     hacked: true,  x: 700,  y: 450 },
+    { id: 'bilkent',  name: 'Bilkent Üniversitesi',     hacked: true,  x: 1100, y: 220 },
+    { id: 'gazi',     name: 'Gazi Üniversitesi',        hacked: true,  x: 1150, y: 600 },
+    { id: 'ted',      name: 'TED Üniversitesi',         hacked: true,  x: 280,  y: 600 },
+    { id: 'baskent',  name: 'Başkent Üniversitesi',     hacked: true,  x: 320,  y: 260 },
+    { id: 'atilim',   name: 'Atılım Üniversitesi',      hacked: true,  x: 700,  y: 770 },
+    { id: 'cankaya',  name: 'Çankaya Üniversitesi',     hacked: false, x: 750,  y: 130 },
+    { id: 'tobb',     name: 'TOBB Üniversitesi',        hacked: false, x: 280,  y: 450 },
+    { id: 'medipol',  name: 'Medipol Üniversitesi',     hacked: false, x: 1080, y: 780 },
+    { id: 'ybu',      name: 'Yıldırım Beyazıt Üniversitesi', hacked: false, x: 980, y: 820 },
+  ];
+
+  const NODES = [];
+
+  UNIVERSITIES.forEach(u => {
+    NODES.push({
+      id: u.id, name: u.name, type: 'university', hacked: u.hacked,
+      x: u.x, y: u.y, originX: u.x, originY: u.y,
+      driftRadius: 40,
+    });
+  });
+
+  // 10 academics loosely orbiting METU
+  const ORG_OFFSETS = [
+    [-80, -50], [40, -90], [100, -30], [110, 50], [40, 100],
+    [-50, 110], [-110, 50], [-100, -30], [30, -40], [0, 60],
+  ];
+  ORG_OFFSETS.forEach((offset, i) => {
+    NODES.push({
+      id: `org${i+1}`, name: 'Akademisyen', type: 'org-team',
+      x: 700 + offset[0], y: 450 + offset[1],
+      originX: 700 + offset[0], originY: 450 + offset[1],
+      driftRadius: 45 + Math.random() * 20,
+    });
+  });
+
+  // 6 ARCH571 students
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + 0.3;
+    const r = 150;
+    const x = 700 + Math.cos(angle) * r;
+    const y = 450 + Math.sin(angle) * r;
+    NODES.push({
+      id: `a571_${i+1}`, name: 'Öğrenci · ARCH571', type: 'arch571',
+      x, y, originX: x, originY: y, driftRadius: 40,
+    });
+  }
+
+  // Students for hacked universities — varied count (3-5)
+  const HACKED_UNIS = UNIVERSITIES.filter(u => u.hacked);
+  const STUDENT_COUNTS = {
+    metu: 5, bilkent: 4, gazi: 4, ted: 3, baskent: 4, atilim: 3
+  };
+  HACKED_UNIS.forEach(uni => {
+    const count = STUDENT_COUNTS[uni.id] || 4;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.6;
+      const r = 55 + Math.random() * 25;
+      const x = uni.x + Math.cos(angle) * r;
+      const y = uni.y + Math.sin(angle) * r;
+      NODES.push({
+        id: `stu_${uni.id}_${i+1}`,
+        name: `Öğrenci · ${uni.name}`,
+        type: 'student', homeUni: uni.id,
+        x, y, originX: x, originY: y, driftRadius: 28,
+      });
+    }
+  });
+
+  // Satellites for unhacked universities — 1 academic + 2 students each
+  const UNHACKED_UNIS = UNIVERSITIES.filter(u => !u.hacked);
+  UNHACKED_UNIS.forEach(uni => {
+    // 1 academic
+    const angle = Math.random() * Math.PI * 2;
+    const r = 30 + Math.random() * 10;
+    NODES.push({
+      id: `unhacked_acad_${uni.id}`,
+      name: 'Akademisyen',
+      type: 'org-team', homeUni: uni.id,
+      x: uni.x + Math.cos(angle) * r,
+      y: uni.y + Math.sin(angle) * r,
+      originX: uni.x + Math.cos(angle) * r,
+      originY: uni.y + Math.sin(angle) * r,
+      driftRadius: 28,
+    });
+    // 2 students
+    for (let i = 0; i < 2; i++) {
+      const sAngle = (i / 2) * Math.PI * 2 + Math.random() * 0.8;
+      const sR = 55 + Math.random() * 20;
+      const x = uni.x + Math.cos(sAngle) * sR;
+      const y = uni.y + Math.sin(sAngle) * sR;
+      NODES.push({
+        id: `stu_${uni.id}_${i+1}`,
+        name: `Öğrenci · ${uni.name}`,
+        type: 'student', homeUni: uni.id,
+        x, y, originX: x, originY: y, driftRadius: 28,
+      });
+    }
+  });
+
+  // 8 workers scattered on canvas edges
+  const WORKER_POSITIONS = [
+    [1260, 380], [1270, 500], [1240, 460], [1250, 200],
+    [130, 380], [140, 520], [160, 460], [150, 200],
+  ];
+  WORKER_POSITIONS.forEach((pos, i) => {
+    NODES.push({
+      id: `w${i+1}`, name: 'Mimarlık İşçisi', type: 'worker',
+      x: pos[0], y: pos[1], originX: pos[0], originY: pos[1],
+      driftRadius: 55,
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // CONNECTIONS
+  // ─────────────────────────────────────────────
+
+  const CONNECTIONS = [];
+  const addConn = (from, to, kind) => CONNECTIONS.push({ from, to, kind });
+
+  // Primary: METU academics + in-between academics
+  const IN_BETWEEN = [
+    { org: 'org1', second: 'bilkent' },
+    { org: 'org2', second: 'gazi' },
+    { org: 'org3', second: 'ted' },
+    { org: 'org4', second: 'baskent' },
+    { org: 'org5', second: 'atilim' },
+  ];
+  IN_BETWEEN.forEach(({ org, second }) => {
+    addConn(org, 'metu',  'primary');
+    addConn(org, second,  'primary');
+  });
+  ['org6', 'org7', 'org8', 'org9', 'org10'].forEach(org => {
+    addConn(org, 'metu', 'primary');
+  });
+
+  // Unhacked-uni academics connect to their home uni (primary) + to METU (secondary)
+  UNHACKED_UNIS.forEach(uni => {
+    addConn(`unhacked_acad_${uni.id}`, uni.id,  'primary');
+    addConn(`unhacked_acad_${uni.id}`, 'metu',  'secondary');
+  });
+
+  // Secondary: ARCH571 to METU + supervisor
+  const ARCH_SUPERVISORS = ['org1', 'org2', 'org3', 'org4', 'org5', 'org6'];
+  for (let i = 0; i < 6; i++) {
+    addConn(`a571_${i+1}`, 'metu', 'secondary');
+    addConn(`a571_${i+1}`, ARCH_SUPERVISORS[i], 'secondary');
+  }
+
+  // Secondary: Students to their home uni
+  HACKED_UNIS.forEach(uni => {
+    const count = STUDENT_COUNTS[uni.id] || 4;
+    for (let i = 0; i < count; i++) {
+      addConn(`stu_${uni.id}_${i+1}`, uni.id, 'secondary');
+    }
+  });
+  UNHACKED_UNIS.forEach(uni => {
+    for (let i = 0; i < 2; i++) {
+      addConn(`stu_${uni.id}_${i+1}`, uni.id, 'secondary');
+    }
+  });
+
+  // Secondary: academic-to-academic infrastructure
+  const ACAD_TO_ACAD = [
+    ['org1', 'org2'], ['org1', 'org5'], ['org2', 'org3'],
+    ['org3', 'org6'], ['org4', 'org7'], ['org5', 'org8'],
+    ['org6', 'org9'], ['org7', 'org10'], ['org4', 'org8'],
+    ['org1', 'unhacked_acad_cankaya'],
+    ['org3', 'unhacked_acad_tobb'],
+    ['org5', 'unhacked_acad_medipol'],
+    ['org7', 'unhacked_acad_ybu'],
+  ];
+  ACAD_TO_ACAD.forEach(([a, b]) => addConn(a, b, 'secondary'));
+
+  // PERIPHERAL: full mesh of uni-to-uni connections
+  for (let i = 0; i < UNIVERSITIES.length; i++) {
+    for (let j = i + 1; j < UNIVERSITIES.length; j++) {
+      addConn(UNIVERSITIES[i].id, UNIVERSITIES[j].id, 'peripheral');
+    }
+  }
+
+  // Peripheral: student cross-ties
+  const STUDENT_CROSSES = [
+    ['stu_bilkent_1', 'stu_gazi_2'],
+    ['stu_ted_1', 'stu_baskent_2'],
+    ['stu_atilim_2', 'stu_metu_1'],
+    ['stu_gazi_3', 'stu_metu_3'],
+    ['stu_cankaya_1', 'stu_bilkent_2'],
+    ['stu_medipol_1', 'stu_gazi_1'],
+    ['stu_tobb_1', 'stu_ted_2'],
+    ['stu_ybu_1', 'stu_atilim_1'],
+  ];
+  STUDENT_CROSSES.forEach(([a, b]) => addConn(a, b, 'peripheral'));
+
+  // Peripheral: student-to-ARCH571 bridges
+  addConn('stu_bilkent_1', 'a571_1', 'peripheral');
+  addConn('stu_gazi_2',    'a571_2', 'peripheral');
+  addConn('stu_ted_1',     'a571_3', 'peripheral');
+  addConn('stu_baskent_1', 'a571_4', 'peripheral');
+  addConn('stu_atilim_1',  'a571_5', 'peripheral');
+  addConn('stu_cankaya_1', 'a571_6', 'peripheral');
+
+  // Peripheral: workers to multiple academics
+  const WORKER_TIES = [
+    ['w1', 'org6'], ['w1', 'org2'], ['w1', 'org3'],
+    ['w2', 'org3'], ['w2', 'org7'],
+    ['w3', 'org4'], ['w3', 'org9'],
+    ['w4', 'org7'], ['w4', 'org5'],
+    ['w5', 'org8'], ['w5', 'org10'],
+    ['w6', 'org9'], ['w6', 'org4'],
+    ['w7', 'org1'], ['w7', 'org6'],
+    ['w8', 'org2'], ['w8', 'org5'],
+  ];
+  WORKER_TIES.forEach(([a, b]) => addConn(a, b, 'peripheral'));
+
+  // Peripheral: worker-to-worker peer ties
+  addConn('w1', 'w2', 'peripheral');
+  addConn('w3', 'w4', 'peripheral');
+  addConn('w5', 'w6', 'peripheral');
+  addConn('w7', 'w8', 'peripheral');
+
+  // ─────────────────────────────────────────────
+  // STYLES
+  // ─────────────────────────────────────────────
+
+  const STYLE = {
+    university: { radius: 14, fill: '#000000' },
+    'org-team': { radius: 9,  fill: '#555555' },
+    arch571:    { radius: 7,  fill: '#999999' },
+    student:    { radius: 6,  fill: '#b0b0b0' },
+    worker:     { radius: 7,  fill: '#c0c0c0' },
+  };
+
+  const UNI_RING = {
+    outerRadius: 55,
+    innerRadius: 40,
+    outerStroke: '#cccccc',
+    outerStrokeWidth: 1,
+    outerDash: '5,4',
+    hackedFill: '#f2f2f2',
+    unhackedFill: 'none',
+  };
+
+  const LINE_STYLES = {
+    primary:    { color: '#333333', width: 1.1, opacity: 0.65, dash: '6,4' },
+    secondary:  { color: '#777777', width: 0.8, opacity: 0.45, dash: '4,4' },
+    peripheral: { color: '#b0b0b0', width: 0.6, opacity: 0.35, dash: '2,4' },
+  };
+
+  // Motion
+  const DRIFT_SPEED_MIN = 0.08;
+  const DRIFT_SPEED_MAX = 0.24;
+  const PADDING = 60;
+
+  NODES.forEach(node => {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = DRIFT_SPEED_MIN + Math.random() * (DRIFT_SPEED_MAX - DRIFT_SPEED_MIN);
+    node.vx = Math.cos(angle) * speed;
+    node.vy = Math.sin(angle) * speed;
+  });
+
+  const NODE_MAP = {};
+  NODES.forEach(n => NODE_MAP[n.id] = n);
+
+  const NS = 'http://www.w3.org/2000/svg';
+
+  // Render
+  const ringGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(ringGroup);
+
+  NODES.filter(n => n.type === 'university').forEach(node => {
+    if (node.hacked) {
+      const innerFill = document.createElementNS(NS, 'circle');
+      innerFill.setAttribute('r', UNI_RING.innerRadius);
+      innerFill.setAttribute('fill', UNI_RING.hackedFill);
+      innerFill.setAttribute('stroke', 'none');
+      ringGroup.appendChild(innerFill);
+      node.innerFillEl = innerFill;
+    }
+    const outerRing = document.createElementNS(NS, 'circle');
+    outerRing.setAttribute('r', UNI_RING.outerRadius);
+    outerRing.setAttribute('fill', 'none');
+    outerRing.setAttribute('stroke', UNI_RING.outerStroke);
+    outerRing.setAttribute('stroke-width', UNI_RING.outerStrokeWidth);
+    outerRing.setAttribute('stroke-dasharray', UNI_RING.outerDash);
+    ringGroup.appendChild(outerRing);
+    node.outerRingEl = outerRing;
+  });
+
+  const lineGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(lineGroup);
+
+  const lineEls = CONNECTIONS.map(conn => {
+    const style = LINE_STYLES[conn.kind];
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', style.color);
+    line.setAttribute('stroke-width', style.width);
+    line.setAttribute('opacity', style.opacity);
+    line.setAttribute('stroke-dasharray', style.dash);
+    lineGroup.appendChild(line);
+    return { el: line, from: NODE_MAP[conn.from], to: NODE_MAP[conn.to] };
+  }).filter(x => x.from && x.to);
+
+  const nodeGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(nodeGroup);
+
+  NODES.forEach(node => {
+    const style = STYLE[node.type];
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', style.radius);
+    circle.setAttribute('fill', style.fill);
+    circle.setAttribute('class', 'uqa-node-dot');
+    circle.dataset.nodeId = node.id;
+    nodeGroup.appendChild(circle);
+    node.el = circle;
+  });
+
+  // Hover label
+  const labelGroup = document.createElementNS(NS, 'g');
+  labelGroup.style.opacity = '0';
+  labelGroup.style.pointerEvents = 'none';
+  svg.appendChild(labelGroup);
+
+  const labelBg = document.createElementNS(NS, 'rect');
+  labelBg.setAttribute('fill', '#000000');
+  labelGroup.appendChild(labelBg);
+
+  const labelText = document.createElementNS(NS, 'text');
+  labelText.setAttribute('fill', '#ffffff');
+  labelText.setAttribute('font-size', '16');
+  labelText.setAttribute('text-anchor', 'middle');
+  labelText.setAttribute('dominant-baseline', 'middle');
+  labelGroup.appendChild(labelText);
+
+  let hoveredNode = null;
+
+  NODES.forEach(node => {
+    node.el.addEventListener('mouseenter', () => {
+      hoveredNode = node;
+      labelText.textContent = node.name;
+      labelGroup.style.opacity = '1';
+    });
+    node.el.addEventListener('mouseleave', () => {
+      hoveredNode = null;
+      labelGroup.style.opacity = '0';
+    });
+  });
+
+  // Animation
+  function tick() {
+    NODES.forEach(node => {
+      node.x += node.vx;
+      node.y += node.vy;
+
+      const dx = node.x - node.originX;
+      const dy = node.y - node.originY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > node.driftRadius) {
+        const pullStrength = 0.02;
+        node.vx -= (dx / dist) * pullStrength;
+        node.vy -= (dy / dist) * pullStrength;
+      }
+
+      if (node.x < PADDING) { node.vx = Math.abs(node.vx); }
+      if (node.x > VIEWBOX_W - PADDING) { node.vx = -Math.abs(node.vx); }
+      if (node.y < PADDING) { node.vy = Math.abs(node.vy); }
+      if (node.y > VIEWBOX_H - PADDING) { node.vy = -Math.abs(node.vy); }
+
+      node.el.setAttribute('cx', node.x);
+      node.el.setAttribute('cy', node.y);
+
+      if (node.outerRingEl) {
+        node.outerRingEl.setAttribute('cx', node.x);
+        node.outerRingEl.setAttribute('cy', node.y);
+      }
+      if (node.innerFillEl) {
+        node.innerFillEl.setAttribute('cx', node.x);
+        node.innerFillEl.setAttribute('cy', node.y);
+      }
+    });
+
+    lineEls.forEach(({ el, from, to }) => {
+      el.setAttribute('x1', from.x);
+      el.setAttribute('y1', from.y);
+      el.setAttribute('x2', to.x);
+      el.setAttribute('y2', to.y);
+    });
+
+    if (hoveredNode) {
+      const offset = (hoveredNode.type === 'university' ? UNI_RING.outerRadius : STYLE[hoveredNode.type].radius) + 20;
+      labelText.setAttribute('x', hoveredNode.x);
+      labelText.setAttribute('y', hoveredNode.y - offset);
+
+      const bbox = labelText.getBBox();
+      const padX = 14;
+      const padY = 7;
+      labelBg.setAttribute('x', bbox.x - padX);
+      labelBg.setAttribute('y', bbox.y - padY);
+      labelBg.setAttribute('width', bbox.width + padX * 2);
+      labelBg.setAttribute('height', bbox.height + padY * 2);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  tick();
+})();
+</script>
+<!-- EMBED BİTİR -->
+</div>
+</body>
+</html>
