@@ -56,18 +56,56 @@ body { background: var(--brand--background); color: #000; }
   svg.setAttribute('viewBox', `0 0 ${VIEWBOX_W} ${VIEWBOX_H}`);
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-  // Universities
+  // Seeded random: the same mix on every load. Change SEED to reshuffle.
+  const SEED = 728;
+  const rand = (() => {
+    let a = SEED;
+    return () => {
+      a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  })();
+  const pick = list => list[Math.floor(rand() * list.length)];
+  const shuffle = list => {
+    const a = [...list];
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  };
+
+  // Universities, same list as manifesto-network. hacked: we held an event there.
+  // METU in the middle, Ankara on an inner ring, the rest on an outer ring.
+  // Not visited yet (hacked: false): no fill, and no ties to the other universities.
   const UNIVERSITIES = [
     { id: 'metu',     name: 'ODTÜ',                     hacked: true,  x: 700,  y: 450 },
-    { id: 'bilkent',  name: 'Bilkent Üniversitesi',     hacked: true,  x: 1100, y: 220 },
-    { id: 'gazi',     name: 'Gazi Üniversitesi',        hacked: true,  x: 1150, y: 600 },
-    { id: 'ted',      name: 'TED Üniversitesi',         hacked: true,  x: 280,  y: 600 },
-    { id: 'baskent',  name: 'Başkent Üniversitesi',     hacked: true,  x: 320,  y: 260 },
-    { id: 'atilim',   name: 'Atılım Üniversitesi',      hacked: true,  x: 700,  y: 770 },
-    { id: 'cankaya',  name: 'Çankaya Üniversitesi',     hacked: false, x: 750,  y: 130 },
-    { id: 'tobb',     name: 'TOBB Üniversitesi',        hacked: false, x: 280,  y: 450 },
-    { id: 'medipol',  name: 'Medipol Üniversitesi',     hacked: false, x: 1080, y: 780 },
-    { id: 'ybu',      name: 'Yıldırım Beyazıt Üniversitesi', hacked: false, x: 980, y: 820 },
+    { id: 'cankaya',  name: 'Çankaya Üniversitesi',     hacked: false, x: 816,  y: 215 },
+    { id: 'bilkent',  name: 'Bilkent Üniversitesi',     hacked: true,  x: 994,  y: 325 },
+    { id: 'medipol',  name: 'Medipol Üniversitesi',     hacked: false, x: 1035, y: 493 },
+    { id: 'gazi',     name: 'Gazi Üniversitesi',        hacked: true,  x: 919,  y: 642 },
+    { id: 'atilim',   name: 'Atılım Üniversitesi',      hacked: true,  x: 700,  y: 700 },
+    { id: 'ted',      name: 'TED Üniversitesi',         hacked: true,  x: 481,  y: 642 },
+    { id: 'tobb',     name: 'TOBB ETÜ',                 hacked: true,  x: 365,  y: 493 },
+    { id: 'baskent',  name: 'Başkent Üniversitesi',     hacked: true,  x: 406,  y: 325 },
+    { id: 'ybu',      name: 'Yıldırım Beyazıt Üniversitesi', hacked: false, x: 584, y: 215 },
+    // Outside Ankara
+    { id: 'itu',      name: 'İstanbul Teknik Üniversitesi',  hacked: true, x: 700,  y: 95 },
+    { id: 'yeditepe', name: 'Yeditepe Üniversitesi',         hacked: true, x: 1271, y: 336 },
+    { id: 'gtu',      name: 'Gebze Teknik Üniversitesi',     hacked: true, x: 1053, y: 749 },
+    { id: 'msgsu',    name: 'Mimar Sinan Güzel Sanatlar Üniversitesi', hacked: true, x: 347, y: 749 },
+    { id: 'esogu',    name: 'Eskişehir Osmangazi Üniversitesi', hacked: true, x: 129, y: 336 },
+  ];
+
+  // Each person gets a role; the role is the hover label and decides the dot style
+  const ACADEMIC = 'Akademisyen';
+  const ASSISTANT = ['Araştırma Görevlisi', 'Doktora Öğrencisi'];
+  const lookOf = role => role === ACADEMIC ? 'academic' : ASSISTANT.includes(role) ? 'assistant' : 'student';
+  // Around a university: mostly students, a few assistants, the odd academic
+  const UNI_POOL = [
+    'Öğrenci', 'Öğrenci', 'Öğrenci', 'Öğrenci',
+    'Yüksek Lisans Öğrencisi', 'Yüksek Lisans Öğrencisi', 'Mezun',
+    'Araştırma Görevlisi', 'Araştırma Görevlisi', 'Doktora Öğrencisi',
+    ACADEMIC, ACADEMIC,
   ];
 
   const NODES = [];
@@ -76,21 +114,26 @@ body { background: var(--brand--background); color: #000; }
     NODES.push({
       id: u.id, name: u.name, type: 'university', hacked: u.hacked,
       x: u.x, y: u.y, originX: u.x, originY: u.y,
-      driftRadius: 40,
+      driftRadius: 12,
     });
   });
 
-  // 10 academics loosely orbiting METU
+  // Organizing team around METU: 5 academics, 3 research assistants, 2 students
+  const ORG_TITLES = shuffle([
+    ACADEMIC, ACADEMIC, ACADEMIC, ACADEMIC, ACADEMIC,
+    'Araştırma Görevlisi', 'Araştırma Görevlisi', 'Araştırma Görevlisi',
+    pick(['Yüksek Lisans Öğrencisi', 'Doktora Öğrencisi']), 'Öğrenci',
+  ]);
   const ORG_OFFSETS = [
     [-80, -50], [40, -90], [100, -30], [110, 50], [40, 100],
     [-50, 110], [-110, 50], [-100, -30], [30, -40], [0, 60],
   ];
   ORG_OFFSETS.forEach((offset, i) => {
     NODES.push({
-      id: `org${i+1}`, name: 'Akademisyen', type: 'org-team',
+      id: `org${i+1}`, name: ORG_TITLES[i], type: 'org-team', look: lookOf(ORG_TITLES[i]),
       x: 700 + offset[0], y: 450 + offset[1],
       originX: 700 + offset[0], originY: 450 + offset[1],
-      driftRadius: 45 + Math.random() * 20,
+      driftRadius: 14 + rand() * 8,
     });
   });
 
@@ -101,73 +144,43 @@ body { background: var(--brand--background); color: #000; }
     const x = 700 + Math.cos(angle) * r;
     const y = 450 + Math.sin(angle) * r;
     NODES.push({
-      id: `a571_${i+1}`, name: 'Öğrenci · ARCH571', type: 'arch571',
-      x, y, originX: x, originY: y, driftRadius: 40,
+      id: `a571_${i+1}`, name: 'ARCH 571 Öğrencisi', type: 'arch571',
+      x, y, originX: x, originY: y, driftRadius: 15,
     });
   }
 
-  // Students for hacked universities — varied count (3-5)
-  const HACKED_UNIS = UNIVERSITIES.filter(u => u.hacked);
-  const STUDENT_COUNTS = {
-    metu: 5, bilkent: 4, gazi: 4, ted: 3, baskent: 4, atilim: 3
-  };
-  HACKED_UNIS.forEach(uni => {
-    const count = STUDENT_COUNTS[uni.id] || 4;
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.6;
-      const r = 55 + Math.random() * 25;
+  // People around each university. Visited: 3–6 from the pool.
+  // Not visited: 1–2, the first one an academic we are in touch with.
+  const SAT_COUNT = {};
+  UNIVERSITIES.forEach(uni => {
+    const titles = uni.hacked
+      ? Array.from({ length: 3 + Math.floor(rand() * 4) }, () => pick(UNI_POOL))
+      : [ACADEMIC, ...Array.from({ length: Math.floor(rand() * 2) }, () => pick(UNI_POOL))];
+    SAT_COUNT[uni.id] = titles.length;
+    titles.forEach((title, i) => {
+      const angle = (i / titles.length) * Math.PI * 2 + rand() * 0.6;
+      const r = 24 + rand() * 20;
       const x = uni.x + Math.cos(angle) * r;
       const y = uni.y + Math.sin(angle) * r;
       NODES.push({
-        id: `stu_${uni.id}_${i+1}`,
-        name: `Öğrenci · ${uni.name}`,
-        type: 'student', homeUni: uni.id,
-        x, y, originX: x, originY: y, driftRadius: 28,
+        id: `sat_${uni.id}_${i+1}`, name: title,
+        type: 'member', look: lookOf(title), homeUni: uni.id,
+        x, y, originX: x, originY: y, driftRadius: 6,
       });
-    }
-  });
-
-  // Satellites for unhacked universities — 1 academic + 2 students each
-  const UNHACKED_UNIS = UNIVERSITIES.filter(u => !u.hacked);
-  UNHACKED_UNIS.forEach(uni => {
-    // 1 academic
-    const angle = Math.random() * Math.PI * 2;
-    const r = 30 + Math.random() * 10;
-    NODES.push({
-      id: `unhacked_acad_${uni.id}`,
-      name: 'Akademisyen',
-      type: 'org-team', homeUni: uni.id,
-      x: uni.x + Math.cos(angle) * r,
-      y: uni.y + Math.sin(angle) * r,
-      originX: uni.x + Math.cos(angle) * r,
-      originY: uni.y + Math.sin(angle) * r,
-      driftRadius: 28,
     });
-    // 2 students
-    for (let i = 0; i < 2; i++) {
-      const sAngle = (i / 2) * Math.PI * 2 + Math.random() * 0.8;
-      const sR = 55 + Math.random() * 20;
-      const x = uni.x + Math.cos(sAngle) * sR;
-      const y = uni.y + Math.sin(sAngle) * sR;
-      NODES.push({
-        id: `stu_${uni.id}_${i+1}`,
-        name: `Öğrenci · ${uni.name}`,
-        type: 'student', homeUni: uni.id,
-        x, y, originX: x, originY: y, driftRadius: 28,
-      });
-    }
   });
 
-  // 8 workers scattered on canvas edges
+  // 8 architecture workers, in the gaps of the outer ring on both sides
+  const WORKER_TITLES = ['Ücretli Çalışan Mimar', 'İşsiz Mimar', 'Serbest Çalışan Mimar', 'Şantiye Mimarı', 'Stajyer Mimar'];
   const WORKER_POSITIONS = [
-    [1260, 380], [1270, 500], [1240, 460], [1250, 200],
-    [130, 380], [140, 520], [160, 460], [150, 200],
+    [1230, 560], [1300, 600], [1250, 650], [1320, 520],
+    [170, 560], [100, 600], [150, 650], [80, 520],
   ];
   WORKER_POSITIONS.forEach((pos, i) => {
     NODES.push({
-      id: `w${i+1}`, name: 'Mimarlık İşçisi', type: 'worker',
+      id: `w${i+1}`, name: pick(WORKER_TITLES), type: 'worker',
       x: pos[0], y: pos[1], originX: pos[0], originY: pos[1],
-      driftRadius: 55,
+      driftRadius: 20,
     });
   });
 
@@ -177,28 +190,18 @@ body { background: var(--brand--background); color: #000; }
 
   const CONNECTIONS = [];
   const addConn = (from, to, kind) => CONNECTIONS.push({ from, to, kind });
+  const HACKED_UNIS = UNIVERSITIES.filter(u => u.hacked);
+  const UNHACKED_UNIS = UNIVERSITIES.filter(u => !u.hacked);
+  const sats = id => Array.from({ length: SAT_COUNT[id] }, (_, i) => `sat_${id}_${i+1}`);
 
-  // Primary: METU academics + in-between academics
+  // Primary: the organizing team ties METU to the universities we went to
   const IN_BETWEEN = [
-    { org: 'org1', second: 'bilkent' },
-    { org: 'org2', second: 'gazi' },
-    { org: 'org3', second: 'ted' },
-    { org: 'org4', second: 'baskent' },
-    { org: 'org5', second: 'atilim' },
+    ['org1', 'bilkent'], ['org2', 'gazi'], ['org3', 'ted'], ['org4', 'baskent'],
+    ['org5', 'atilim'], ['org6', 'tobb'], ['org7', 'itu'], ['org7', 'gtu'],
+    ['org8', 'msgsu'], ['org9', 'yeditepe'], ['org10', 'esogu'],
   ];
-  IN_BETWEEN.forEach(({ org, second }) => {
-    addConn(org, 'metu',  'primary');
-    addConn(org, second,  'primary');
-  });
-  ['org6', 'org7', 'org8', 'org9', 'org10'].forEach(org => {
-    addConn(org, 'metu', 'primary');
-  });
-
-  // Unhacked-uni academics connect to their home uni (primary) + to METU (secondary)
-  UNHACKED_UNIS.forEach(uni => {
-    addConn(`unhacked_acad_${uni.id}`, uni.id,  'primary');
-    addConn(`unhacked_acad_${uni.id}`, 'metu',  'secondary');
-  });
+  ORG_OFFSETS.forEach((_, i) => addConn(`org${i+1}`, 'metu', 'primary'));
+  IN_BETWEEN.forEach(([org, uni]) => addConn(org, uni, 'primary'));
 
   // Secondary: ARCH571 to METU + supervisor
   const ARCH_SUPERVISORS = ['org1', 'org2', 'org3', 'org4', 'org5', 'org6'];
@@ -207,77 +210,46 @@ body { background: var(--brand--background); color: #000; }
     addConn(`a571_${i+1}`, ARCH_SUPERVISORS[i], 'secondary');
   }
 
-  // Secondary: Students to their home uni
-  HACKED_UNIS.forEach(uni => {
-    const count = STUDENT_COUNTS[uni.id] || 4;
-    for (let i = 0; i < count; i++) {
-      addConn(`stu_${uni.id}_${i+1}`, uni.id, 'secondary');
-    }
-  });
-  UNHACKED_UNIS.forEach(uni => {
-    for (let i = 0; i < 2; i++) {
-      addConn(`stu_${uni.id}_${i+1}`, uni.id, 'secondary');
-    }
-  });
+  // Secondary: people to their university
+  UNIVERSITIES.forEach(uni => sats(uni.id).forEach(s => addConn(s, uni.id, 'secondary')));
+
+  // Secondary: our contact at a university we have not visited yet, back to METU
+  UNHACKED_UNIS.forEach(uni => addConn(`sat_${uni.id}_1`, 'metu', 'secondary'));
 
   // Secondary: academic-to-academic infrastructure
   const ACAD_TO_ACAD = [
     ['org1', 'org2'], ['org1', 'org5'], ['org2', 'org3'],
     ['org3', 'org6'], ['org4', 'org7'], ['org5', 'org8'],
     ['org6', 'org9'], ['org7', 'org10'], ['org4', 'org8'],
-    ['org1', 'unhacked_acad_cankaya'],
-    ['org3', 'unhacked_acad_tobb'],
-    ['org5', 'unhacked_acad_medipol'],
-    ['org7', 'unhacked_acad_ybu'],
   ];
   ACAD_TO_ACAD.forEach(([a, b]) => addConn(a, b, 'secondary'));
 
-  // PERIPHERAL: full mesh of uni-to-uni connections
-  for (let i = 0; i < UNIVERSITIES.length; i++) {
-    for (let j = i + 1; j < UNIVERSITIES.length; j++) {
-      addConn(UNIVERSITIES[i].id, UNIVERSITIES[j].id, 'peripheral');
-    }
+  // Peripheral: each visited university to its visited neighbours on the same ring
+  const RINGS = [
+    ['bilkent', 'gazi', 'atilim', 'ted', 'tobb', 'baskent'],
+    ['itu', 'yeditepe', 'gtu', 'msgsu', 'esogu'],
+  ];
+  RINGS.forEach(ring => ring.forEach((id, i) => addConn(id, ring[(i + 1) % ring.length], 'peripheral')));
+  // ...and each university outside Ankara to the two nearest Ankara ones
+  const UNI = Object.fromEntries(UNIVERSITIES.map(u => [u.id, u]));
+  RINGS[1].forEach(id => {
+    const d = k => Math.hypot(UNI[k].x - UNI[id].x, UNI[k].y - UNI[id].y);
+    [...RINGS[0]].sort((a, b) => d(a) - d(b)).slice(0, 2).forEach(k => addConn(id, k, 'peripheral'));
+  });
+
+  // Peripheral: people who know each other across visited universities, and ARCH571 bridges
+  const VISITED_SATS = HACKED_UNIS.flatMap(u => sats(u.id));
+  for (let n = 0; n < 10; n++) {
+    const a = pick(VISITED_SATS), b = pick(VISITED_SATS);
+    if (a.split('_')[1] !== b.split('_')[1]) addConn(a, b, 'peripheral');
   }
+  for (let i = 0; i < 3; i++) addConn(pick(VISITED_SATS), `a571_${i+1}`, 'peripheral');
 
-  // Peripheral: student cross-ties
-  const STUDENT_CROSSES = [
-    ['stu_bilkent_1', 'stu_gazi_2'],
-    ['stu_ted_1', 'stu_baskent_2'],
-    ['stu_atilim_2', 'stu_metu_1'],
-    ['stu_gazi_3', 'stu_metu_3'],
-    ['stu_cankaya_1', 'stu_bilkent_2'],
-    ['stu_medipol_1', 'stu_gazi_1'],
-    ['stu_tobb_1', 'stu_ted_2'],
-    ['stu_ybu_1', 'stu_atilim_1'],
-  ];
-  STUDENT_CROSSES.forEach(([a, b]) => addConn(a, b, 'peripheral'));
-
-  // Peripheral: student-to-ARCH571 bridges
-  addConn('stu_bilkent_1', 'a571_1', 'peripheral');
-  addConn('stu_gazi_2',    'a571_2', 'peripheral');
-  addConn('stu_ted_1',     'a571_3', 'peripheral');
-  addConn('stu_baskent_1', 'a571_4', 'peripheral');
-  addConn('stu_atilim_1',  'a571_5', 'peripheral');
-  addConn('stu_cankaya_1', 'a571_6', 'peripheral');
-
-  // Peripheral: workers to multiple academics
-  const WORKER_TIES = [
-    ['w1', 'org6'], ['w1', 'org2'], ['w1', 'org3'],
-    ['w2', 'org3'], ['w2', 'org7'],
-    ['w3', 'org4'], ['w3', 'org9'],
-    ['w4', 'org7'], ['w4', 'org5'],
-    ['w5', 'org8'], ['w5', 'org10'],
-    ['w6', 'org9'], ['w6', 'org4'],
-    ['w7', 'org1'], ['w7', 'org6'],
-    ['w8', 'org2'], ['w8', 'org5'],
-  ];
-  WORKER_TIES.forEach(([a, b]) => addConn(a, b, 'peripheral'));
-
-  // Peripheral: worker-to-worker peer ties
-  addConn('w1', 'w2', 'peripheral');
-  addConn('w3', 'w4', 'peripheral');
-  addConn('w5', 'w6', 'peripheral');
-  addConn('w7', 'w8', 'peripheral');
+  // Peripheral: workers form two small groups, each worker tied to one team member
+  [['w1', 'w2'], ['w2', 'w3'], ['w3', 'w4'], ['w4', 'w1'],
+   ['w5', 'w6'], ['w6', 'w7'], ['w7', 'w8'], ['w8', 'w5'],
+   ['w1', 'org4'], ['w2', 'org3'], ['w3', 'org4'], ['w4', 'org2'],
+   ['w5', 'org7'], ['w6', 'org8'], ['w7', 'org7'], ['w8', 'org6']].forEach(([a, b]) => addConn(a, b, 'peripheral'));
 
   // ─────────────────────────────────────────────
   // STYLES
@@ -285,7 +257,8 @@ body { background: var(--brand--background); color: #000; }
 
   const STYLE = {
     university: { radius: 14, fill: '#000000' },
-    'org-team': { radius: 9,  fill: '#555555' },
+    academic:   { radius: 9,  fill: '#555555' },
+    assistant:  { radius: 7.5, fill: '#888888' },
     arch571:    { radius: 7,  fill: '#999999' },
     student:    { radius: 6,  fill: '#b0b0b0' },
     worker:     { radius: 7,  fill: '#c0c0c0' },
@@ -313,8 +286,8 @@ body { background: var(--brand--background); color: #000; }
   const PADDING = 60;
 
   NODES.forEach(node => {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = DRIFT_SPEED_MIN + Math.random() * (DRIFT_SPEED_MAX - DRIFT_SPEED_MIN);
+    const angle = rand() * Math.PI * 2;
+    const speed = DRIFT_SPEED_MIN + rand() * (DRIFT_SPEED_MAX - DRIFT_SPEED_MIN);
     node.vx = Math.cos(angle) * speed;
     node.vy = Math.sin(angle) * speed;
   });
@@ -358,14 +331,14 @@ body { background: var(--brand--background); color: #000; }
     line.setAttribute('opacity', style.opacity);
     line.setAttribute('stroke-dasharray', style.dash);
     lineGroup.appendChild(line);
-    return { el: line, from: NODE_MAP[conn.from], to: NODE_MAP[conn.to] };
+    return { el: line, base: style.opacity, from: NODE_MAP[conn.from], to: NODE_MAP[conn.to] };
   }).filter(x => x.from && x.to);
 
   const nodeGroup = document.createElementNS(NS, 'g');
   svg.appendChild(nodeGroup);
 
   NODES.forEach(node => {
-    const style = STYLE[node.type];
+    const style = STYLE[node.look || node.type];
     const circle = document.createElementNS(NS, 'circle');
     circle.setAttribute('r', style.radius);
     circle.setAttribute('fill', style.fill);
@@ -373,6 +346,8 @@ body { background: var(--brand--background); color: #000; }
     circle.dataset.nodeId = node.id;
     nodeGroup.appendChild(circle);
     node.el = circle;
+    node.r0 = style.radius;
+    node.glow = 0;
   });
 
   // Hover label
@@ -381,33 +356,52 @@ body { background: var(--brand--background); color: #000; }
   labelGroup.style.pointerEvents = 'none';
   svg.appendChild(labelGroup);
 
-  const labelBg = document.createElementNS(NS, 'rect');
-  labelBg.setAttribute('fill', '#000000');
-  labelGroup.appendChild(labelBg);
-
   const labelText = document.createElementNS(NS, 'text');
-  labelText.setAttribute('fill', '#ffffff');
+  labelText.setAttribute('fill', '#111111');
   labelText.setAttribute('font-size', '16');
+  // A thin outline in the page colour keeps the text readable over lines and dots
+  labelText.setAttribute('stroke', 'var(--brand--background, #ffffff)');
+  labelText.setAttribute('stroke-width', 4);
+  labelText.setAttribute('paint-order', 'stroke');
   labelText.setAttribute('text-anchor', 'middle');
   labelText.setAttribute('dominant-baseline', 'middle');
   labelGroup.appendChild(labelText);
 
   let hoveredNode = null;
 
+  // Rhythm: universities light up one by one, in the order we first went there,
+  // as if hovered. A real hover takes over and the rhythm picks up again after it.
+  const RHYTHM = ['metu', 'bilkent', 'gazi', 'ted', 'atilim', 'baskent', 'tobb', 'gtu', 'itu', 'yeditepe', 'msgsu', 'esogu'];
+  const RHYTHM_MS = 2200;   // time each university stays lit
+  const RESUME_MS = 800;    // pause after a hover before the rhythm continues
+  let beat = -1, autoNode = null, nextBeat = 0;
+
   NODES.forEach(node => {
-    node.el.addEventListener('mouseenter', () => {
-      hoveredNode = node;
-      labelText.textContent = node.name;
-      labelGroup.style.opacity = '1';
-    });
+    node.el.addEventListener('mouseenter', () => { hoveredNode = node; });
     node.el.addEventListener('mouseleave', () => {
       hoveredNode = null;
-      labelGroup.style.opacity = '0';
+      nextBeat = performance.now() + RESUME_MS;
     });
   });
 
+  // How lit a node is: a university by itself, a person through their university
+  const glowOf = n => n.type === 'university' ? n.glow : n.homeUni ? NODE_MAP[n.homeUni].glow : 0;
+
   // Animation
-  function tick() {
+  function tick(now = 0) {
+    if (!hoveredNode && now >= nextBeat) {
+      beat = (beat + 1) % RHYTHM.length;
+      autoNode = NODE_MAP[RHYTHM[beat]];
+      nextBeat = now + RHYTHM_MS;
+    }
+    const focus = hoveredNode || autoNode;
+    if (labelText.textContent !== focus.name) labelText.textContent = focus.name;
+    labelGroup.style.opacity = '1';
+
+    NODES.forEach(node => {
+      if (node.type === 'university') node.glow += ((node === focus ? 1 : 0) - node.glow) * 0.08;
+    });
+
     NODES.forEach(node => {
       node.x += node.vx;
       node.y += node.vy;
@@ -427,44 +421,44 @@ body { background: var(--brand--background); color: #000; }
       if (node.y < PADDING) { node.vy = Math.abs(node.vy); }
       if (node.y > VIEWBOX_H - PADDING) { node.vy = -Math.abs(node.vy); }
 
+      // Lit nodes swell a little
+      const g = glowOf(node);
       node.el.setAttribute('cx', node.x);
       node.el.setAttribute('cy', node.y);
+      node.el.setAttribute('r', node.r0 * (1 + (node.type === 'university' ? 0.3 : 0.2) * g));
 
       if (node.outerRingEl) {
         node.outerRingEl.setAttribute('cx', node.x);
         node.outerRingEl.setAttribute('cy', node.y);
+        node.outerRingEl.setAttribute('r', UNI_RING.outerRadius * (1 + 0.1 * g));
+        node.outerRingEl.setAttribute('stroke', g > 0.5 ? '#888888' : UNI_RING.outerStroke);
       }
       if (node.innerFillEl) {
         node.innerFillEl.setAttribute('cx', node.x);
         node.innerFillEl.setAttribute('cy', node.y);
+        node.innerFillEl.setAttribute('r', UNI_RING.innerRadius * (1 + 0.1 * g));
       }
     });
 
-    lineEls.forEach(({ el, from, to }) => {
+    lineEls.forEach(({ el, base, from, to }) => {
+      // Lines of the lit university darken
+      el.setAttribute('opacity', base + (0.9 - base) * Math.max(glowOf(from), glowOf(to)));
       el.setAttribute('x1', from.x);
       el.setAttribute('y1', from.y);
       el.setAttribute('x2', to.x);
       el.setAttribute('y2', to.y);
     });
 
-    if (hoveredNode) {
-      const offset = (hoveredNode.type === 'university' ? UNI_RING.outerRadius : STYLE[hoveredNode.type].radius) + 20;
-      labelText.setAttribute('x', hoveredNode.x);
-      labelText.setAttribute('y', hoveredNode.y - offset);
-
-      const bbox = labelText.getBBox();
-      const padX = 14;
-      const padY = 7;
-      labelBg.setAttribute('x', bbox.x - padX);
-      labelBg.setAttribute('y', bbox.y - padY);
-      labelBg.setAttribute('width', bbox.width + padX * 2);
-      labelBg.setAttribute('height', bbox.height + padY * 2);
-    }
+    const offset = (focus.type === 'university' ? UNI_RING.outerRadius * 1.1 : STYLE[focus.look || focus.type].radius) + 20;
+    // Keep long names inside the box near the edges
+    labelText.setAttribute('y', focus.y - offset);
+    const half = labelText.getBBox().width / 2 + 8;
+    labelText.setAttribute('x', Math.min(Math.max(focus.x, half), VIEWBOX_W - half));
 
     requestAnimationFrame(tick);
   }
 
-  tick();
+  requestAnimationFrame(tick);
 })();
 </script>
 <!-- EMBED BİTİR -->
