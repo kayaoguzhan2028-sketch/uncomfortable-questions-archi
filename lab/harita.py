@@ -15,16 +15,18 @@ CACHE = os.path.join(HERE, ".ne")
 URL = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/%s.geojson"
 ILCE_URL = "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/TUR/ADM2/geoBoundaries-TUR-ADM2.geojson"
 
-# Şehir haritaları: hangi ilçeler girer. Ankara'da sadece merkez ilçeler (il çok büyük).
+# Şehir haritaları: ilin bütün ilçeleri; haritaya sadece ilin dış sınırı çizilir.
 SEHIRLER = {
-    "ankara": ["Altındağ", "Çankaya", "Etimesgut", "Gölbaşı", "Keçiören", "Mamak", "Pursaklar", "Sincan", "Yenimahalle"],
+    "ankara": ["Akyurt", "Altındağ", "Ayaş", "Bala", "Beypazarı", "Çamlıdere", "Çankaya", "Çubuk", "Elmadağ",
+               "Etimesgut", "Evren", "Gölbaşı", "Güdül", "Haymana", "Kahramankazan", "Kalecik", "Keçiören",
+               "Kızılcahamam", "Mamak", "Nallıhan", "Polatlı", "Pursaklar", "Sincan", "Şereflikoçhisar", "Yenimahalle"],
     "istanbul": ["Adalar", "Prince Islands", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy",
                  "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca",
                  "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy",
                  "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri",
                  "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"],
 }
-KUTU = {"ankara": (32.2, 39.2, 33.3, 40.3), "istanbul": (27.9, 40.7, 29.95, 41.7)}  # aynı adlı ilçeler karışmasın
+KUTU = {"ankara": (30.9, 38.6, 34.0, 40.8), "istanbul": (27.9, 40.7, 29.95, 41.7)}  # aynı adlı ilçeler karışmasın
 TOL_SEHIR = 0.0004                        # derece (~40 m) sadeleştirme
 TOL_DIS = 0.004                           # dış sınır dünya ölçeğinde görünür, kaba olabilir
 
@@ -135,25 +137,27 @@ def sehirler():
     ilceler = load("tur_adm2", ILCE_URL)["features"]
     for ad, liste in SEHIRLER.items():
         x0, y0, x1, y1 = KUTU[ad]
-        paths, xs, ys, hepsi = [], [], [], []
+        hepsi = []
         for f in ilceler:
             g = shape(f["geometry"])
             c = g.representative_point()
-            if f["properties"]["shapeName"] not in liste or not (x0 < c.x < x1 and y0 < c.y < y1):
+            if f["properties"]["shapeName"] in liste and x0 < c.x < x1 and y0 < c.y < y1:
+                hepsi.append(g)
+        bulunan = len(hepsi)
+        # İlçeler birleşir; aralarındaki ince boşluklar kapanır ki içeride çizgi kalmasın
+        il = unary_union(hepsi).buffer(0.001).buffer(-0.001)
+        paths, xs, ys = [], [], []
+        for poly in getattr(il.simplify(TOL_SEHIR), "geoms", [il.simplify(TOL_SEHIR)]):
+            if poly.area < TOL_SEHIR ** 2 * 4:
                 continue
-            hepsi.append(g)
-            g = g.simplify(TOL_SEHIR)
-            for poly in getattr(g, "geoms", [g]):
-                if poly.area < TOL_SEHIR ** 2 * 4:
-                    continue
-                pts = []
-                for lon, lat in poly.exterior.coords:
-                    x, y = xy(lon, lat)
-                    pts.append((round(x, 4), round(y, 4)))
-                    xs.append(x); ys.append(y)
-                paths.append(d(pts, True))
-        # Şehrin dış sınırı: dünya haritasında tıklanacak alan olarak kullanılır, şehir haritasında görünmez
-        dis = unary_union(hepsi).simplify(TOL_DIS)
+            pts = []
+            for lon, lat in poly.exterior.coords:
+                x, y = xy(lon, lat)
+                pts.append((round(x, 4), round(y, 4)))
+                xs.append(x); ys.append(y)
+            paths.append(d(pts, True))
+        # Şehrin dış sınırı, kaba hâli: dünya haritasında tıklanacak alan olarak kullanılır, şehir haritasında görünmez
+        dis = il.simplify(TOL_DIS)
         sinir = "".join(d([tuple(round(v, 3) for v in xy(lon, lat)) for lon, lat in poly.exterior.coords], True)
                         for poly in getattr(dis, "geoms", [dis]) if poly.area > TOL_DIS ** 2 * 4)
         vb = "%g %g %g %g" % (min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
@@ -164,7 +168,7 @@ def sehirler():
             "</svg>\n"
         )
         open(os.path.join(HERE, ad + ".svg"), "w", encoding="utf-8", newline="\n").write(svg)
-        print("lab/%s.svg: %d KB, %d parça, kutu %s" % (ad, len(svg) // 1024, len(paths), vb))
+        print("lab/%s.svg: %d KB, %d/%d ilçe, %d parça, kutu %s" % (ad, len(svg) // 1024, bulunan, len(liste), len(paths), vb))
 
 
 if __name__ == "__main__":

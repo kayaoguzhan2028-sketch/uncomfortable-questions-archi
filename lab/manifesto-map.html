@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.insertBefore(g, areas);
     getText(v).then(t => {
       g.innerHTML = t.replace(/<\/?svg[^>]*>/g, '');
-      g.w = +(t.match(/viewBox="[^"]*?([\d.]+) [\d.]+"/) || [])[1] || 0; // map width, so a city opens wide enough to be recognised
+      g.vb = ((t.match(/viewBox="([^"]*)"/) || [])[1] || '').split(' ').map(Number); // a city opens showing its whole outline
       if (v === view && v !== 'world') { base = fit(); reset(); }
     }).catch(() => {
       if (v === 'world') g.innerHTML = `<image href="${MAPS[v]}" width="3600" height="1775"/>`;
@@ -169,6 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Frame: fits every place on the current map, and keeps the centre away from the edges
   const fit = () => {
     const world = view === 'world';
+    const vb = !world && maps[view] && maps[view].vb;
+    if (vb && vb.length === 4) {
+      const [mx, my, mw, mh] = vb, w = Math.max(mw, mh * RATIO) * 1.08;
+      return [mx + mw / 2 - w / 2, my + mh / 2 - w / RATIO / 2, w];
+    }
     const pts = [...here.map(id => places[id]), ...(world ? extra : [])].map(p => [p.x, p.y]);
     let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
     let y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
@@ -179,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
       x1 = Math.max(x1, hub.x + (hub.x - x0) * 0.45); x0 = Math.min(x0, hub.x - (x1 - hub.x) * 0.45);
       y1 = Math.max(y1, hub.y + (hub.y - y0) * 0.45); y0 = Math.min(y0, hub.y - (y1 - hub.y) * 0.45);
     }
-    const w = Math.max(x1 - x0, (y1 - y0) * RATIO, world ? 220 : (maps[view].w || 0) * 0.4);
+    const w = Math.max(x1 - x0, (y1 - y0) * RATIO, world ? 220 : 0);
     return [(x0 + x1 - w) / 2, (y0 + y1 - w / RATIO) / 2, w];
   };
 
@@ -239,10 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .uqa-line { opacity: 0.6; transition: opacity 0.3s; }
     .uqa-off { opacity: 0 !important; }
     .uqa-pin.uqa-dim { opacity: 0.25; }
-    .uqa-area { fill: ${THEME.accent}; fill-opacity: 0.12; stroke: ${THEME.accent}; stroke-opacity: 0.6; stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill-opacity 0.25s; }
-    .uqa-area:hover, .uqa-area.uqa-hot { fill-opacity: 0.4; }
+    .uqa-area { fill: ${THEME.accent}; fill-opacity: 0; stroke: ${THEME.accent}; stroke-opacity: 0.6; stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; transition: stroke-opacity 0.25s, stroke-width 0.25s; }
+    .uqa-area:hover, .uqa-area.uqa-hot { stroke-opacity: 1; stroke-width: 2; }
     @media (hover: none) { .uqa-area { animation: uqa-pulse 1.8s ease-in-out infinite; } }
-    @keyframes uqa-pulse { 50% { fill-opacity: 0.45; } }
+    @keyframes uqa-pulse { 50% { stroke-opacity: 1; stroke-width: 2; } }
     .uqa-ui { position: absolute; display: flex; gap: 0.3rem; z-index: 5; }
     .uqa-ui button { display: flex; align-items: center; gap: 0.5rem; background: ${THEME.tipBg}; border: 1px solid #ddd; padding: 0.25rem 0.6rem; font: 0.6rem 'Space Mono', monospace; color: ${THEME.tipText}; cursor: pointer; }
     .uqa-ui button i { width: 1.4rem; height: 4px; }
