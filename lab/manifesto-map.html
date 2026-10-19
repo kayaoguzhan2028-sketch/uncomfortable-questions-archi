@@ -40,10 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const THEME = { label: '#333333', accent: '#e03a2f', tipBg: '#ffffff', tipText: '#0a0a0a', tipMuted: '#888888' };
 
-  // Line types: the buttons in the bottom right corner switch them on and off
+  // Line types
   const TYPES = {
-    visit:   { color: '#e03a2f', label: 'Ziyaret ettiklerimiz' },
-    contact: { color: '#2f6fd6', label: 'İletişimde olduklarımız' }
+    visit:   { color: '#e03a2f', label: 'Ziyaret ettiklerimiz' }
   };
 
   // Places. lat / lon come from Google Maps (right click on the spot). side: 'r' / 'l' puts the name on the right / left.
@@ -57,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     izmir:     { city: 'İzmir', lat: 38.42, lon: 27.14 },
     venedik:   { city: 'Venedik', lat: 45.44, lon: 12.33 },
     atina:     { city: 'Atina', lat: 37.98, lon: 23.73 },
-    londra:    { city: 'Londra', lat: 51.51, lon: -0.13 },
 
     odtu:      { city: 'ODTÜ', lat: 39.8899, lon: 32.7798, in: 'ankara', hub: true },
     ofis:      { city: 'Ofisimiz', lat: 39.903242, lon: 32.861651, in: 'ankara', side: 'r', big: true },
@@ -72,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
     kult:      { city: 'Kült Kavaklıdere', lat: 39.9050, lon: 32.8605, in: 'ankara', side: 'r' },
     tandogan:  { city: 'Tandoğan', lat: 39.9300, lon: 32.8345, in: 'ankara', side: 'r' },
     aoc:       { city: 'AOÇ Hangarlar', lat: 39.9440, lon: 32.7980, in: 'ankara', side: 'l' },
-    odasi:     { city: 'Mimarlar Odası', lat: 39.9200, lon: 32.8560, in: 'ankara' },
     md1927:    { city: 'Mimarlar Derneği 1927', lat: 39.8990, lon: 32.8612, in: 'ankara', side: 'l' },
     kent:      { city: 'Kent Enstitüleri', lat: 39.9155, lon: 32.8570, in: 'ankara', side: 'l' },
     manuma:    { city: 'Manuma Studio', lat: 39.9170, lon: 32.8620, in: 'ankara', side: 'r' },
@@ -82,10 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     yeditepe:  { city: 'Yeditepe', lat: 40.9727, lon: 29.1530, in: 'istanbul', side: 'r' },
     him:       { city: 'Herkes İçin Mimarlık', lat: 40.9880, lon: 29.0262, in: 'istanbul', side: 'r' }
   };
-  // The world map also opens far enough to show these points (Britain)
-  const SHOW_ALSO = [[58.6, -3], [50, -5.7]];
 
-  // Events. To add one: copy a line and change it. type: 'visit' or 'contact'.
+  // Events. To add one: copy a line and change it. type: 'visit'.
   const events = [
     { at: 'odtu', name: 'Toplantılar, atölyeler, açık dersler, okuma buluşmaları, sergiler', date: '2024–2026' },
     { at: 'ofis', type: 'visit', name: 'Mimarlık İşçileri Buluşması', date: '19.04.2026' },
@@ -104,21 +99,18 @@ document.addEventListener('DOMContentLoaded', () => {
     { at: 'kult', type: 'visit', name: 'Kolektif Değerlendirme: Başlangıç/Bugün/Gelecek', date: '29.01.2026' },
     { at: 'tandogan', type: 'visit', name: '1 Mayıs Emek ve Dayanışma Günü', date: '01.05.2025 · 01.05.2026' },
     { at: 'aoc', type: 'visit', name: 'Sihirli Sözcükler Atölyesi (RoofCoLiving)', date: '02.11.2025' },
-    { at: 'odasi', type: 'contact', name: 'TMMOB Mimarlar Odası', date: '2025–2026' },
     { at: 'md1927', type: 'visit', name: 'Mimarlıkta Rahatsız Edici Sorular: Bir Kolektifin Gündemi', date: '09.12.2025' },
     { at: 'kent', type: 'visit', name: 'Nasıl Yoksullaştırılıyoruz', date: '22.06.2025' },
     { at: 'manuma', type: 'visit', name: 'Ücretli Çalışan ve İşsiz Mimarlar ile Deneme Toplantısı', date: '28.07.2024' },
     { at: 'him', type: 'visit', name: 'Herkes İçin Mimarlık - Yaz Okulu', date: '05.08.2025' },
     { at: 'itu', type: 'visit', name: 'Situated Architectural Pedagogies of Co-making', date: '18–21.09.2025' },
-    { at: 'itu', type: 'contact', name: 'Taşkışla Direniş', date: '2025' },
     { at: 'yeditepe', type: 'visit', name: 'Mimarlıkta Rahatsız Edici Sorular: Yeditepe', date: '20–24.10.2025' },
     { at: 'msgsu', type: 'visit', name: 'Mimarlık ve Eğitim Kurultayı - XIII', date: '14–15.11.2025' },
     { at: 'gebze', type: 'visit', name: 'PUPA: Mimarlıkta Rahatsız Edici Sorular (GTÜ)', date: '12.09.2025' },
     { at: 'eskisehir', type: 'visit', name: 'Atölye - Kabuk Fanzin (ESOGÜ)', date: '13.04.2026' },
     { at: 'izmir', type: 'visit', name: 'Karaburun', date: 'Yakında' },
     { at: 'venedik', type: 'visit', name: 'Venedik Bienali - Mimarlık İşçileri Kolektifleri Buluşması', date: '08.07.2025' },
-    { at: 'atina', type: 'visit', name: 'AKEA Çalışan Mimarların Uluslararası Buluşması', date: '08.02.2026' },
-    { at: 'londra', type: 'contact', name: 'SAW - Section of Architectural Workers', date: '2025–2026' }
+    { at: 'atina', type: 'visit', name: 'AKEA Çalışan Mimarların Uluslararası Buluşması', date: '08.02.2026' }
   ];
 
   // Same projection as the map images (Miller, 10 units per degree). Change one, change all.
@@ -134,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // A city pin on the world map also carries the line types of the places on its own map
     p.types = [...new Set(events.filter(e => e.at === id || places[e.at].in === id).map(e => e.type).filter(Boolean))];
   });
-  const extra = SHOW_ALSO.map(([la, lo]) => { const [x, y] = xy(la, lo); return { x, y }; });
 
   const NS = 'http://www.w3.org/2000/svg', RATIO = 900 / 413;
   const svg = document.createElementNS(NS, 'svg');
@@ -164,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }).catch(() => {}));
 
   let view = 'world', here = [], base, cur;
-  const off = new Set();
 
   // Frame: fits every place on the current map, and keeps the centre away from the edges
   const fit = () => {
@@ -174,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const [mx, my, mw, mh] = vb, w = Math.max(mw, mh * RATIO) * 1.08;
       return [mx + mw / 2 - w / 2, my + mh / 2 - w / RATIO / 2, w];
     }
-    const pts = [...here.map(id => places[id]), ...(world ? extra : [])].map(p => [p.x, p.y]);
+    const pts = here.map(id => [places[id].x, places[id].y]);
     let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
     let y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
     const pad = world ? 25 : Math.max(x1 - x0, y1 - y0) * 0.2;
@@ -202,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let out = '';
     const hub = here.map(id => places[id]).find(p => p.hub);
     if (hub) here.forEach(id => places[id] !== hub && places[id].types.forEach((t, n) =>
-      out += `<path class="uqa-line${off.has(t) ? ' uqa-off' : ''}" d="${arc([hub.x, hub.y], [places[id].x, places[id].y], n)}" fill="none" stroke="${TYPES[t].color}" stroke-width="${1.2 * s}" stroke-dasharray="${4 * s},${6 * s}"/>`));
+      out += `<path class="uqa-line" d="${arc([hub.x, hub.y], [places[id].x, places[id].y], n)}" fill="none" stroke="${TYPES[t].color}" stroke-width="${1.2 * s}" stroke-dasharray="${4 * s},${6 * s}"/>`));
     // A name is left out while its pin sits on top of a busier one (city pins first); zooming in brings it back
     const named = [];
     [...here].sort((a, b) => !!places[b].hub - !!places[a].hub || !!(places[b].map || places[b].big) - !!(places[a].map || places[a].big) || places[b].own.length - places[a].own.length).forEach(id => {
@@ -211,8 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!crowded) named.push(p);
       const [r1, r2, r3, ty] = (p.hub ? [14, 8, 4.5, 21] : p.map || p.big || p.own.length > 1 ? [11, 5.5, 3, 17] : [10, 5, 2.5, 16]).map(v => v * s);
       const c = p.hub || !p.types.length ? THEME.accent : TYPES[p.types[0]].color;
-      const dim = p.types.length && p.types.every(t => off.has(t)) ? ' uqa-dim' : '';
-      out += `<g class="uqa-pin${dim}" data-id="${id}">
+      out += `<g class="uqa-pin" data-id="${id}">
         <circle cx="${x}" cy="${y}" r="${r1}" fill="${c}" opacity="${p.map ? 0 : 0.15}"/>
         <circle cx="${x}" cy="${y}" r="${r2}" fill="${c}" opacity="0.4"/>
         <circle cx="${x}" cy="${y}" r="${r3}" fill="${c}"/>
@@ -242,16 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
   style.textContent = `
     .uqa-pin { cursor: pointer; transition: opacity 0.3s; }
     .uqa-line { opacity: 0.6; transition: opacity 0.3s; }
-    .uqa-off { opacity: 0 !important; }
-    .uqa-pin.uqa-dim { opacity: 0.25; }
     .uqa-area { fill: ${THEME.accent}; fill-opacity: 0; stroke: ${THEME.accent}; stroke-opacity: 0.6; stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; transition: stroke-opacity 0.25s, stroke-width 0.25s; }
     .uqa-area:hover, .uqa-area.uqa-hot { stroke-opacity: 1; stroke-width: 2; }
     @media (hover: none) { .uqa-area { animation: uqa-pulse 1.8s ease-in-out infinite; } }
     @keyframes uqa-pulse { 50% { stroke-opacity: 1; stroke-width: 2; } }
     .uqa-ui { position: absolute; display: flex; gap: 0.3rem; z-index: 5; }
     .uqa-ui button { display: flex; align-items: center; gap: 0.5rem; background: ${THEME.tipBg}; border: 1px solid #ddd; padding: 0.25rem 0.6rem; font: 0.6rem 'Space Mono', monospace; color: ${THEME.tipText}; cursor: pointer; }
-    .uqa-ui button i { width: 1.4rem; height: 4px; }
-    .uqa-ui button[aria-pressed="false"] { opacity: 0.4; }
     .uqa-tip { position: absolute; background: ${THEME.tipBg}; border: 1px solid ${THEME.accent}; padding: 0.7rem 0.9rem; font-family: 'Space Mono', monospace;
       font-size: 0.65rem; color: ${THEME.tipText}; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 10; max-width: 260px; line-height: 1.6; }
     .uqa-tip.visible { opacity: 1; }
@@ -291,11 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const [back] = panel('left:0.75rem;top:0.75rem', [['← Dünya', () => open('world')]]);
   panel('right:0.75rem;top:0.75rem;flex-direction:column', [['+', () => zoom(1 / 1.5)], ['−', () => zoom(1.5)], ['⟲', reset]]);
-  panel('right:0.75rem;bottom:0.75rem;flex-direction:column', Object.entries(TYPES).map(([t, { color, label }]) => [`<i style="background:${color}"></i>${label}`, b => {
-    off.has(t) ? off.delete(t) : off.add(t);
-    b.setAttribute('aria-pressed', !off.has(t));
-    draw();
-  }])).forEach(b => b.setAttribute('aria-pressed', 'true'));
   box.appendChild(tip);
 
   const show = (pin) => {

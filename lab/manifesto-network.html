@@ -58,7 +58,7 @@ body { background: #0a0a0a; color: #f2f0ea; }
       <div class="lab-step" id="uqa-step-4"><b>05 · Bahar 2026</b>
         <p>Eskişehir Osmangazi Üniversitesi'nde Kabuk Fanzin'le buluştuk. Nisan'da Kuğulu'daki ofisimizde mimarlık işçilerini ağırladık, 1 Mayıs'ta Tandoğan'daydık, Haziran'da TOBB ETÜ'deki Tamirhane Mimarlık Festivali'ne katıldık.</p>
         </div>
-      <div class="lab-step lab-son" id="uqa-step-5"><p>Yıldırım Beyazıt, Çankaya ve Medipol Üniversitesi gibi henüz gitmediğimiz yerlere de ziyarette bulunmak istiyoruz.</p></div>
+      <div class="lab-step lab-son" id="uqa-step-5"><p>Çankaya Üniversitesi gibi henüz gitmediğimiz yerlere de ziyarette bulunmak istiyoruz.</p></div>
     </div>
     <div class="lab-yapiskan">
       <div id="uqa-date"></div>
@@ -130,8 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
     cankaya: { x: 500, y: 88,  label: 'ÇANKAYA', rx: 60, ri: 38 },
     atilim:  { x: 500, y: 550, label: 'ATILIM', rx: 62, ri: 38 },
     tobb:    { x: 178, y: 320, label: 'TOBB', rx: 58, ri: 36 },
-    medipol: { x: 760, y: 555, label: 'MEDİPOL', rx: 60, ri: 38 },
-    ybu:     { x: 680, y: 570, label: 'YILDIRIM\nBEYAZIT', rx: 58, ri: 36 },
     // Outside Ankara: an outer ring around METU, hidden until the term we went there
     gtu:      { x: 316,  y: 54,  label: 'GTÜ', rx: 62, ri: 38, far: true },
     yeditepe: { x: 685,  y: 109, label: 'YEDİTEPE', rx: 62, ri: 38, far: true },
@@ -140,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     msgsu:    { x: 40,   y: 230, label: 'MSGSÜ', rx: 62, ri: 38, far: true }
   };
   // Universities we planned to visit but have not yet
-  const missed = ['medipol', 'ybu', 'cankaya'];
+  const missed = ['cankaya'];
 
   const org = [
     [-65,-50],[30,-75],[75,-30],[70,30],[20,72],[-40,70],[-72,20],[-68,-10],
