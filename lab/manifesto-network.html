@@ -295,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     svg.innerHTML = '';
     drifters.length = 0;
+    drawnBefore = drawnNow; drawnNow = new Set();
     svg.appendChild(document.createElementNS(NS, 'style')).textContent = BLINK_CSS;
     parent = svg.appendChild(document.createElementNS(NS, 'g'));
     for (let x = vb[0] + 20; x < vb[0] + vb[2]; x += 60)
@@ -370,6 +371,9 @@ document.addEventListener('DOMContentLoaded', () => {
       label(800, 413, 'MİMARLIK İŞÇİLERİ', '#a9602b');
     });
 
+    // The group: copies of cluster dots that leave their cluster and walk over; the clusters stay whole
+    MEET.filter(m => m.batch <= meeting).forEach(m => drifter(m.key, m.from[0], m.from[1], m.look, 1, null, m.at));
+
     // University names, drawn last
     Object.entries(unis).forEach(([k, u]) => {
       const on = s.u.includes(k);
@@ -396,12 +400,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ...[-0.3, 0.6, 1.5, -1.2].map(a => [Math.cos(a) * 34, Math.sin(a) * 34])];
   const MEET_DRIFT = 0.5;       // in the group the dots keep wandering, half as far, so they do not bump into each other
   const MEET_DELAY = 1200;      // newcomers first show in their own cluster, then set off after this many ms
-  let meeting = 0;
+  let meeting = 0, drawnBefore = new Set(), drawnNow = new Set();
   const MEET = (() => {
     const near = (pts, keyOf, n, ok = () => true) => pts.map((p, j) => [keyOf(j), p])
       .filter(([, p], j) => ok(p, j) && !underName(p[0], p[1], 4.5))
       .sort((a, b) => Math.hypot(a[1][0] - MEET_AT[0], a[1][1] - MEET_AT[1]) - Math.hypot(b[1][0] - MEET_AT[0], b[1][1] - MEET_AT[1]))
-      .slice(0, n).map(([k]) => k);
+      .slice(0, n);
+    const look = { w: { r: 3.5, fill: '#a9602b', opacity: 0.85 }, s: { r: 3.5, fill: '#3d6595', opacity: 0.85 },
+                   o: { r: 4.5, fill: RED, opacity: 0.9 }, a: { r: 3.5, fill: GOLD, opacity: 0.9 } };
     const w = near(workers, j => 'w' + j, 5), st = near(students, j => 's' + j, 5);
     const batches = [
       [w[0], w[1], st[0], st[1]],
@@ -409,9 +415,11 @@ document.addEventListener('DOMContentLoaded', () => {
       [st[3], st[4]],
       [w[3], w[4]],
     ];
-    const out = {};
-    let n = 0;
-    batches.forEach((keys, b) => keys.forEach(k => { out[k] = { at: [MEET_AT[0] + MEET_SLOTS[n][0], MEET_AT[1] + MEET_SLOTS[n][1]], batch: b + 1 }; n++; }));
+    const out = [];
+    batches.forEach((pairs, b) => pairs.forEach(([k, from]) => {
+      const n = out.length;
+      out.push({ key: 'm:' + k, from, look: look[k[0]], at: [MEET_AT[0] + MEET_SLOTS[n][0], MEET_AT[1] + MEET_SLOTS[n][1]], batch: b + 1 });
+    }));
     return out;
   })();
 
@@ -421,10 +429,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const drifters = [], driftState = {};
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // scale shrinks the wander; dots inside the institutions barely move. line: a line whose start follows the dot.
-  function drifter(key, x, y, attrs, scale = 1, line = null) {
+  function drifter(key, x, y, attrs, scale = 1, line = null, goal = null) {
+    // A dot that was not on the map in the last drawing starts again from its own spot
+    if (!drawnBefore.has(key)) delete driftState[key];
+    drawnNow.add(key);
     const s = driftState[key] || (driftState[key] = { dx: 0, dy: 0, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, mx: 0, my: 0 });
-    // Where the dot is heading: the meeting spot during the workshop, its own spot otherwise
-    const goal = MEET[key] && MEET[key].batch <= meeting ? MEET[key].at : null;
+    // goal: where the dot is heading (a group copy walking to the group); otherwise it stays at its own spot
     const gx = goal ? goal[0] - x : 0, gy = goal ? goal[1] - y : 0;
     if (gx !== s.gx || gy !== s.gy) {
       s.gx = gx; s.gy = gy;
