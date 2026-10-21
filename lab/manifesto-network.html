@@ -233,6 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // st / w / a: the students, workers and ARCH571 clusters appear from that step on.
   // only: just the universities themselves blink, not the people around them.
   // ring: the semester review brought people back to METU, so from then on the band around METU is filled.
+  // flow: which way a pulse runs along the lines. By default it runs from METU out to the lit university;
+  // 'in': from every university back to METU (the semester review); 'both': out and back (the full network).
   const steps = [
     { d: 'Nisan 2024', h: [], b: ['org'] },
     { d: 'Mayıs 2024', h: ['abc'], b: ['org'] },
@@ -244,8 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { d: 'Kasım 2024', h: ['ted'], b: ['org', 'arch571', 'clusters'] },
     { d: 'Aralık 2024', h: ['atilim'], b: ['arch571'] },
     { d: 'Aralık 2024', h: ['baskent'], b: [] },
-    { d: 'Ocak 2025', h: ['metu'], ring: 1, b: ['ring'] },
-    { d: 'Ocak–Nisan 2025', h: ['metu', 'bilkent', 'gazi', 'ted', 'atilim', 'baskent', 'abc'], b: [], only: 1 }
+    { d: 'Ocak 2025', h: ['metu'], ring: 1, b: ['ring'], flow: 'in' },
+    { d: 'Ocak–Nisan 2025', h: ['metu', 'bilkent', 'gazi', 'ted', 'atilim', 'baskent', 'abc'], b: [], only: 1, flow: 'both' }
   ];
   steps.forEach((s, i) => {
     const sofar = steps.slice(0, i + 1);
@@ -267,9 +269,23 @@ document.addEventListener('DOMContentLoaded', () => {
     parent = prev;
   };
 
+  // A short bright segment running along a line, from x1 (METU) to x2 ('out'), back ('in') or both ways
+  const pulse = (x1, y1, x2, y2, dir) => {
+    const len = Math.hypot(x2 - x1, y2 - y1), seg = 16;
+    const ln = el('line', { x1, y1, x2, y2, stroke: RED, 'stroke-width': 2.2, 'stroke-linecap': 'round',
+      'stroke-dasharray': `${seg} ${len + seg}`, opacity: 0.85 });
+    const an = document.createElementNS(NS, 'animate');
+    const start = seg, end = -len;
+    an.setAttribute('attributeName', 'stroke-dashoffset');
+    an.setAttribute('values', dir === 'out' ? `${start};${end}` : dir === 'in' ? `${end};${start}` : `${start};${end};${start}`);
+    an.setAttribute('dur', dir === 'both' ? '2.8s' : '1.4s');
+    an.setAttribute('repeatCount', 'indefinite');
+    ln.appendChild(an);
+  };
+
   // settled: drawn like the rest, nothing highlighted or blinking
   function render(i, settled = false) {
-    const s = settled ? { ...steps[i], h: [], b: [] } : steps[i];
+    const s = settled ? { ...steps[i], h: [], b: [], flow: null } : steps[i];
     if (dateEl) dateEl.textContent = s.d;
 
     svg.innerHTML = '';
@@ -286,6 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const [x1, y1] = edge(a, b), [x2, y2] = edge(b, a);
       blinking(hi, () => el('line', { x1, y1, x2, y2, stroke: RED, 'stroke-width': hi ? 1.4 : 1,
         'stroke-dasharray': b.ext ? '2,6' : '4,6', opacity: hi ? 0.9 : 0.6 }));
+      const dir = s.flow === 'in' ? (b.ext ? null : 'in') : hi ? (s.flow === 'both' ? 'both' : 'out') : null;
+      if (dir && !reducedMotion) pulse(x1, y1, x2, y2, dir);
     });
     // Ankara schools are on the map from the start, faint until the text reaches them; ABC School appears when it is reached
     Object.entries(unis).forEach(([k, u]) => {
