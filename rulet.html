@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tolga'yla Rulet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Limelight&family=Karla:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+/* Layout: one casino table at night shared by two devices — player rails on top, wheel beside the controls, felt layout below. */
+:root {
+  color-scheme: dark;
+  --felt: #0f3a2d;
+  --felt-deep: #08241c;
+  --felt-line: #3f7a61;
+  --brass: #c9a24a;
+  --brass-dim: #8a6f33;
+  --ivory: #f2e9d6;
+  --ivory-dim: #b9b29f;
+  --red: #b3261e;
+  --black: #17130f;
+  --green: #1d7a4c;
+  --p1: #f0b44c;
+  --p2: #5fc9d9;
+  --win: #ffe08a;
+  --font-display: "Limelight", "Didot", Georgia, serif;
+  --font-body: "Karla", "Segoe UI", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at 50% 0%, var(--felt) 0%, var(--felt-deep) 70%) fixed, var(--felt-deep);
+  color: var(--ivory);
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 5vw, 42px); margin: 0; color: var(--brass); letter-spacing: .02em; }
+.sub { color: var(--ivory-dim); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.conn { padding: 2px 10px; border-radius: 999px; border: 1px solid var(--felt-line); text-transform: none; letter-spacing: 0; }
+.conn.ok { border-color: #4caf7a; color: #8fe0a8; }
+.conn.bad { border-color: #c0504a; color: #f08a80; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--win); outline-offset: 2px; }
+
+/* Join screen */
+.join { max-width: 460px; margin: 8vh auto 0; display: grid; gap: 16px; padding: 24px; border: 1px solid var(--felt-line); border-radius: 16px; background: color-mix(in srgb, var(--felt-deep) 80%, transparent); }
+.join h2 { margin: 0; font-family: var(--font-display); font-weight: 400; color: var(--brass); font-size: 28px; }
+.join p { margin: 0; color: var(--ivory-dim); line-height: 1.5; }
+.join label { display: grid; gap: 6px; font-size: 13px; color: var(--ivory-dim); }
+.join input { background: var(--felt-deep); border: 1px solid var(--felt-line); border-radius: 10px; padding: 10px 12px; color: var(--ivory); font: 600 16px var(--font-num); text-transform: uppercase; }
+.seats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seat { border: 1px solid var(--pc); color: var(--pc); background: transparent; border-radius: 12px; padding: 14px 10px; font-weight: 700; font-size: 16px; }
+.seat:hover { background: color-mix(in srgb, var(--pc) 12%, transparent); }
+.err { color: #f08a80; font-size: 13px; min-height: 1.2em; }
+
+/* Players */
+.players { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.player { border: 1px solid var(--felt-line); border-radius: 14px; padding: 12px 14px; background: color-mix(in srgb, var(--felt-deep) 70%, transparent); display: grid; gap: 6px; transition: border-color .2s, box-shadow .2s; }
+.player.active { border-color: var(--pc); box-shadow: 0 0 0 1px var(--pc), 0 0 24px -6px var(--pc); }
+.player .top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.player .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--pc); flex-shrink: 0; box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--pc) 55%, #000); }
+.player .name { font: 700 17px var(--font-body); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player input.name { background: transparent; border: 0; border-bottom: 1px dashed var(--felt-line); color: var(--ivory); width: 100%; padding: 2px 0; }
+.player .you { font-size: 11px; color: var(--ivory-dim); white-space: nowrap; }
+.player .turn { margin-left: auto; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--pc); white-space: nowrap; }
+.player .bal { font-family: var(--font-num); font-size: clamp(22px, 4vw, 30px); font-variant-numeric: tabular-nums; }
+.player .meta { display: flex; justify-content: space-between; gap: 8px; color: var(--ivory-dim); font-size: 13px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.net.up { color: #8fe0a8; } .net.down { color: #f08a80; }
+
+/* Wheel + controls */
+.stage { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; align-items: center; }
+.wheelbox { position: relative; width: 100%; max-width: 340px; aspect-ratio: 1; margin: 0 auto; }
+canvas { width: 100%; height: 100%; display: block; }
+.side { display: grid; gap: 16px; min-width: 0; }
+.result { display: flex; align-items: center; gap: 14px; min-height: 64px; }
+.result .num { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; font: 600 26px var(--font-num); border: 2px solid var(--brass); background: var(--felt-deep); }
+.num.red { background: var(--red); } .num.black { background: var(--black); } .num.green { background: var(--green); }
+.result .msg { display: grid; gap: 2px; min-width: 0; }
+.result .msg b { font-size: 17px; }
+.result .msg span { color: var(--ivory-dim); font-size: 14px; }
+.history { display: flex; gap: 6px; flex-wrap: wrap; min-height: 26px; }
+.history span { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 600 11px var(--font-num); }
+.history .red { background: var(--red); } .history .black { background: var(--black); border: 1px solid #3a332b; } .history .green { background: var(--green); }
+.label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ivory-dim); }
+.chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.chip { width: 50px; height: 50px; border-radius: 50%; border: 0; display: grid; place-items: center; font: 600 14px var(--font-num); color: #fff; background: var(--cc);
+  box-shadow: inset 0 0 0 4px rgba(255,255,255,.85), inset 0 0 0 7px var(--cc), inset 0 0 0 8px rgba(255,255,255,.35), 0 3px 6px rgba(0,0,0,.4); transition: transform .15s; }
+.chip[aria-pressed="true"] { transform: translateY(-4px); outline: 2px solid var(--win); outline-offset: 3px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--felt-line); background: color-mix(in srgb, var(--felt-deep) 80%, transparent); border-radius: 999px; padding: 9px 16px; font-weight: 600; }
+.btn:hover:not(:disabled) { border-color: var(--brass); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.main { background: var(--brass); color: var(--felt-deep); border-color: var(--brass); padding: 11px 22px; font-size: 16px; }
+.btn.main:hover:not(:disabled) { background: var(--win); }
+.note { color: var(--ivory-dim); font-size: 13px; min-height: 1.3em; }
+
+/* Table layout */
+.tablebox { overflow-x: auto; padding-bottom: 6px; }
+.table { min-width: 680px; display: grid; gap: 3px; grid-template-columns: 54px repeat(12, minmax(0, 1fr)) 54px; grid-template-rows: repeat(3, 50px) 42px 42px;
+  border: 2px solid var(--brass-dim); border-radius: 10px; padding: 8px; background: var(--felt); }
+.cell { position: relative; border: 1px solid var(--felt-line); border-radius: 4px; background: transparent; display: grid; place-items: center; font-weight: 700; font-size: 15px; padding: 0; transition: background .15s, box-shadow .2s; }
+.cell:hover:not(:disabled) { background: rgba(255,255,255,.07); }
+.cell:disabled { cursor: default; }
+.cell.n { font-family: var(--font-num); font-size: 16px; }
+.cell.n span.face { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; }
+.cell.red span.face { background: var(--red); } .cell.black span.face { background: var(--black); }
+.cell.zero { grid-row: 1 / 4; grid-column: 1; background: var(--green); border-radius: 22px 4px 4px 22px; }
+.cell.small { font-size: 13px; letter-spacing: .04em; }
+.diamond { width: 22px; height: 22px; transform: rotate(45deg); border-radius: 3px; }
+.diamond.red { background: var(--red); } .diamond.black { background: var(--black); border: 1px solid #3a332b; }
+.cell.win { box-shadow: 0 0 0 2px var(--win), 0 0 18px var(--win); animation: glow 1.2s ease-in-out 3; }
+@keyframes glow { 50% { box-shadow: 0 0 0 2px var(--win), 0 0 4px var(--win); } }
+.stack { position: absolute; right: 2px; bottom: 2px; display: flex; gap: 2px; pointer-events: none; }
+.stack i { font-style: normal; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 11px; display: grid; place-items: center; font: 600 10px var(--font-num); color: #10100e; background: var(--pc); box-shadow: 0 0 0 2px rgba(0,0,0,.35); }
+.stack i.draft { outline: 1px dashed #fff; }
+.foot { color: var(--ivory-dim); font-size: 12px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.foot .btn { margin-left: auto; padding: 5px 12px; font-size: 12px; }
+
+@media (max-width: 720px) {
+  .stage, .players { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell.win { animation: none; }
+  .chip, .player { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<section class="join" id="join">
+  <h2>Masaya otur</h2>
+  <p>İkiniz de bu dosyayı kendi bilgisayarınızda açın, aynı masa kodunu yazın ve kendi yerinizi seçin. Masa internet üzerinden ikinizde aynı anda güncellenir.</p>
+  <label for="code">Masa kodu
+    <input id="code" value="OZZY-TOLGA" maxlength="40" autocomplete="off">
+  </label>
+  <div class="seats">
+    <button class="seat" id="seat0" style="--pc: var(--p1)">Ben Ozzy'yim</button>
+    <button class="seat" id="seat1" style="--pc: var(--p2)">Ben Tolga'yım</button>
+  </div>
+  <div class="err" id="joinErr"></div>
+</section>
+
+<div class="wrap" id="game" hidden>
+  <header>
+    <h1>Tolga'yla Rulet</h1>
+    <span class="sub"><span>Avrupa ruleti · tek sıfır · oyun parası</span><span id="tableCode"></span><span class="conn" id="conn">Bağlanıyor…</span></span>
+  </header>
+
+  <section class="players" id="players"></section>
+
+  <section class="stage">
+    <div class="wheelbox"><canvas id="wheel" aria-label="Rulet çarkı"></canvas></div>
+    <div class="side">
+      <div class="result" aria-live="polite">
+        <div class="num" id="resNum">–</div>
+        <div class="msg"><b id="resTitle">Bahisler açık</b><span id="resText"></span></div>
+      </div>
+      <div class="history" id="history" aria-label="Son sayılar"></div>
+      <div>
+        <div class="label" style="margin-bottom:8px">Fiş seç</div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="undo">Geri al</button>
+        <button class="btn" id="clear">Temizle</button>
+        <button class="btn" id="rebet">Son bahsi tekrarla</button>
+        <button class="btn main" id="done">Bahsim tamam</button>
+      </div>
+      <div class="note" id="note"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="tablebox"><div class="table" id="table"></div></div>
+    <div class="foot">
+      <span>Tek sayı 35'e 1</span><span>Düzine / sıra 2'ye 1</span><span>Kırmızı-siyah, tek-çift, 1–18 / 19–36 1'e 1</span><span>Sıfır gelirse dış bahisler kaybeder</span>
+      <button class="btn" id="reset">Yeni oyun (1.000 $)</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---------- Supabase ----------
+  const SB_URL = 'https://dxgwgenzrebnmwzhwhck.supabase.co';
+  const SB_KEY = 'sb_publishable_YP8wq-frx_W7KW3NurAPJw_rBamLIO7';
+  const TABLE = 'rulet_masalar';
+
+  // ---------- Roulette rules ----------
+  const ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+  const REDS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+  const colorOf = n => n === 0 ? 'green' : REDS.has(n) ? 'red' : 'black';
+  const colorName = n => ({ red: 'kırmızı', black: 'siyah', green: 'yeşil' })[colorOf(n)];
+  const START = 1000;
+  const CHIPS = [[5, '#7a5bb5'], [25, '#2e8b57'], [100, '#1f1f1f'], [500, '#a8322b']];
+  const PCOL = ['var(--p1)', 'var(--p2)'];
+  const money = v => (v < 0 ? '−' : '') + '$' + Math.abs(v).toLocaleString('tr-TR');
+  const short = v => v >= 1000 ? (v / 1000).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + 'K' : String(v);
+  const sum = o => Object.values(o || {}).reduce((a, b) => a + b, 0);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const BETS = {};
+  for (let n = 0; n <= 36; n++) BETS['n' + n] = { label: String(n), wins: x => x === n, pays: 35 };
+  const range = (a, b) => x => x >= a && x <= b;
+  Object.assign(BETS, {
+    red:   { label: 'Kırmızı', wins: x => REDS.has(x), pays: 1 },
+    black: { label: 'Siyah', wins: x => x !== 0 && !REDS.has(x), pays: 1 },
+    odd:   { label: 'Tek', wins: x => x !== 0 && x % 2 === 1, pays: 1 },
+    even:  { label: 'Çift', wins: x => x !== 0 && x % 2 === 0, pays: 1 },
+    low:   { label: '1–18', wins: range(1, 18), pays: 1 },
+    high:  { label: '19–36', wins: range(19, 36), pays: 1 },
+    d1:    { label: '1. düzine', wins: range(1, 12), pays: 2 },
+    d2:    { label: '2. düzine', wins: range(13, 24), pays: 2 },
+    d3:    { label: '3. düzine', wins: range(25, 36), pays: 2 },
+    c1:    { label: '1. sıra', wins: x => x !== 0 && x % 3 === 1, pays: 2 },
+    c2:    { label: '2. sıra', wins: x => x !== 0 && x % 3 === 2, pays: 2 },
+    c3:    { label: '3. sıra', wins: x => x !== 0 && x % 3 === 0, pays: 2 },
+  });
+
+  // Shared state, the same on both devices.
+  // A round: the starting player bets and passes, the other bets and the wheel spins. The next round the other one starts.
+  const freshState = () => ({
+    players: [
+      { name: 'Ozzy', balance: START, bets: {}, last: {} },
+      { name: 'Tolga', balance: START, bets: {}, last: {} },
+    ],
+    first: 0, turn: 0, done: [false, false], history: [], spin: null,
+  });
+
+  // ---------- Local state ----------
+  let db, kod, me, S = null, surum = 0, chip = 25;
+  let draft = { bets: {}, moves: [] };       // my bets this turn, not sent yet
+  let shownSpin = null, animating = false, busy = false;
+  const $ = id => document.getElementById(id);
+  const note = t => { $('note').textContent = t || ''; };
+  const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+  const conn = (txt, cls) => { const c = $('conn'); c.textContent = txt; c.className = 'conn ' + (cls || ''); };
+
+  // ---------- Join ----------
+  const lastCode = store.get('rulet-kod'); if (lastCode) $('code').value = lastCode;
+  [0, 1].forEach(i => $('seat' + i).addEventListener('click', () => join(i)));
+  async function join(seat) {
+    $('joinErr').textContent = '';
+    if (!window.supabase) { $('joinErr').textContent = 'Bağlantı kütüphanesi yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile.'; return; }
+    kod = $('code').value.trim().toUpperCase().replace(/\s+/g, '-');
+    if (kod.length < 3) { $('joinErr').textContent = 'Masa kodu en az 3 harf olsun.'; return; }
+    me = seat; store.set('rulet-kod', kod);
+    db = window.supabase.createClient(SB_URL, SB_KEY);
+    try {
+      let row = await fetchRow();
+      if (!row) {
+        await db.from(TABLE).insert({ kod, durum: freshState(), surum: 1 });
+        row = await fetchRow();
+      }
+      $('join').hidden = true; $('game').hidden = false;
+      $('tableCode').textContent = 'Masa: ' + kod;
+      buildTable(); buildChips(); sizeCanvas(); requestAnimationFrame(loop);
+      apply(row, true);
+      listen();
+    } catch (e) {
+      $('joinErr').textContent = 'Masaya bağlanılamadı: ' + (e.message || e);
+    }
+  }
+  async function fetchRow() {
+    const { data, error } = await db.from(TABLE).select('durum, surum').eq('kod', kod).maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+  function listen() {
+    db.channel('rulet-' + kod)
+      .on('postgres_changes', { event: '*', schema: 'public', table: TABLE, filter: 'kod=eq.' + kod }, p => { if (p.new && p.new.durum) apply(p.new); })
+      .subscribe(st => conn(st === 'SUBSCRIBED' ? 'Bağlı' : 'Bağlanıyor…', st === 'SUBSCRIBED' ? 'ok' : ''));
+    // Backup in case live updates drop
+    setInterval(async () => {
+      try { const r = await fetchRow(); if (r) apply(r); } catch { conn('Bağlantı yok', 'bad'); }
+    }, 4000);
+  }
+
+  // Writes a change on top of the latest state; retries if the other device wrote first
+  async function commit(change) {
+    if (busy) return false;
+    busy = true; renderAll();
+    try {
+      for (let tries = 0; tries < 4; tries++) {
+        const next = structuredClone(S);
+        const ok = change(next);
+        if (ok === false) return false;
+        const { data, error } = await db.from(TABLE)
+          .update({ durum: next, surum: surum + 1, guncellendi: new Date().toISOString() })
+          .eq('kod', kod).eq('surum', surum).select('durum, surum');
+        if (error) throw error;
+        if (data && data.length) { apply(data[0]); return true; }
+        const fresh = await fetchRow(); if (fresh) apply(fresh);
+      }
+      note('Masa o sırada değişti, tekrar dene.');
+      return false;
+    } catch (e) {
+      note('Kaydedilemedi: ' + (e.message || e)); conn('Bağlantı yok', 'bad');
+      return false;
+    } finally { busy = false; renderAll(); }
+  }
+
+  function apply(row, first = false) {
+    if (!first && row.surum <= surum) return;
+    const wasMyTurn = S && S.turn === me && !S.done[me];
+    S = row.durum; surum = row.surum;
+    if (wasMyTurn && (S.turn !== me || S.done[me])) draft = { bets: {}, moves: [] };
+    const sp = S.spin;
+    if (sp && sp.id !== shownSpin) {
+      shownSpin = sp.id;
+      if (first) { placeBall(sp.idx); showResult(); }
+      else spinTo(sp.idx);
+    }
+    if (!sp) { shownSpin = null; }
+    renderAll();
+  }
+
+  // ---------- Players ----------
+  function renderPlayers() {
+    const box = $('players');
+    S.players.forEach((p, i) => {
+      let el = box.children[i];
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'player';
+        el.innerHTML = `<div class="top"><span class="dot"></span><span class="nm"></span><span class="turn"></span></div>
+          <div class="bal"></div><div class="meta"><span class="onbet"></span><span class="net"></span></div>`;
+        box.appendChild(el);
+        const nm = el.querySelector('.nm');
+        if (i === me) {
+          nm.innerHTML = `<input class="name" id="myname" maxlength="18" aria-label="Adın">`;
+          nm.querySelector('input').addEventListener('change', e => {
+            const v = e.target.value.trim().slice(0, 18) || p.name;
+            commit(s => { s.players[me].name = v; });
+          });
+        } else nm.innerHTML = `<span class="name"></span>`;
+      }
+      el.style.setProperty('--pc', PCOL[i]);
+      const myTurn = S.turn === i && !S.done[i] && !animating;
+      el.classList.toggle('active', myTurn);
+      const nameEl = el.querySelector('.name');
+      if (i === me) { if (document.activeElement !== nameEl) nameEl.value = p.name; }
+      else nameEl.textContent = p.name;
+      el.querySelector('.turn').textContent = animating ? '' : S.done[i] ? 'Bahis tamam' : S.turn === i ? (i === me ? 'Sıra sende' : 'Sıra onda') : 'Bekliyor';
+      // While the ball runs, balances show what they were before the payout
+      const sp = S.spin;
+      let bal = animating && sp ? sp.before[i] : p.balance;
+      let onTable = animating && sp ? sum(sp.bets[i]) : sum(p.bets);
+      if (i === me && myTurn) { bal -= sum(draft.bets); onTable += sum(draft.bets); }
+      el.querySelector('.bal').textContent = money(bal);
+      el.querySelector('.onbet').textContent = `Masada: ${money(onTable)}` + (i === me ? ' · sen' : '');
+      const net = el.querySelector('.net');
+      const n = !animating && sp ? sp.nets[i] : null;
+      net.textContent = n === null || n === undefined ? '' : `Son el: ${n > 0 ? '+' : ''}${money(n)}`;
+      net.className = 'net ' + (n > 0 ? 'up' : n < 0 ? 'down' : '');
+    });
+  }
+
+  // ---------- Table ----------
+  const cells = {};
+  function buildTable() {
+    const t = $('table');
+    const add = (key, cls, html, col, row, label) => {
+      const b = document.createElement('button');
+      b.className = 'cell ' + cls; b.style.gridColumn = col; b.style.gridRow = row;
+      b.innerHTML = html + '<span class="stack"></span>';
+      b.setAttribute('aria-label', label);
+      b.addEventListener('click', () => place(key));
+      b.addEventListener('contextmenu', e => { e.preventDefault(); remove(key); });
+      t.appendChild(b); cells[key] = b;
+    };
+    add('n0', 'n zero', '<span class="face">0</span>', '1', '1 / 4', 'Sıfır');
+    for (let c = 0; c < 12; c++) for (let r = 0; r < 3; r++) {
+      const n = c * 3 + (3 - r);
+      add('n' + n, 'n ' + colorOf(n), `<span class="face">${n}</span>`, String(c + 2), String(r + 1), `Sayı ${n}`);
+    }
+    ['c3', 'c2', 'c1'].forEach((k, r) => add(k, 'small', '2:1', '14', String(r + 1), BETS[k].label));
+    ['d1', 'd2', 'd3'].forEach((k, i) => add(k, 'small', ['1–12', '13–24', '25–36'][i], `${2 + i * 4} / span 4`, '4', BETS[k].label));
+    [['low', '1–18'], ['even', 'Çift'], ['red', '<span class="diamond red"></span>'], ['black', '<span class="diamond black"></span>'], ['odd', 'Tek'], ['high', '19–36']]
+      .forEach(([k, html], i) => add(k, 'small', html, `${2 + i * 2} / span 2`, '5', BETS[k].label));
+  }
+  const canBet = () => S && S.turn === me && !S.done[me] && !animating && !busy;
+  function renderTable() {
+    const sp = S.spin;
+    const shown = animating && sp ? sp.bets : S.players.map(p => p.bets);
+    Object.entries(cells).forEach(([key, b]) => {
+      b.disabled = !canBet();
+      const stack = b.querySelector('.stack'); stack.innerHTML = '';
+      [0, 1].forEach(i => {
+        let v = (shown[i] || {})[key] || 0, isDraft = false;
+        if (i === me && canBet() && draft.bets[key]) { v += draft.bets[key]; isDraft = true; }
+        if (!v) return;
+        const chipEl = document.createElement('i');
+        chipEl.style.setProperty('--pc', PCOL[i]);
+        if (isDraft) chipEl.className = 'draft';
+        chipEl.textContent = short(v);
+        chipEl.title = `${S.players[i].name}: ${money(v)}`;
+        stack.appendChild(chipEl);
+      });
+    });
+  }
+
+  // ---------- Chips & actions ----------
+  function buildChips() {
+    CHIPS.forEach(([v, c]) => {
+      const b = document.createElement('button');
+      b.className = 'chip'; b.style.setProperty('--cc', c); b.textContent = v;
+      b.setAttribute('aria-label', `${v} dolarlık fiş`);
+      b.addEventListener('click', () => { chip = v; renderSide(); });
+      $('chips').appendChild(b);
+    });
+  }
+  const myFree = () => S.players[me].balance - sum(draft.bets);
+  function renderSide() {
+    [...$('chips').children].forEach((b, i) => b.setAttribute('aria-pressed', String(CHIPS[i][0] === chip)));
+    const ok = canBet();
+    const other = S.players[1 - me];
+    $('undo').disabled = !ok || !draft.moves.length;
+    $('clear').disabled = !ok || !draft.moves.length;
+    $('rebet').disabled = !ok || draft.moves.length > 0 || !sum(S.players[me].last);
+    $('done').disabled = !ok;
+    $('done').textContent = S.done[1 - me] ? 'Bahsim tamam · Çevir' : `Bahsim tamam · Sıra ${other.name}`;
+    $('reset').disabled = animating || busy;
+    $('history').innerHTML = S.history.slice(0, 14).map(n => `<span class="${colorOf(n)}">${n}</span>`).join('');
+    if (!animating && !S.spin) {
+      $('resTitle').textContent = 'Bahisler açık';
+    }
+    if (!animating) {
+      $('resText').textContent = S.turn === me && !S.done[me]
+        ? (S.done[1 - me] ? `${other.name} bahsini koydu. Sen de koy ve çevir.` : 'Sıra sende: bahsini koy, sonra “Bahsim tamam”.')
+        : `${S.players[S.turn].name} bahsini koyuyor, bekle.`;
+    }
+  }
+  function renderAll() { if (!S) return; renderPlayers(); renderTable(); renderSide(); }
+
+  function place(key) {
+    if (!canBet()) return;
+    if (myFree() < chip) { note(`Bakiyen ${money(chip)} fişe yetmiyor. Daha küçük fiş seç.`); return; }
+    draft.bets[key] = (draft.bets[key] || 0) + chip;
+    draft.moves.push([key, chip]);
+    note(`${BETS[key].label} üstüne ${money(chip)}. Kesik çizgili fişler henüz gönderilmedi; sağ tık bir fiş geri alır.`);
+    renderAll();
+  }
+  function takeBack(i) {
+    const [k, v] = draft.moves.splice(i, 1)[0];
+    draft.bets[k] -= v; if (!draft.bets[k]) delete draft.bets[k];
+  }
+  function remove(key) {
+    if (!canBet()) return;
+    for (let i = draft.moves.length - 1; i >= 0; i--) if (draft.moves[i][0] === key) { takeBack(i); renderAll(); return; }
+  }
+  $('undo').addEventListener('click', () => { if (draft.moves.length) { takeBack(draft.moves.length - 1); note(''); renderAll(); } });
+  $('clear').addEventListener('click', () => { draft = { bets: {}, moves: [] }; note(''); renderAll(); });
+  $('rebet').addEventListener('click', () => {
+    const last = S.players[me].last, need = sum(last);
+    if (need > S.players[me].balance) { note(`Son bahis ${money(need)}, bakiyen ${money(S.players[me].balance)}. Yetmiyor.`); return; }
+    draft = { bets: { ...last }, moves: Object.entries(last) };
+    note(`Son bahsin yeniden kondu: ${money(need)}.`); renderAll();
+  });
+
+  function randomPocket() {
+    const a = new Uint32Array(1); let x;
+    do { crypto.getRandomValues(a); x = a[0]; } while (x >= Math.floor(2 ** 32 / 37) * 37);
+    return x % 37;
+  }
+
+  $('done').addEventListener('click', async () => {
+    if (!canBet()) return;
+    const mine = { ...draft.bets };
+    const ok = await commit(s => {
+      if (s.turn !== me || s.done[me]) return false;
+      const p = s.players[me], stake = sum(mine);
+      if (stake > p.balance) return false;
+      p.balance -= stake; p.bets = mine; s.done[me] = true;
+      if (!s.done[1 - me]) { s.turn = 1 - me; return; }
+      // Both have bet: spin now. The result and payouts go into the same write, so both devices see the same thing.
+      const idx = randomPocket(), n = ORDER[idx];
+      const before = s.players.map(q => q.balance);
+      const bets = s.players.map(q => q.bets);
+      const nets = s.players.map(q => {
+        const staked = sum(q.bets);
+        let back = 0;
+        Object.entries(q.bets).forEach(([k, v]) => { if (BETS[k].wins(n)) back += v * (BETS[k].pays + 1); });
+        q.balance += back;
+        if (staked) q.last = { ...q.bets };
+        q.bets = {};
+        return staked ? back - staked : null;
+      });
+      s.history = [n, ...s.history].slice(0, 30);
+      s.spin = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), idx, n, before, bets, nets };
+      s.first = 1 - s.first; s.turn = s.first; s.done = [false, false];
+    });
+    if (ok) note('');
+  });
+
+  let resetArmed = false;
+  $('reset').addEventListener('click', async () => {
+    if (!resetArmed) { resetArmed = true; $('reset').textContent = 'Emin misin? Tekrar bas'; setTimeout(() => { resetArmed = false; $('reset').textContent = 'Yeni oyun (1.000 $)'; }, 4000); return; }
+    resetArmed = false; $('reset').textContent = 'Yeni oyun (1.000 $)';
+    const names = S.players.map(p => p.name);
+    draft = { bets: {}, moves: [] };
+    await commit(s => { const f = freshState(); f.players.forEach((p, i) => p.name = names[i]); Object.assign(s, f); });
+    clearWins(); $('resNum').textContent = '–'; $('resNum').className = 'num';
+  });
+
+  // ---------- Wheel ----------
+  const canvas = $('wheel'), ctx = canvas.getContext('2d');
+  const SEG = Math.PI * 2 / 37;
+  let rot = 0, ballAngle = -0.6, ballR = 0.86, ballOnWheel = null;
+  function sizeCanvas() {
+    const r = canvas.getBoundingClientRect(), d = devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(r.width * d)); canvas.height = Math.max(1, Math.round(r.height * d));
+  }
+  addEventListener('resize', sizeCanvas);
+  function draw() {
+    const W = canvas.width, c = W / 2, R = W / 2 * 0.98;
+    ctx.clearRect(0, 0, W, W);
+    let g = ctx.createRadialGradient(c, c, R * 0.8, c, c, R);
+    g.addColorStop(0, '#5a3b1c'); g.addColorStop(0.6, '#3a2410'); g.addColorStop(1, '#1d1208');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, R, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#c9a24a'; ctx.lineWidth = W * 0.006;
+    ctx.beginPath(); ctx.arc(c, c, R * 0.93, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#2a1a0c'; ctx.beginPath(); ctx.arc(c, c, R * 0.9, 0, Math.PI * 2); ctx.fill();
+    const rOut = R * 0.8, rIn = R * 0.6;
+    ORDER.forEach((n, i) => {
+      const a = rot + i * SEG - Math.PI / 2;
+      ctx.beginPath(); ctx.arc(c, c, rOut, a - SEG / 2, a + SEG / 2); ctx.arc(c, c, rIn, a + SEG / 2, a - SEG / 2, true); ctx.closePath();
+      ctx.fillStyle = n === 0 ? '#1d7a4c' : REDS.has(n) ? '#b3261e' : '#17130f'; ctx.fill();
+      ctx.strokeStyle = '#c9a24a'; ctx.lineWidth = W * 0.003; ctx.stroke();
+      ctx.save(); ctx.translate(c + Math.cos(a) * R * 0.72, c + Math.sin(a) * R * 0.72); ctx.rotate(a + Math.PI / 2);
+      ctx.fillStyle = '#f2e9d6'; ctx.font = `600 ${Math.round(W * 0.036)}px "IBM Plex Mono", monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n, 0, 0); ctx.restore();
+    });
+    ctx.strokeStyle = '#c9a24a'; ctx.lineWidth = W * 0.004; ctx.beginPath(); ctx.arc(c, c, rIn, 0, Math.PI * 2); ctx.stroke();
+    g = ctx.createRadialGradient(c - R * 0.1, c - R * 0.1, R * 0.05, c, c, rIn);
+    g.addColorStop(0, '#7a5428'); g.addColorStop(0.7, '#4a3015'); g.addColorStop(1, '#2c1c0b');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c, c, rIn - W * 0.004, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#d8b25a'; ctx.lineWidth = W * 0.012; ctx.lineCap = 'round';
+    for (let k = 0; k < 4; k++) { const a = rot + k * Math.PI / 2; ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(c + Math.cos(a) * R * 0.3, c + Math.sin(a) * R * 0.3); ctx.stroke(); }
+    ctx.fillStyle = '#e6c46e'; ctx.beginPath(); ctx.arc(c, c, R * 0.07, 0, Math.PI * 2); ctx.fill();
+    const ba = (ballOnWheel === null ? ballAngle : rot + ballOnWheel) - Math.PI / 2;
+    const bx = c + Math.cos(ba) * R * ballR, by = c + Math.sin(ba) * R * ballR;
+    g = ctx.createRadialGradient(bx - W * 0.006, by - W * 0.006, 1, bx, by, W * 0.022);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#c9c4b8');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, W * 0.02, 0, Math.PI * 2); ctx.fill();
+  }
+  function loop() { if (!animating && !reduced) rot += 0.003; draw(); requestAnimationFrame(loop); }
+  function placeBall(idx) { ballOnWheel = idx * SEG; ballR = 0.66; }
+
+  function spinTo(idx) {
+    animating = true; clearWins(); note('');
+    $('resTitle').textContent = 'Bahisler kapandı'; $('resText').textContent = 'Top dönüyor…';
+    $('resNum').textContent = '…'; $('resNum').className = 'num';
+    renderAll();
+    const dur = reduced ? 900 : 6200;
+    const rot0 = rot, rot1 = rot + Math.PI * 2 * (reduced ? 0.5 : 3) + Math.random() * 0.5;
+    const b0 = ballOnWheel === null ? ballAngle : rot + ballOnWheel;
+    let b1 = rot1 + idx * SEG;
+    while (b1 > b0 - Math.PI * 2 * (reduced ? 1 : 7)) b1 -= Math.PI * 2;
+    ballOnWheel = null; ballR = 0.86;
+    const t0 = performance.now();
+    (function step(now) {
+      const t = Math.min(1, (now - t0) / dur);
+      rot = rot0 + (rot1 - rot0) * (1 - Math.pow(1 - t, 3));
+      ballAngle = b0 + (b1 - b0) * (1 - Math.pow(1 - t, 4));
+      const drop = Math.max(0, (t - 0.62) / 0.38);
+      ballR = 0.86 - 0.2 * (1 - Math.pow(1 - drop, 2));
+      if (t < 1) requestAnimationFrame(step);
+      else { placeBall(idx); animating = false; showResult(); renderAll(); }
+    })(t0);
+  }
+  function showResult() {
+    const sp = S.spin; if (!sp) return;
+    const n = sp.n;
+    $('resNum').textContent = n; $('resNum').className = 'num ' + colorOf(n);
+    $('resTitle').textContent = `${n} ${colorName(n)}`;
+    const lines = [0, 1].filter(i => sp.nets[i] !== null).map(i => `${S.players[i].name} ${sp.nets[i] > 0 ? '+' : ''}${money(sp.nets[i])}`);
+    note(lines.join(' · ') || 'Masada bahis yoktu.');
+    clearWins();
+    Object.entries(BETS).forEach(([k, b]) => { if (b.wins(n)) cells[k].classList.add('win'); });
+    const broke = S.players.filter(p => p.balance === 0).map(p => p.name);
+    if (broke.length) note($('note').textContent + ` · ${broke.join(' ve ')} bitti; devam için “Yeni oyun”.`);
+  }
+  function clearWins() { Object.values(cells).forEach(b => b.classList.remove('win')); }
+})();
+</script>
+</body>
+</html>
