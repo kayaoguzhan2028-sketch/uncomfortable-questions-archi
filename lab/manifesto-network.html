@@ -170,6 +170,16 @@ document.addEventListener('DOMContentLoaded', () => {
     [-5,-30,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[10,-55,'baskent'],[35,8,'atilim']
   ];
   const coreR = u => u.hub ? 10 : 6;
+  // The box a name takes above its core dot; dots that would sit under a name are left out
+  const nameBox = u => {
+    const fs = u.hub ? 16 : 9, half = u.label.length * fs * 0.68 / 2 + 5, base = u.y - coreR(u) - 4;
+    return [u.x - half, base - fs * 0.8 - 5, u.x + half, base + 5];
+  };
+  const underName = (x, y, r) => Object.values(unis).some(u => {
+    if (u.ext) return false;
+    const [x0, y0, x1, y1] = nameBox(u);
+    return x + r > x0 && x - r < x1 && y + r > y0 && y - r < y1;
+  });
   const arch571 = Array.from({ length: 22 }, (_, i) => {
     const a = (i / 22) * Math.PI * 2 - 0.3, r = 38 + (i % 3) * 6;
     return [420 + Math.cos(a) * r, 310 + Math.sin(a) * r];
@@ -271,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Org team; a member blinks with the university they opened the door to
     org.forEach(([dx, dy, link]) => {
       const x = 420 + dx, y = 310 + dy;
+      if (underName(x, y, 4.5)) return;
       blinking(s.b.includes('org') || (link && s.h.includes(link) && !s.only), () => {
         if (link && s.u.includes(link)) {
           const [x2, y2] = edge(unis[link], { x, y });
@@ -281,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (s.a) blinking(s.b.includes('arch571'), () =>
-      arch571.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: GOLD, opacity: 0.9 })));
+      arch571.forEach(([x, y]) => underName(x, y, 3.5) || el('circle', { cx: x, cy: y, r: 3.5, fill: GOLD, opacity: 0.9 })));
 
     // Blue clusters at every university reached
     s.u.forEach(k => {
@@ -290,7 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
       blinking((s.h.includes(k) && !s.only) || s.b.includes('clusters'), () => {
         for (let j = 0; j < 8; j++) {
           const a = (j / 8) * Math.PI * 2 + 0.5, r = 16 + (j % 2) * 9;
-          el('circle', { cx: u.x + Math.cos(a) * r, cy: u.y + Math.sin(a) * r, r: 3.5, fill: '#3d6595', opacity: 0.85 });
+          const cx = u.x + Math.cos(a) * r, cy = u.y + Math.sin(a) * r;
+          if (!underName(cx, cy, 3.5)) el('circle', { cx, cy, r: 3.5, fill: '#3d6595', opacity: 0.85 });
         }
       });
     });
