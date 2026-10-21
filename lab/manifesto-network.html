@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const angleTo = (a, b) => Math.atan2(b.y - a.y, b.x - a.x);
   const org = [
     [-65,-50],[30,-75],[75,-30],[70,30],[20,72],[-40,70],[-72,20],[-68,-10],
-    [-5,-30,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[10,-55,'baskent'],[35,8,'atilim']
+    [-8,-62,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[10,-55,'baskent'],[35,8,'atilim']
   ];
   const coreR = u => u.hub ? 10 : 6;
   // The box a name takes above its core dot; dots that would sit under a name are left out
@@ -244,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dateEl) dateEl.textContent = s.d;
 
     svg.innerHTML = '';
+    drifters.length = 0;
     svg.appendChild(document.createElementNS(NS, 'style')).textContent = BLINK_CSS;
     parent = svg.appendChild(document.createElementNS(NS, 'g'));
     for (let x = vb[0] + 20; x < vb[0] + vb[2]; x += 60)
@@ -311,12 +312,12 @@ document.addEventListener('DOMContentLoaded', () => {
       .textContent = text;
 
     if (s.st) blinking(s.b.includes('students'), () => {
-      students.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: '#3d6595', opacity: 0.85 }));
+      students.forEach(([x, y], j) => drifter('s' + j, x, y, '#3d6595'));
       label(650, 437, 'ÖĞRENCİLER', '#3d6595');
     });
 
     if (s.w) blinking(s.b.includes('workers'), () => {
-      workers.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: '#a9602b', opacity: 0.85 }));
+      workers.forEach(([x, y], j) => drifter('w' + j, x, y, '#a9602b'));
       label(780, 258, 'MİMARLIK İŞÇİLERİ', '#a9602b');
     });
 
@@ -338,6 +339,30 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // Students and architecture workers wander a little around their own spot, then drift back
+  const DRIFT_R = 8;            // how far a dot may stray from its spot
+  const drifters = [], driftState = {};
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function drifter(key, x, y, fill) {
+    const s = driftState[key] || (driftState[key] = { dx: 0, dy: 0, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
+    const c = el('circle', { cx: x + s.dx, cy: y + s.dy, r: 3.5, fill, opacity: 0.85 });
+    drifters.push({ c, x, y, s });
+  }
+  function drift() {
+    drifters.forEach(({ c, x, y, s }) => {
+      s.vx += (Math.random() - 0.5) * 0.08 - s.dx * 0.001;
+      s.vy += (Math.random() - 0.5) * 0.08 - s.dy * 0.001;
+      const d = Math.hypot(s.dx, s.dy);
+      if (d > DRIFT_R) { s.vx -= s.dx / d * 0.03; s.vy -= s.dy / d * 0.03; }
+      s.vx *= 0.98; s.vy *= 0.98;
+      const v = Math.hypot(s.vx, s.vy); if (v > 0.25) { s.vx *= 0.25 / v; s.vy *= 0.25 / v; }
+      s.dx += s.vx; s.dy += s.vy;
+      c.setAttribute('cx', x + s.dx); c.setAttribute('cy', y + s.dy);
+    });
+    requestAnimationFrame(drift);
+  }
+  if (!reducedMotion) requestAnimationFrame(drift);
 
   const blocks = steps.map((_, i) => document.getElementById('uqa-step-' + i)).filter(Boolean);
   let current = 0, settleTimer = null;
