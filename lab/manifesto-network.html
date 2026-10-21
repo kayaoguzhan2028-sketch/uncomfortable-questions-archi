@@ -18,7 +18,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; font-family: "Space Mono", monospace; }
 
-body { background: #0a0a0a; color: #f2f0ea; }
+body { background: #ffffff; color: #0a0a0a; }
 </style>
 </head>
 <body>
@@ -39,7 +39,7 @@ body { background: #0a0a0a; color: #f2f0ea; }
 /* Phones: the graph sticks to the top half, the text passes underneath */
 @media (max-width: 767px) {
   .uqa-net { grid-template-columns: minmax(0, 1fr); }
-  .uqa-net__yapiskan { height: auto; order: -1; justify-content: flex-start; padding: 8px 0; background: #0a0a0a; z-index: 1; }
+  .uqa-net__yapiskan { height: auto; order: -1; justify-content: flex-start; padding: 8px 0; background: #ffffff; z-index: 1; }
   .uqa-net #uqa-date { margin-bottom: 4px; }
   .uqa-net #uqa-network { height: 42vh; }
   .uqa-net__adim { min-height: 60vh; }
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ['#555', 'kurumsal çekirdek', '1px dashed #888'],
     ['#4a7fc1', 'öğrenciler'],
     ['#c96a1f', 'çalışan / işsiz mimarlar'],
-    ['#d4b83a', 'ARCH 571 ekibi']
+    ['#c9a227', 'ARCH 571 ekibi']
   ].forEach(([color, text, border]) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:0.6rem';
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     s.st = sofar.some(t => t.st); s.w = sofar.some(t => t.w); s.a = sofar.some(t => t.a); s.ring = sofar.some(t => t.ring);
   });
 
-  const WHITE = '#f2f0ea', DIM = 'rgba(242,240,234,0.35)', RED = '#e03a2f';
+  const INK = '#111111', DIM = 'rgba(17,17,17,0.35)', RED = '#e03a2f', GOLD = '#c9a227';
   const BLINK_CSS = '@keyframes uqa-flash{0%,100%{filter:brightness(1)}35%{filter:brightness(2)}}' +
     '@keyframes uqa-blink{0%,55%,100%{opacity:1}80%{opacity:.35}}' +
     '.uqa-blink{animation:uqa-flash .9s ease-out,uqa-blink 2.4s ease-in-out .9s 3}' +
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.appendChild(document.createElementNS(NS, 'style')).textContent = BLINK_CSS;
     parent = svg.appendChild(document.createElementNS(NS, 'g'));
     for (let x = vb[0] + 20; x < vb[0] + vb[2]; x += 60)
-      for (let y = vb[1] + 20; y < vb[1] + vb[3]; y += 60) el('circle', { cx: x, cy: y, r: 0.8, fill: '#1a1a1a' });
+      for (let y = vb[1] + 20; y < vb[1] + vb[3]; y += 60) el('circle', { cx: x, cy: y, r: 0.8, fill: '#e2e2e2' });
     parent = svg.appendChild(document.createElementNS(NS, 'g'));
 
     s.u.forEach(k => {
@@ -250,18 +250,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const on = s.u.includes(k), hi = s.h.includes(k);
       if (u.far && !on) return;
       if (u.ext) {
-        blinking(hi, () => el('circle', { cx: u.x, cy: u.y, r: u.ri, fill: '#0a0a0a', stroke: RED, 'stroke-width': hi ? 1.5 : 1,
+        blinking(hi, () => el('circle', { cx: u.x, cy: u.y, r: u.ri, fill: '#ffffff', stroke: RED, 'stroke-width': hi ? 1.5 : 1,
           'stroke-dasharray': '2,4', opacity: hi ? 1 : 0.6 }));
         return;
       }
       // The band between METU's inner circle and its dashed ring; the inner circle drawn next covers the middle
       if (u.hub && s.ring) blinking(s.b.includes('ring'), () =>
-        el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: '#bdbdbd', 'fill-opacity': 0.14 }));
-      el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: 'none', stroke: on ? '#444' : '#222', 'stroke-dasharray': '3,5' });
+        el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: '#888888', 'fill-opacity': 0.14 }));
+      el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: 'none', stroke: on ? '#bbbbbb' : '#e0e0e0', 'stroke-dasharray': '3,5' });
       blinking(hi, () => {
-        el('circle', { cx: u.x, cy: u.y, r: u.ri, fill: on ? (hi ? '#1e1e1e' : '#161616') : '#0f0f0f',
-          stroke: on ? (hi ? RED : '#333') : '#1a1a1a', 'stroke-width': hi ? 1.5 : 1 });
-        if (on) el('circle', { cx: u.x, cy: u.y, r: u.hub ? 10 : 6, fill: hi ? RED : '#3a3a3a', stroke: hi ? RED : '#666' });
+        el('circle', { cx: u.x, cy: u.y, r: u.ri, fill: on ? (hi ? '#f2f2f2' : '#f6f6f6') : '#fafafa',
+          stroke: on ? (hi ? RED : '#cfcfcf') : '#e6e6e6', 'stroke-width': hi ? 1.5 : 1 });
+        if (on) el('circle', { cx: u.x, cy: u.y, r: u.hub ? 10 : 6, fill: hi ? RED : '#9a9a9a', stroke: hi ? RED : '#777777' });
       });
     });
 
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (s.a) blinking(s.b.includes('arch571'), () =>
-      arch571.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: '#d4b83a', opacity: 0.85 })));
+      arch571.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: GOLD, opacity: 0.9 })));
 
     // Blue clusters at every university reached
     s.u.forEach(k => {
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const lines = u.label.split('\n');
       const t = el('text', { x: u.x, y: u.y + (lines.length > 1 ? -7 : 0), 'text-anchor': 'middle', 'dominant-baseline': 'middle',
         'font-size': u.hub ? 16 : 9, 'font-weight': 700, 'letter-spacing': '0.05em',
-        fill: on ? WHITE : DIM, stroke: hi ? '#1e1e1e' : '#161616', 'stroke-width': 3, 'paint-order': 'stroke' });
+        fill: on ? INK : DIM, stroke: hi ? '#f2f2f2' : '#ffffff', 'stroke-width': 3, 'paint-order': 'stroke' });
       lines.forEach((ln, li) => {
         const ts = document.createElementNS(NS, 'tspan');
         ts.setAttribute('x', u.x); ts.setAttribute('dy', li ? 15 : 0);
