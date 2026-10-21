@@ -395,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const MEET_SLOTS = [[0, 0], ...Array.from({ length: 7 }, (_, n) => [Math.cos(n / 7 * Math.PI * 2 - 0.4) * 20, Math.sin(n / 7 * Math.PI * 2 - 0.4) * 20]),
     ...[-0.3, 0.6, 1.5, -1.2].map(a => [Math.cos(a) * 34, Math.sin(a) * 34])];
   const MEET_DRIFT = 0.5;       // in the group the dots keep wandering, half as far, so they do not bump into each other
+  const MEET_DELAY = 1200;      // newcomers first show in their own cluster, then set off after this many ms
   let meeting = 0;
   const MEET = (() => {
     const near = (pts, keyOf, n, ok = () => true) => pts.map((p, j) => [keyOf(j), p])
@@ -424,17 +425,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const s = driftState[key] || (driftState[key] = { dx: 0, dy: 0, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, mx: 0, my: 0 });
     // Where the dot is heading: the meeting spot during the workshop, its own spot otherwise
     const goal = MEET[key] && MEET[key].batch <= meeting ? MEET[key].at : null;
-    s.gx = goal ? goal[0] - x : 0; s.gy = goal ? goal[1] - y : 0;
+    const gx = goal ? goal[0] - x : 0, gy = goal ? goal[1] - y : 0;
+    if (gx !== s.gx || gy !== s.gy) {
+      s.gx = gx; s.gy = gy;
+      // Setting off for the group waits a moment; going home starts at once
+      s.wait = goal ? performance.now() + MEET_DELAY : 0;
+    }
     if (goal) scale = Math.min(scale, MEET_DRIFT);
     if (reducedMotion) { s.mx = s.gx; s.my = s.gy; }
     const c = el('circle', { ...attrs, cx: x + s.mx + s.dx * scale, cy: y + s.my + s.dy * scale });
     if (line) { line.setAttribute('x1', x + s.mx + s.dx * scale); line.setAttribute('y1', y + s.my + s.dy * scale); }
     drifters.push({ c, x, y, s, scale, line });
   }
-  function drift() {
+  function drift(now) {
     const moved = new Set();
     drifters.forEach(({ c, x, y, s, scale, line }) => {
-      if (!moved.has(s)) { moved.add(s); step(s); }
+      if (!moved.has(s)) { moved.add(s); step(s, now); }
       const px = x + s.mx + s.dx * scale, py = y + s.my + s.dy * scale;
       c.setAttribute('cx', px); c.setAttribute('cy', py);
       if (line) { line.setAttribute('x1', px); line.setAttribute('y1', py); }
@@ -442,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(drift);
   }
   // One frame of a random walk pulled back towards the spot
-  function step(s) {
+  function step(s, now) {
     s.vx += (Math.random() - 0.5) * 0.08 - s.dx * 0.001;
     s.vy += (Math.random() - 0.5) * 0.08 - s.dy * 0.001;
     const d = Math.hypot(s.dx, s.dy);
@@ -451,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const v = Math.hypot(s.vx, s.vy); if (v > 0.25) { s.vx *= 0.25 / v; s.vy *= 0.25 / v; }
     s.dx += s.vx; s.dy += s.vy;
     // Walk towards the meeting spot or back home, easing in over about a second and a half
-    s.mx += (s.gx - s.mx) * 0.04; s.my += (s.gy - s.my) * 0.04;
+    if (!(now < s.wait)) { s.mx += (s.gx - s.mx) * 0.04; s.my += (s.gy - s.my) * 0.04; }
   }
   if (!reducedMotion) requestAnimationFrame(drift);
 
