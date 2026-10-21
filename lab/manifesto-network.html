@@ -30,16 +30,17 @@ body { background: #0a0a0a; color: #f2f0ea; }
 .lab-son { margin-top: 40vh; }
 @media (max-width: 767px) {
   .lab-izgara { grid-template-columns: minmax(0, 1fr); }
-  .lab-yapiskan { position: static; height: auto; order: -1; }
-  #uqa-network { height: auto; }
-  .lab-step { min-height: 0; padding: 16px 0; opacity: 1; }
-  .lab-son { margin-top: 32px; }
+  .lab-yapiskan { height: auto; order: -1; justify-content: flex-start; padding: 8px 0; background: #0a0a0a; z-index: 1; }
+  #uqa-date { margin-bottom: 4px; }
+  #uqa-network { height: 42vh; }
+  .lab-step { min-height: 60vh; }
+  .lab-son { margin-top: 0; padding-bottom: 30vh; }
 }
 
 </style>
 </head>
 <body>
-<nav class="lab-nav"><a href="index.html">← lab</a> · manifesto-network · <span>koyu zemin; #uqa-network, #uqa-date ve 12 adım bloğu taklit; metinler gelen manifesto metninden, paragraf paragraf; her adımda o paragrafın aktörleri ve çizgileri yanıp söner · masaüstünde kaydır, telefonda kendi döner</span></nav>
+<nav class="lab-nav"><a href="index.html">← lab</a> · manifesto-network · <span>koyu zemin; #uqa-network, #uqa-date ve 12 adım bloğu taklit; metinler gelen manifesto metninden, paragraf paragraf; her adımda o paragrafın aktörleri ve çizgileri yanıp söner · masaüstünde ve telefonda kaydır; telefonda diyagram üst yarıya yapışır</span></nav>
 <div class="lab-bosluk">↓ kaydır</div>
 <section class="lab-izgara">
     <div class="lab-adimlar">
@@ -109,9 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mobile settings
   const MOBILE = window.matchMedia('(max-width: 767px)'); // Webflow's mobile landscape breakpoint and below
-  const MOBILE_RATIO = '1 / 1';  // aspect ratio of the graph on phones
-  const STEP_MS = 1600;          // time per step in the loop (long enough to see the blink)
-  const LAST_HOLD_MS = 3000;     // the full network stays up longer before restarting
+  // Where on the screen a text block has to be to take over the graph.
+  // Desktop: the middle. Phone: the graph sticks to the top half, so the middle of the lower half.
+  const TRIGGER_DESKTOP = '-50% 0px -50% 0px';
+  const TRIGGER_MOBILE = '-75% 0px -25% 0px';
 
   box.style.position = 'relative';
   const svg = document.createElementNS(NS, 'svg');
@@ -125,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const vb = [110 - pad, 50 - pad, 780 + pad * 2, 562 + pad * 2];
   svg.setAttribute('viewBox', vb.join(' '));
 
-  // Legend: sits on the graph on desktop, moves below it on phones
+  // Legend: sits on the graph on desktop, moves below it on phones as a compact wrapping row
   const legend = document.createElement('div');
   [
     ['#e03a2f', 'organizasyon ekibi (ara pozisyondaki akademisyenler)'],
@@ -144,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const LEGEND_BASE = 'pointer-events:none;font-family:"Space Mono",monospace;line-height:2;color:#4a4a4a;';
   const LEGEND_DESKTOP = LEGEND_BASE + 'position:absolute;left:1.5rem;bottom:1.5rem;z-index:1;font-size:0.8rem';
-  const LEGEND_MOBILE = LEGEND_BASE + 'position:static;margin-top:1rem;font-size:0.65rem';
+  const LEGEND_MOBILE = LEGEND_BASE + 'position:static;margin-top:0.4rem;font-size:0.6rem;line-height:1.6;display:flex;flex-wrap:wrap;gap:0 1rem';
 
   const el = (tag, attrs) => {
     const n = document.createElementNS(NS, tag);
@@ -318,40 +320,29 @@ document.addEventListener('DOMContentLoaded', () => {
     blocks.forEach((b, j) => b.classList.toggle('is-active', j === i));
   };
 
-  // Desktop: steps follow the scroll
-  const stepObserver = new IntersectionObserver(entries => {
-    if (MOBILE.matches) return;
-    entries.forEach(e => {
-      if (e.isIntersecting) show(blocks.indexOf(e.target));
-    });
-  }, { rootMargin: '-50% 0px -50% 0px' });
-  blocks.forEach(b => stepObserver.observe(b));
-
-  // Mobile: steps loop on their own, and pause while the graph is off screen
-  let timer = null, onScreen = true;
-  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; }, { threshold: 0.1 }).observe(box);
-
-  const next = () => {
-    if (!onScreen) { timer = setTimeout(next, 500); return; }
-    show((current + 1) % steps.length);
-    timer = setTimeout(next, current === steps.length - 1 ? LAST_HOLD_MS : STEP_MS);
+  // Steps follow the scroll on desktop and on phones alike
+  let stepObserver = null;
+  const watchSteps = (rootMargin) => {
+    if (stepObserver) stepObserver.disconnect();
+    stepObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) show(blocks.indexOf(e.target));
+      });
+    }, { rootMargin });
+    blocks.forEach(b => stepObserver.observe(b));
   };
-  const stopLoop = () => { clearTimeout(timer); timer = null; svg.style.opacity = '1'; };
 
   const applyMode = () => {
-    stopLoop();
     if (MOBILE.matches) {
-      Object.assign(box.style, { aspectRatio: MOBILE_RATIO, height: 'auto' });
       legend.style.cssText = LEGEND_MOBILE;
       box.after(legend);
-      show(0);
-      timer = setTimeout(next, STEP_MS);
+      watchSteps(TRIGGER_MOBILE);
     } else {
-      Object.assign(box.style, { aspectRatio: '', height: '' });
       legend.style.cssText = LEGEND_DESKTOP;
       box.appendChild(legend);
-      show(current);
+      watchSteps(TRIGGER_DESKTOP);
     }
+    show(current);
   };
   MOBILE.addEventListener('change', applyMode);
   applyMode();
