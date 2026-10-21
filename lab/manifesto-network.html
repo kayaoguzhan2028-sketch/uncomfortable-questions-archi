@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // One step per paragraph of the text.
   // h: universities the paragraph is about. Every university reached so far stays on, with a line from METU.
   // b: what blinks in that paragraph: 'org', 'students', 'workers', 'arch571', 'clusters' (the blue clusters at each university), 'ring'.
-  // Pulse: one brighter flash first, then a long bright phase with a short gradual dim, three times.
+  // Highlight: one brighter flash, then the highlighted things stay marked for a few seconds (no pulsing).
   // Then the step settles: everything goes back to the same look as the rest. It starts again whenever a step is shown again.
   // st / w / a: the students, workers and ARCH571 clusters appear from that step on.
   // only: just the universities themselves blink, not the people around them.
@@ -216,10 +216,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const INK = '#111111', PAPER = '#f2f0ea', RED = '#b3362c', GOLD = '#a3852c';
   const BLINK_CSS = '@keyframes uqa-flash{0%,100%{filter:brightness(1)}35%{filter:brightness(1.35)}}' +
-    '@keyframes uqa-blink{0%,55%,100%{opacity:1}80%{opacity:.35}}' +
-    '.uqa-blink{animation:uqa-flash .9s ease-out,uqa-blink 2.4s ease-in-out .9s 3}' +
+    '.uqa-blink{animation:uqa-flash .9s ease-out}' +
     '@media (prefers-reduced-motion:reduce){.uqa-blink{animation:none}}';
-  const PULSE_MS = 900 + 3 * 2400; // flash + three pulses; after this the step settles
+  const PULSE_MS = 4000; // after the flash the step stays marked this long, then settles
 
   // Draws whatever fn adds inside its own group; the group blinks when on is true
   const blinking = (on, fn) => {
