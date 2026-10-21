@@ -5,15 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>network-script</title>
-<!-- Önizleme: sitenin fontu yerine Helvetica Neue; embed fontu sayfadan alır -->
+<!-- Önizleme: sitenin fontu yerine TeX Gyre Heros (ücretsiz Helvetica kopyası); embed fontu sayfadan alır -->
 <style>
 /* ---- ÖNİZLEME KABUĞU: Webflow'a gitmez ---- */
+@font-face { font-family: "TeX Gyre Heros"; src: url(fonts/texgyreheros-regular.otf) format("opentype"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "TeX Gyre Heros"; src: url(fonts/texgyreheros-bold.otf) format("opentype"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "TeX Gyre Heros"; src: url(fonts/texgyreheros-italic.otf) format("opentype"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "TeX Gyre Heros"; src: url(fonts/texgyreheros-bolditalic.otf) format("opentype"); font-weight: 700; font-style: italic; }
 
-.lab-nav { font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 10px 16px; border-bottom: 1px dashed #999; opacity: .7; }
+.lab-nav { font: 12px/1.4 "TeX Gyre Heros", "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 10px 16px; border-bottom: 1px dashed #999; opacity: .7; }
 .lab-nav a { color: inherit; }
 .lab-nav span { opacity: .6; }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+body { margin: 0; font-family: "TeX Gyre Heros", "Helvetica Neue", Helvetica, Arial, sans-serif; }
 
 :root { --brand--background: #ffffff; }
 body { background: var(--brand--background); color: #000; }
