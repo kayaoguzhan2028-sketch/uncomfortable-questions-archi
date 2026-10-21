@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     s.st = sofar.some(t => t.st); s.w = sofar.some(t => t.w); s.a = sofar.some(t => t.a); s.ring = sofar.some(t => t.ring);
   });
 
-  const INK = '#111111', RED = '#b3362c', GOLD = '#a3852c';
+  const INK = '#111111', PAPER = '#f2f0ea', RED = '#b3362c', GOLD = '#a3852c';
   const BLINK_CSS = '@keyframes uqa-flash{0%,100%{filter:brightness(1)}35%{filter:brightness(1.35)}}' +
     '@keyframes uqa-blink{0%,55%,100%{opacity:1}80%{opacity:.35}}' +
     '.uqa-blink{animation:uqa-flash .9s ease-out,uqa-blink 2.4s ease-in-out .9s 3}' +
@@ -277,10 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
         el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: '#888888', 'fill-opacity': 0.14 }));
       el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: 'none', stroke: '#8f8f8f', 'stroke-dasharray': '3,5' });
       blinking(hi, () => {
-        el('circle', { cx: u.x, cy: u.y, r: u.ri, fill: hi ? '#f2f2f2' : '#f6f6f6',
+        el('circle', { cx: u.x, cy: u.y, r: u.ri, fill: hi ? '#1e1e1e' : '#111111',
           stroke: hi ? RED : '#a8a8a8', 'stroke-width': hi ? 1.5 : 1 });
         // Institutional core: the dot in the middle; the name sits just above it
-        el('circle', { cx: u.x, cy: u.y, r: coreR(u), fill: hi ? RED : '#666666' });
+        el('circle', { cx: u.x, cy: u.y, r: coreR(u), fill: hi ? RED : '#8a8a8a' });
       });
     });
 
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ? el('text', { x: u.x, y: u.y - 7, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
             'font-size': 9, 'font-weight': 700, 'letter-spacing': '0.05em', fill: INK })
         : el('text', { x: u.x, y: u.y - coreR(u) - 4, 'text-anchor': 'middle',
-            'font-size': u.hub ? 16 : 9, 'font-weight': 700, 'letter-spacing': '0.05em', fill: INK });
+            'font-size': u.hub ? 16 : 9, 'font-weight': 700, 'letter-spacing': '0.05em', fill: PAPER });
       lines.forEach((ln, li) => {
         const ts = document.createElementNS(NS, 'tspan');
         ts.setAttribute('x', u.x); ts.setAttribute('dy', li ? 15 : 0);
