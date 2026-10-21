@@ -287,20 +287,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Org team; a member blinks with the university they opened the door to
-    org.forEach(([dx, dy, link]) => {
+    org.forEach(([dx, dy, link], j) => {
       const x = 420 + dx, y = 310 + dy;
       if (underName(x, y, 4.5)) return;
       blinking(s.b.includes('org') || (link && s.h.includes(link) && !s.only), () => {
+        let line = null;
         if (link && s.u.includes(link)) {
           const [x2, y2] = edge(unis[link], { x, y });
-          el('line', { x1: x, y1: y, x2, y2, stroke: RED, 'stroke-width': 0.8, 'stroke-dasharray': '2,5', opacity: 0.6 });
+          line = el('line', { x1: x, y1: y, x2, y2, stroke: RED, 'stroke-width': 0.8, 'stroke-dasharray': '2,5', opacity: 0.6 });
         }
-        el('circle', { cx: x, cy: y, r: 4.5, fill: RED, opacity: 0.9 });
+        // The member's line follows the dot, so lines never come loose
+        drifter('o' + j, x, y, { r: 4.5, fill: RED, opacity: 0.9 }, CORE_DRIFT, line);
       });
     });
 
     if (s.a) blinking(s.b.includes('arch571'), () =>
-      arch571.forEach(([x, y]) => underName(x, y, 3.5) || el('circle', { cx: x, cy: y, r: 3.5, fill: GOLD, opacity: 0.9 })));
+      arch571.forEach(([x, y], j) => underName(x, y, 3.5) || drifter('a' + j, x, y, { r: 3.5, fill: GOLD, opacity: 0.9 }, CORE_DRIFT)));
 
     // Blue clusters at every university reached
     s.u.forEach(k => {
@@ -310,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let j = 0; j < 8; j++) {
           const a = (j / 8) * Math.PI * 2 + 0.5, r = 16 + (j % 2) * 9;
           const cx = u.x + Math.cos(a) * r, cy = u.y + Math.sin(a) * r;
-          if (!underName(cx, cy, 3.5)) el('circle', { cx, cy, r: 3.5, fill: '#3d6595', opacity: 0.85 });
+          if (!underName(cx, cy, 3.5)) drifter('c' + k + j, cx, cy, { r: 3.5, fill: '#3d6595', opacity: 0.85 }, CORE_DRIFT);
         }
       });
     });
@@ -319,12 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
       .textContent = text;
 
     if (s.st) blinking(s.b.includes('students'), () => {
-      students.forEach(([x, y], j) => drifter('s' + j, x, y, '#3d6595'));
+      students.forEach(([x, y], j) => drifter('s' + j, x, y, { r: 3.5, fill: '#3d6595', opacity: 0.85 }));
       label(650, 437, 'ÖĞRENCİLER', '#3d6595');
     });
 
     if (s.w) blinking(s.b.includes('workers'), () => {
-      workers.forEach(([x, y], j) => drifter('w' + j, x, y, '#a9602b'));
+      workers.forEach(([x, y], j) => drifter('w' + j, x, y, { r: 3.5, fill: '#a9602b', opacity: 0.85 }));
       label(780, 258, 'MİMARLIK İŞÇİLERİ', '#a9602b');
     });
 
@@ -347,27 +349,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Students and architecture workers wander a little around their own spot, then drift back
+  // Dots wander a little around their own spot and drift back: students and workers freely, the rest barely
   const DRIFT_R = 8;            // how far a dot may stray from its spot
+  const CORE_DRIFT = 0.25;      // inside the institutions: a quarter of that, barely a tremble
   const drifters = [], driftState = {};
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function drifter(key, x, y, fill) {
+  // scale shrinks the wander; dots inside the institutions barely move. line: a line whose start follows the dot.
+  function drifter(key, x, y, attrs, scale = 1, line = null) {
     const s = driftState[key] || (driftState[key] = { dx: 0, dy: 0, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
-    const c = el('circle', { cx: x + s.dx, cy: y + s.dy, r: 3.5, fill, opacity: 0.85 });
-    drifters.push({ c, x, y, s });
+    const c = el('circle', { ...attrs, cx: x + s.dx * scale, cy: y + s.dy * scale });
+    if (line) { line.setAttribute('x1', x + s.dx * scale); line.setAttribute('y1', y + s.dy * scale); }
+    drifters.push({ c, x, y, s, scale, line });
   }
   function drift() {
-    drifters.forEach(({ c, x, y, s }) => {
-      s.vx += (Math.random() - 0.5) * 0.08 - s.dx * 0.001;
-      s.vy += (Math.random() - 0.5) * 0.08 - s.dy * 0.001;
-      const d = Math.hypot(s.dx, s.dy);
-      if (d > DRIFT_R) { s.vx -= s.dx / d * 0.03; s.vy -= s.dy / d * 0.03; }
-      s.vx *= 0.98; s.vy *= 0.98;
-      const v = Math.hypot(s.vx, s.vy); if (v > 0.25) { s.vx *= 0.25 / v; s.vy *= 0.25 / v; }
-      s.dx += s.vx; s.dy += s.vy;
-      c.setAttribute('cx', x + s.dx); c.setAttribute('cy', y + s.dy);
+    const moved = new Set();
+    drifters.forEach(({ c, x, y, s, scale, line }) => {
+      if (!moved.has(s)) { moved.add(s); step(s); }
+      const px = x + s.dx * scale, py = y + s.dy * scale;
+      c.setAttribute('cx', px); c.setAttribute('cy', py);
+      if (line) { line.setAttribute('x1', px); line.setAttribute('y1', py); }
     });
     requestAnimationFrame(drift);
+  }
+  // One frame of a random walk pulled back towards the spot
+  function step(s) {
+    s.vx += (Math.random() - 0.5) * 0.08 - s.dx * 0.001;
+    s.vy += (Math.random() - 0.5) * 0.08 - s.dy * 0.001;
+    const d = Math.hypot(s.dx, s.dy);
+    if (d > DRIFT_R) { s.vx -= s.dx / d * 0.03; s.vy -= s.dy / d * 0.03; }
+    s.vx *= 0.98; s.vy *= 0.98;
+    const v = Math.hypot(s.vx, s.vy); if (v > 0.25) { s.vx *= 0.25 / v; s.vy *= 0.25 / v; }
+    s.dx += s.vx; s.dy += s.vy;
   }
   if (!reducedMotion) requestAnimationFrame(drift);
 
