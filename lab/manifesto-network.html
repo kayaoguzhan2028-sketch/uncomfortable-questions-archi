@@ -199,9 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return pts;
   };
-  const workers = scatter(16, 780, 297, 32, 571);
+  const workers = scatter(16, 780, 305, 32, 571);   // top dots stay below the label even while drifting
   // Students met on 17 May 2024, before any university event: a loose cluster of their own
-  const students = scatter(12, 650, 476, 29, 1705);
+  const students = scatter(12, 650, 480, 29, 1705);
 
   // One step per paragraph of the text.
   // h: universities the paragraph is about. Every university reached so far stays on, with a line from METU.
