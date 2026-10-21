@@ -233,15 +233,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // st / w / a: the students, workers and ARCH571 clusters appear from that step on.
   // only: just the universities themselves blink, not the people around them.
   // ring: the semester review brought people back to METU, so from then on the band around METU is filled.
-  // meet: the opening workshop; a few workers, students and METU people walk over to one spot and meet there.
+  // meet: a group forms below-right of METU and stays. 1: the May–July meetings bring two students and two workers;
+  // 2: the opening workshop adds one more of each, a METU team member and an ARCH 571 student.
   // flow: which way a pulse runs along the lines. By default it runs from METU out to the lit university;
   // 'in': from every university back to METU (the semester review); 'both': out and back (the full network).
   const steps = [
     { d: 'Nisan 2024', h: [], b: ['org'] },
     { d: 'Mayıs 2024', h: ['abc'], b: ['org'] },
-    { d: 'Mayıs–Temmuz 2024', h: [], st: 1, w: 1, b: ['students', 'workers'] },
+    { d: 'Mayıs–Temmuz 2024', h: [], st: 1, w: 1, b: ['students', 'workers'], meet: 1 },
     { d: 'Temmuz–Eylül 2024', h: ['metu'], b: [] },
-    { d: 'Ekim 2024', h: ['metu'], a: 1, b: ['arch571', 'students', 'workers'], meet: 1 },
+    { d: 'Ekim 2024', h: ['metu'], a: 1, b: ['arch571', 'students', 'workers'], meet: 2 },
     { d: 'Ekim 2024', h: ['bilkent'], b: [] },
     { d: 'Kasım 2024', h: ['gazi'], b: [] },
     { d: 'Kasım 2024', h: ['ted'], b: ['org', 'arch571', 'clusters'] },
@@ -254,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sofar = steps.slice(0, i + 1);
     s.u = [...new Set(sofar.flatMap(t => t.h))];
     s.st = sofar.some(t => t.st); s.w = sofar.some(t => t.w); s.a = sofar.some(t => t.a); s.ring = sofar.some(t => t.ring);
+    s.meetLevel = Math.max(0, ...sofar.map(t => t.meet || 0));
   });
 
   const INK = '#111111', PAPER = '#f2f0ea', RED = '#b3362c', GOLD = '#a3852c';
@@ -287,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // settled: drawn like the rest, nothing highlighted or blinking
   function render(i, settled = false) {
     const s = settled ? { ...steps[i], h: [], b: [], flow: null } : steps[i];
-    meeting = !!s.meet;
+    meeting = s.meetLevel;
     if (dateEl) dateEl.textContent = s.d;
 
     svg.innerHTML = '';
@@ -386,23 +388,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // The opening workshop (12 October 2024): two workers, two students, a free METU team member and an ARCH 571
-  // student leave their spots and meet below-right of METU, with no circle around them. Elsewhere they go home.
+  // A group below-right of METU, with no circle around it. It forms in May–July 2024 (two workers, two students),
+  // grows at the opening workshop (one more of each, a free METU team member, an ARCH 571 student) and stays.
   const MEET_AT = [493, 392];
-  const MEET_SLOTS = [[-14, -8], [0, -14], [14, -6], [18, 8], [6, 12], [-10, 10]];
-  let meeting = false;
+  const MEET_SLOTS = [[0, 0], ...Array.from({ length: 7 }, (_, n) => [Math.cos(n / 7 * Math.PI * 2 - 0.4) * 20, Math.sin(n / 7 * Math.PI * 2 - 0.4) * 20])];
+  const MEET_DRIFT = 0.5;       // in the group the dots keep wandering, half as far, so they do not bump into each other
+  let meeting = 0;
   const MEET = (() => {
     const near = (pts, keyOf, n, ok = () => true) => pts.map((p, j) => [keyOf(j), p])
       .filter(([, p], j) => ok(p, j) && !underName(p[0], p[1], 4.5))
       .sort((a, b) => Math.hypot(a[1][0] - MEET_AT[0], a[1][1] - MEET_AT[1]) - Math.hypot(b[1][0] - MEET_AT[0], b[1][1] - MEET_AT[1]))
       .slice(0, n).map(([k]) => k);
-    const keys = [
-      ...near(workers, j => 'w' + j, 2),
-      ...near(students, j => 's' + j, 2),
-      ...near(org.map(([dx, dy]) => [420 + dx, 310 + dy]), j => 'o' + j, 1, (p, j) => !org[j][2]),
-      ...near(arch571, j => 'a' + j, 1),
+    const w = near(workers, j => 'w' + j, 3), st = near(students, j => 's' + j, 3);
+    const batches = [
+      [w[0], w[1], st[0], st[1]],
+      [w[2], st[2], ...near(org.map(([dx, dy]) => [420 + dx, 310 + dy]), j => 'o' + j, 1, (p, j) => !org[j][2]), ...near(arch571, j => 'a' + j, 1)],
     ];
-    return Object.fromEntries(keys.map((k, n) => [k, [MEET_AT[0] + MEET_SLOTS[n][0], MEET_AT[1] + MEET_SLOTS[n][1]]]));
+    const out = {};
+    let n = 0;
+    batches.forEach((keys, b) => keys.forEach(k => { out[k] = { at: [MEET_AT[0] + MEET_SLOTS[n][0], MEET_AT[1] + MEET_SLOTS[n][1]], batch: b + 1 }; n++; }));
+    return out;
   })();
 
   // Dots wander a little around their own spot and drift back: students and workers freely, the rest barely
@@ -414,8 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function drifter(key, x, y, attrs, scale = 1, line = null) {
     const s = driftState[key] || (driftState[key] = { dx: 0, dy: 0, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, mx: 0, my: 0 });
     // Where the dot is heading: the meeting spot during the workshop, its own spot otherwise
-    const goal = meeting && MEET[key];
+    const goal = MEET[key] && MEET[key].batch <= meeting ? MEET[key].at : null;
     s.gx = goal ? goal[0] - x : 0; s.gy = goal ? goal[1] - y : 0;
+    if (goal) scale = Math.min(scale, MEET_DRIFT);
     if (reducedMotion) { s.mx = s.gx; s.my = s.gy; }
     const c = el('circle', { ...attrs, cx: x + s.mx + s.dx * scale, cy: y + s.my + s.dy * scale });
     if (line) { line.setAttribute('x1', x + s.mx + s.dx * scale); line.setAttribute('y1', y + s.my + s.dy * scale); }
