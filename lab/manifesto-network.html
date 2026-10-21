@@ -86,7 +86,7 @@ body { background: #ffffff; color: #0a0a0a; }
         </div>
       <div class="uqa-net__adim" id="uqa-step-9"><b>Aralık 2024 · Son üniversite etkinliği</b>
         <p><i>Başkent Üniversitesi · Toplumsal Cinsiyet</i></p>
-        <p>Başkent Üniversitesindeki beşinci etkinlik, kurumsal hacklemenin ilk turunu kapattı. Beş üniversite. Beş sızma. Tek bir ağ.</p>
+        <p>Başkent Üniversitesindeki beşinci etkinlik, kurumsal hacklemenin ilk turunu kapattı.<br>Beş üniversite. Beş sızma.<br>Tek bir ağ.</p>
         </div>
       <div class="uqa-net__adim" id="uqa-step-10"><b>Ocak 2025 · Dönem değerlendirmesi</b>
         <p>Ocak 2025'te ODTÜ'de yaptığımız dönem değerlendirmesi bir kapanış toplantısından fazlasıydı. Neyin işlediğini, neyin doğaçlama gerektirdiğini ve neyin çözümsüz kaldığını haritalandırdığımız kolektif bir analizdi.</p>
@@ -132,23 +132,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Legend: sits on the graph on desktop, moves below it on phones as a compact wrapping row
   const legend = document.createElement('div');
   [
-    ['#b3362c', 'organizasyon ekibi (ara pozisyondaki akademisyenler)'],
+    ['#b3362c', 'organizasyon ekibi', null, '(ara pozisyondaki akademisyenler)'],
     ['transparent', 'uluslararası ağ', '1px dashed #b3362c'],
     ['#555', 'kurumsal çekirdek', '1px dashed #888'],
     ['#3d6595', 'öğrenciler'],
     ['#a9602b', 'çalışan / işsiz mimarlar'],
     ['#a3852c', 'ARCH 571 ekibi']
-  ].forEach(([color, text, border]) => {
+  ].forEach(([color, text, border, note]) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:0.6rem';
     const dot = document.createElement('span');
-    dot.style.cssText = `width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${color};border:${border || 'none'}`;
-    row.append(dot, text);
+    dot.style.cssText = `width:9px;height:9px;border-radius:50%;flex-shrink:0;background:${color};border:${border || 'none'}`;
+    const label = document.createElement('span');
+    label.textContent = text;
+    if (note) { const sm = document.createElement('span'); sm.style.fontSize = '0.8em'; sm.textContent = ' ' + note; label.appendChild(sm); }
+    row.append(dot, label);
     legend.appendChild(row);
   });
   const LEGEND_BASE = 'pointer-events:none;line-height:2;color:#4a4a4a;';
-  const LEGEND_DESKTOP = LEGEND_BASE + 'position:absolute;left:1.5rem;bottom:1.5rem;z-index:1;font-size:0.8rem';
-  const LEGEND_MOBILE = LEGEND_BASE + 'position:static;margin-top:0.4rem;font-size:0.6rem;line-height:1.6;display:flex;flex-wrap:wrap;gap:0 1rem';
+  const LEGEND_DESKTOP = LEGEND_BASE + 'position:absolute;left:1.5rem;bottom:1.5rem;z-index:1;font-size:0.72rem';
+  const LEGEND_MOBILE = LEGEND_BASE + 'position:static;margin-top:0.4rem;font-size:0.55rem;line-height:1.6;display:flex;flex-wrap:wrap;gap:0 1rem';
 
   const el = (tag, attrs) => {
     const n = document.createElementNS(NS, tag);
@@ -161,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     metu:    { x: 420, y: 310, label: 'ODTÜ', rx: 90, ri: 55, hub: true },
     bilkent: { x: 725, y: 148, label: 'BİLKENT', rx: 70, ri: 42 },
     gazi:    { x: 826, y: 310, label: 'GAZİ', rx: 70, ri: 42 },
-    ted:     { x: 175, y: 430, label: 'TED', rx: 65, ri: 40 },
+    ted:     { x: 175, y: 428, label: 'TED', rx: 65, ri: 40 },
     baskent: { x: 215, y: 195, label: 'BAŞKENT', rx: 65, ri: 40 },
     atilim:  { x: 492, y: 564, label: 'ATILIM', rx: 62, ri: 38 },
     // International network: no campus, only a dashed outline; hidden until we got in touch
