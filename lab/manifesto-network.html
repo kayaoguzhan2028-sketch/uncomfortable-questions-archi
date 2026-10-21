@@ -19,85 +19,89 @@
 body { margin: 0; font-family: "Space Mono", monospace; }
 
 body { background: #0a0a0a; color: #f2f0ea; }
-.lab-izgara { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 32px; max-width: 1400px; margin: 0 auto; padding: 0 16px; }
-.lab-yapiskan { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
-#uqa-date { font-size: 14px; color: #e03a2f; margin-bottom: 12px; min-height: 1.4em; }
-#uqa-network { width: 100%; height: 80vh; }
-.lab-step { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; opacity: .3; transition: opacity .3s; font-size: 13px; }
-.lab-step.is-active { opacity: 1; }
-.lab-step p { margin: 6px 0; line-height: 1.6; }
-.lab-son { margin-top: 40vh; }
-@media (max-width: 767px) {
-  .lab-izgara { grid-template-columns: minmax(0, 1fr); }
-  .lab-yapiskan { height: auto; order: -1; justify-content: flex-start; padding: 8px 0; background: #0a0a0a; z-index: 1; }
-  #uqa-date { margin-bottom: 4px; }
-  #uqa-network { height: 42vh; }
-  .lab-step { min-height: 60vh; }
-  .lab-son { margin-top: 0; padding-bottom: 30vh; }
-}
-
 </style>
 </head>
 <body>
-<nav class="lab-nav"><a href="index.html">← lab</a> · manifesto-network · <span>koyu zemin; #uqa-network, #uqa-date ve 12 adım bloğu taklit; metinler gelen manifesto metninden, paragraf paragraf; her adımda o paragrafın aktörleri ve çizgileri yanıp söner · masaüstünde ve telefonda kaydır; telefonda diyagram üst yarıya yapışır</span></nav>
-<section class="lab-izgara">
-    <div class="lab-adimlar">
-      <div class="lab-step" id="uqa-step-0"><b>Nisan 2024 · İlk adımlar</b>
+<nav class="lab-nav"><a href="index.html">← lab</a> · manifesto-network · <span>Webflow'a tek embed olarak gider: metin, diyagram ve düzen birlikte; yazı tipi ve renk sayfadan gelir (burada site fontu yerine Space Mono) · masaüstünde ve telefonda kaydır</span></nav>
+<div class="w-embed">
+<!-- EMBED BAŞLA -->
+<style>
+/* Everything here is scoped to .uqa-net, so the rest of the page is untouched. Font, size and color come from the page. */
+.uqa-net, .uqa-net * { box-sizing: border-box; }
+.uqa-net { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 32px; max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+.uqa-net__yapiskan { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+.uqa-net #uqa-date { font-size: 14px; color: #e03a2f; margin-bottom: 12px; min-height: 1.4em; }
+.uqa-net #uqa-network { width: 100%; height: 80vh; }
+.uqa-net__adim { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; opacity: .3; transition: opacity .3s; }
+.uqa-net__adim.is-active { opacity: 1; }
+.uqa-net__adim p { margin: 6px 0; line-height: 1.6; }
+.uqa-net__son { margin-top: 40vh; }
+/* Phones: the graph sticks to the top half, the text passes underneath */
+@media (max-width: 767px) {
+  .uqa-net { grid-template-columns: minmax(0, 1fr); }
+  .uqa-net__yapiskan { height: auto; order: -1; justify-content: flex-start; padding: 8px 0; background: #0a0a0a; z-index: 1; }
+  .uqa-net #uqa-date { margin-bottom: 4px; }
+  .uqa-net #uqa-network { height: 42vh; }
+  .uqa-net__adim { min-height: 60vh; }
+  .uqa-net__son { margin-top: 0; padding-bottom: 30vh; }
+}
+</style>
+<section class="uqa-net">
+<div class="uqa-net__adimlar">
+      <div class="uqa-net__adim" id="uqa-step-0"><b>Nisan 2024 · İlk adımlar</b>
         <p><i>Ortak sorulardan kolektif bir sorgulamaya</i></p>
         <p>Ankara'da farklı üniversitelerle ilişkili, doktora çalışmalarını sürdüren 13 mimar ve "ara pozisyon" (yarı zamanlı öğretim görevlisi, araştırma görevlisi, doktor adayı) akademisyen bir araya geldi. Daha önce kurulmuş arkadaşlıklar, akademik ilişkiler ve ortak deneyimler, mimarlık eğitimi ve çalışma yaşamındaki sorunları birlikte tartışmaya açmak için bir başlangıç zemini oluşturdu.</p>
         </div>
-      <div class="lab-step" id="uqa-step-1"><b>Mayıs 2024 · İlk buluşmalar</b>
+      <div class="uqa-net__adim" id="uqa-step-1"><b>Mayıs 2024 · İlk buluşmalar</b>
         <p><i>Bağlantılar kurmak, birlikte düşünmek</i></p>
         <p>İlk çevrimiçi toplantılar ve yüz yüze buluşmalarla kolektifin nasıl çalışabileceği üzerine düşünmeye başladık. Architecture Beyond Capitalism School (ABC School) ile kurulan temas ve "Hacking the Institution" başlığı uluslararası tartışma ve dayanışma ağlarıyla ilişkilenmemizin ilk adımlarından biri oldu. Aynı zamanda bir kurum olarak akademiyi ve kendi pozisyonlarımızı eleştirel biçimde ele almanın önünü açtı.</p>
         </div>
-      <div class="lab-step" id="uqa-step-2"><b>Mayıs–Temmuz 2024 · Yeni ortaklıklar</b>
+      <div class="uqa-net__adim" id="uqa-step-2"><b>Mayıs–Temmuz 2024 · Yeni ortaklıklar</b>
         <p><i>Öğrenciler ve mimarlık işçileriyle buluşmalar</i></p>
         <p>17 Mayıs'ta öğrencilerle, 28 Temmuz'da ise mimarlık alanının farklı noktalarında çalışan, işsiz ya da sektör değiştirmiş mimarları davet ettiğimiz toplantılar düzenledik. Bu buluşmalar, eğitimden çalışma yaşamına uzanan ortak sorunları farklı deneyimler üzerinden tartışmamıza ve yeni ilişkiler kurmamıza olanak sağladı.</p>
         </div>
-      <div class="lab-step" id="uqa-step-3"><b>Temmuz–Eylül 2024 · Açık ders hazırlıkları</b>
+      <div class="uqa-net__adim" id="uqa-step-3"><b>Temmuz–Eylül 2024 · Açık ders hazırlıkları</b>
         <p><i>Kurumsal sınırların ötesinde bir sorgulama ve öğrenme alanı</i></p>
         <p>Yaz aylarında yürüttüğümüz tartışmalar, ODTÜ Mimarlık Bölümünde açılacak bir lisansüstü dersin hazırlıklarına dönüştü. "Hacking the Institution" başlığı etrafında mimarlık eğitimi, stüdyo kültürü, müfredat, sınıf, emek ve toplumsal cinsiyet meselelerini ele alan, farklı üniversitelere konuk olacak ve üniversite dışından katılımlara da açık bir program geliştirdik.</p>
         </div>
-      <div class="lab-step" id="uqa-step-4"><b>Ekim 2024 · Açılış etkinliği</b>
+      <div class="uqa-net__adim" id="uqa-step-4"><b>Ekim 2024 · Açılış etkinliği</b>
         <p>ODTÜ'de açılan ARCH 571 dersi, tartışmaların düzenli biçimde sürdürülmesi ve yeni katılımcıların sürece dâhil olması için önemli bir alan yarattı. 12 Ekim'de düzenlenen açılış atölyesinde öğrenciler, akademisyenler ve mimarlık işçileri bir araya geldi. Dersi alan öğrenciler, etkinliklerin hazırlanması ve yürütülmesinde de aktif roller üstlenmeye başladı. Bu atölye, katılımcıların organizasyona aidiyetini sağlarken çalışmaya da kurumsal bir ders gibi bakmalarının önüne geçti.</p>
         </div>
-      <div class="lab-step" id="uqa-step-5"><b>Ekim 2024 · İlk üniversite etkinliği</b>
+      <div class="uqa-net__adim" id="uqa-step-5"><b>Ekim 2024 · İlk üniversite etkinliği</b>
         <p><i>Bilkent Üniversitesi · Mimarlık ve Pedagoji</i></p>
         <p>Mimarlık eğitiminin yöntemlerini ve öğretme-öğrenme süreçlerini tartışmaya açtığımız bu oturum, Bilkent'te "ara pozisyon"da görev yapan ekip üyelerinin kurum içindeki bağlantıları kurmasıyla hayata geçti. Etkinlik öncesinde destek verebilecek akademisyenlerle kurulan doğrudan temaslar, öğrenci topluluklarına yapılan çağrılar ve açılış etkinliğinde kurulan bağlar, kuruma sızılmasını ve rahatsız edici soruların stüdyolara taşınmasını sağladı.</p>
         </div>
-      <div class="lab-step" id="uqa-step-6"><b>Kasım 2024 · İkinci buluşma</b>
+      <div class="uqa-net__adim" id="uqa-step-6"><b>Kasım 2024 · İkinci buluşma</b>
         <p><i>Gazi Üniversitesi · Stüdyo Kültürü</i></p>
         <p>Gazi Üniversitesindeki ikinci üniversite etkinliği de aynı modeli takip etti. Mimari tasarım eğitiminin kalbi olan stüdyo ortamındaki hiyerarşiyi, rekabeti ve çalışma koşullarını masaya yatırdığımız bu buluşma, Gazi Üniversitesinde görev yapan ekip üyemiz ve orada dersine konuk olduğumuz akademisyenlerin katkısıyla gerçekleşti. Bu aşamada organizasyon modelimizin esnekliği iyice belirginleşti: Ekipteki herkesin her etkinliğe eşit düzeyde katılımı zorunlu tutulmadı. Kilit aktörler, belirli anlarda kilit roller üstlendi; bazı üyeler her buluşmada fiziksel olarak bulunamasa da, kendi kurumlarıyla olan bağları UQA için kapıların açılmasını ve kurumsal meşruiyetin sağlanmasını kolaylaştırdı.</p>
         </div>
-      <div class="lab-step" id="uqa-step-7"><b>Kasım 2024 · Üçüncü buluşma</b>
+      <div class="uqa-net__adim" id="uqa-step-7"><b>Kasım 2024 · Üçüncü buluşma</b>
         <p><i>TED Üniversitesi · Müfredat Teşhiri</i></p>
         <p>Bu duraktaki tema ile akademik programların neleri kapsadığını ve neleri görmezden geldiğini sorguladık. UQA'nın organizasyon yapısı artık kendini tekrar ederek büyüyen bir modele dönüştü: ara pozisyonlardaki akademisyenlerden oluşan "kırmızı bir hat", ARCH 571 öğrencilerinden oluşan "sarı bir çekirdek" ve hacklenen her kurumda filizlenen "mavi öğrenci kümeleri".</p>
         </div>
-      <div class="lab-step" id="uqa-step-8"><b>Aralık 2024 · Dördüncü buluşma</b>
+      <div class="uqa-net__adim" id="uqa-step-8"><b>Aralık 2024 · Dördüncü buluşma</b>
         <p><i>Atılım Üniversitesi · Sınıf ve Emek</i></p>
         <p>Sınıf ve emek teması altında mimarlık pratiğindeki sınıfsal çelişkileri, ücretli çalışanların sömürü koşullarını ve güvencesizliği merkeze aldığımız bu oturum, Atılım Üniversitesinde araştırma görevlisi olarak görev yapan ekip üyemiz ve ARCH 571 ekibinin iş birliğiyle hayata geçirildi. Etkinlik boyunca, mimarlığın piyasa koşullarındaki sarsıcı gerçekliği ile akademik eğitimin vaatleri arasındaki uçurum, öğrenciler ve genç mezunlarla birlikte samimiyetle tartışıldı.</p>
         </div>
-      <div class="lab-step" id="uqa-step-9"><b>Aralık 2024 · Son üniversite etkinliği</b>
+      <div class="uqa-net__adim" id="uqa-step-9"><b>Aralık 2024 · Son üniversite etkinliği</b>
         <p><i>Başkent Üniversitesi · Toplumsal Cinsiyet</i></p>
         <p>Başkent Üniversitesindeki beşinci etkinlik, kurumsal hacklemenin ilk turunu kapattı. Beş üniversite. Beş sızma. Tek bir ağ.</p>
         </div>
-      <div class="lab-step" id="uqa-step-10"><b>Ocak 2025 · Dönem değerlendirmesi</b>
+      <div class="uqa-net__adim" id="uqa-step-10"><b>Ocak 2025 · Dönem değerlendirmesi</b>
         <p>Ocak 2025'te ODTÜ'de yaptığımız dönem değerlendirmesi bir kapanış toplantısından fazlasıydı. Neyin işlediğini, neyin doğaçlama gerektirdiğini ve neyin çözümsüz kaldığını haritalandırdığımız kolektif bir analizdi.</p>
         </div>
-      <div class="lab-step lab-son" id="uqa-step-11"><b>Ocak–Nisan 2025 · Tam ağ</b>
+      <div class="uqa-net__adim uqa-net__son" id="uqa-step-11"><b>Ocak–Nisan 2025 · Tam ağ</b>
         <p><i>Katmanlı, yaşayan bir aktör-ağ</i></p>
         <p>Son harita, önceden planlanması zor olanı gösteriyor: bir ana plan değil; güven, kişisel bağlar ve stratejik konumlanma üzerinden büyüyen, çok katmanlı ve kendiliğinden ortaya çıkan bir ağ.</p>
         <p>Bir kurumu tam olarak nasıl hackleyeceğinizi bilmeyebilirsiniz. Ama güçlü ve stratejik bir aktör ağı kurmak, hem süreklilik hem de erişim için anahtardır.</p>
         <p>ODTÜ hâlâ ağırlık merkezi; ama UQA'nın düğümleri artık Ankara'nın mimarlık okullarına ve ötesine uzanıyor.</p>
         </div>
     </div>
-    <div class="lab-yapiskan">
-      <div id="uqa-date"></div>
-      <div id="uqa-network"></div>
-    </div>
+  <div class="uqa-net__yapiskan">
+    <div id="uqa-date"></div>
+    <div id="uqa-network"></div>
+  </div>
 </section>
-<div class="w-embed">
-<!-- EMBED BAŞLA -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const box = document.getElementById('uqa-network');
