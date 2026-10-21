@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       // The band between METU's inner circle and its dashed ring; the inner circle drawn next covers the middle
       if (u.hub && s.ring) blinking(s.b.includes('ring'), () =>
-        el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: '#888888', 'fill-opacity': 0.14 }));
+        el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: '#666666', 'fill-opacity': 0.28 }));
       el('circle', { cx: u.x, cy: u.y, r: u.rx, fill: 'none', stroke: on ? '#8f8f8f' : '#d6d6d6', 'stroke-dasharray': '3,5' });
       blinking(hi, () => {
         el('circle', { cx: u.x, cy: u.y, r: u.ri, fill: hi ? '#1e1e1e' : '#111111', opacity: on ? 1 : 0.25,
