@@ -174,6 +174,7 @@ canvas { width: 100%; height: 100%; display: block; }
         <button class="btn" id="clear">Temizle</button>
         <button class="btn" id="rebet">Son bahsi tekrarla</button>
         <button class="btn main" id="done">Bahsim tamam</button>
+        <button class="btn" id="rebuy" hidden>Kasadan 1.000 $ al</button>
       </div>
       <div class="note" id="note"></div>
     </div>
@@ -280,9 +281,11 @@ canvas { width: 100%; height: 100%; display: block; }
       .on('postgres_changes', { event: '*', schema: 'public', table: TABLE, filter: 'kod=eq.' + kod }, p => { if (p.new && p.new.durum) apply(p.new); })
       .subscribe(st => conn(st === 'SUBSCRIBED' ? 'Bağlı' : 'Bağlanıyor…', st === 'SUBSCRIBED' ? 'ok' : ''));
     // Backup in case live updates drop
-    setInterval(async () => {
-      try { const r = await fetchRow(); if (r) apply(r); } catch { conn('Bağlantı yok', 'bad'); }
-    }, 4000);
+    setInterval(refresh, 3000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  }
+  async function refresh() {
+    try { const r = await fetchRow(); if (r) apply(r); } catch { conn('Bağlantı yok', 'bad'); }
   }
 
   // Writes a change on top of the latest state; retries if the other device wrote first
@@ -357,7 +360,7 @@ canvas { width: 100%; height: 100%; display: block; }
       let onTable = animating && sp ? sum(sp.bets[i]) : sum(p.bets);
       if (i === me && myTurn) { bal -= sum(draft.bets); onTable += sum(draft.bets); }
       el.querySelector('.bal').textContent = money(bal);
-      el.querySelector('.onbet').textContent = `Masada: ${money(onTable)}` + (i === me ? ' · sen' : '');
+      el.querySelector('.onbet').textContent = `Masada: ${money(onTable)}` + (p.loans ? ` · kasaya borç ${money(p.loans * START)}` : '') + (i === me ? ' · sen' : '');
       const net = el.querySelector('.net');
       const n = !animating && sp ? sp.nets[i] : null;
       net.textContent = n === null || n === undefined ? '' : `Son el: ${n > 0 ? '+' : ''}${money(n)}`;
@@ -430,6 +433,11 @@ canvas { width: 100%; height: 100%; display: block; }
     $('done').disabled = !ok;
     $('done').textContent = S.done[1 - me] ? 'Bahsim tamam · Çevir' : `Bahsim tamam · Sıra ${other.name}`;
     $('reset').disabled = animating || busy;
+    // Out of money: take another 1.000 from the bank instead of resetting the whole game
+    const mineP = S.players[me];
+    $('rebuy').hidden = !(mineP.balance < CHIPS[0][0] && !sum(mineP.bets) && !animating);
+    $('rebuy').disabled = busy;
+    $('rebuy').textContent = `Kasadan 1.000 $ al${mineP.loans ? ` (${mineP.loans + 1}. kez)` : ''}`;
     $('history').innerHTML = S.history.slice(0, 14).map(n => `<span class="${colorOf(n)}">${n}</span>`).join('');
     if (!animating && !S.spin) {
       $('resTitle').textContent = 'Bahisler açık';
@@ -501,6 +509,12 @@ canvas { width: 100%; height: 100%; display: block; }
     });
     if (ok) note('');
   });
+
+  $('rebuy').addEventListener('click', () => commit(s => {
+    const p = s.players[me];
+    if (p.balance >= CHIPS[0][0] || sum(p.bets)) return false;
+    p.balance += START; p.loans = (p.loans || 0) + 1;
+  }));
 
   let resetArmed = false;
   $('reset').addEventListener('click', async () => {
@@ -575,7 +589,7 @@ canvas { width: 100%; height: 100%; display: block; }
       const drop = Math.max(0, (t - 0.62) / 0.38);
       ballR = 0.86 - 0.2 * (1 - Math.pow(1 - drop, 2));
       if (t < 1) requestAnimationFrame(step);
-      else { placeBall(idx); animating = false; showResult(); renderAll(); }
+      else { placeBall(idx); animating = false; showResult(); renderAll(); refresh(); }
     })(t0);
   }
   function showResult() {
@@ -587,8 +601,8 @@ canvas { width: 100%; height: 100%; display: block; }
     note(lines.join(' · ') || 'Masada bahis yoktu.');
     clearWins();
     Object.entries(BETS).forEach(([k, b]) => { if (b.wins(n)) cells[k].classList.add('win'); });
-    const broke = S.players.filter(p => p.balance === 0).map(p => p.name);
-    if (broke.length) note($('note').textContent + ` · ${broke.join(' ve ')} bitti; devam için “Yeni oyun”.`);
+    const broke = S.players.filter(p => p.balance < CHIPS[0][0]).map(p => p.name);
+    if (broke.length) note($('note').textContent + ` · ${broke.join(' ve ')} battı; “Kasadan 1.000 $ al” ile devam edebilir.`);
   }
   function clearWins() { Object.values(cells).forEach(b => b.classList.remove('win')); }
 })();
