@@ -5,18 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>manifesto-map</title>
-<!-- Önizleme: Webflow sitesinin Space Mono fontu varsayıldı -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Önizleme: sitenin fontu yerine Helvetica Neue; embed fontu sayfadan alır -->
 <style>
 /* ---- ÖNİZLEME KABUĞU: Webflow'a gitmez ---- */
 
-.lab-nav { font: 12px/1.4 "Space Mono", monospace; padding: 10px 16px; border-bottom: 1px dashed #999; opacity: .7; }
+.lab-nav { font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 10px 16px; border-bottom: 1px dashed #999; opacity: .7; }
 .lab-nav a { color: inherit; }
 .lab-nav span { opacity: .6; }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: "Space Mono", monospace; }
+body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
 
 body { background: #ffffff; color: #0a0a0a; }
 .lab-kutu { max-width: 1100px; margin: 48px auto; padding: 0 16px; }
@@ -205,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <circle cx="${x}" cy="${y}" r="${r1}" fill="${c}" opacity="${p.map ? 0 : 0.15}"/>
         <circle cx="${x}" cy="${y}" r="${r2}" fill="${c}" opacity="0.4"/>
         <circle cx="${x}" cy="${y}" r="${r3}" fill="${c}"/>
-        <text${crowded ? ' display="none"' : ''} x="${x + side * (r1 + 2 * s)}" y="${side ? y + 3 * s : y + ty}" text-anchor="${['end', 'middle', 'start'][side + 1]}" font-family="Space Mono, monospace" font-size="${(p.hub ? 10 : 8) * s}" font-weight="700" fill="${p.hub ? THEME.accent : THEME.label}" letter-spacing="0.05em">${p.city.toLocaleUpperCase('tr')}</text>
+        <text${crowded ? ' display="none"' : ''} x="${x + side * (r1 + 2 * s)}" y="${side ? y + 3 * s : y + ty}" text-anchor="${['end', 'middle', 'start'][side + 1]}" font-size="${(p.hub ? 10 : 8) * s}" font-weight="700" fill="${p.hub ? THEME.accent : THEME.label}" letter-spacing="0.05em">${p.city.toLocaleUpperCase('tr')}</text>
       </g>`;
     });
     layer.innerHTML = out;
@@ -236,8 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
     @media (hover: none) { .uqa-area { animation: uqa-pulse 1.8s ease-in-out infinite; } }
     @keyframes uqa-pulse { 50% { stroke-opacity: 1; stroke-width: 2; } }
     .uqa-ui { position: absolute; display: flex; gap: 0.3rem; z-index: 5; }
-    .uqa-ui button { display: flex; align-items: center; gap: 0.5rem; background: ${THEME.tipBg}; border: 1px solid #ddd; padding: 0.25rem 0.6rem; font: 0.6rem 'Space Mono', monospace; color: ${THEME.tipText}; cursor: pointer; }
-    .uqa-tip { position: absolute; background: ${THEME.tipBg}; border: 1px solid ${THEME.accent}; padding: 0.7rem 0.9rem; font-family: 'Space Mono', monospace;
+    .uqa-ui button { display: flex; align-items: center; gap: 0.5rem; background: ${THEME.tipBg}; border: 1px solid #ddd; padding: 0.25rem 0.6rem; font-size: 0.6rem; font-family: inherit; color: ${THEME.tipText}; cursor: pointer; }
+    .uqa-tip { position: absolute; background: ${THEME.tipBg}; border: 1px solid ${THEME.accent}; padding: 0.7rem 0.9rem; font-family: inherit;
       font-size: 0.65rem; color: ${THEME.tipText}; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 10; max-width: 260px; line-height: 1.6; }
     .uqa-tip.visible { opacity: 1; }
     .uqa-tip strong { color: ${THEME.accent}; display: block; margin-bottom: 0.25rem; }
