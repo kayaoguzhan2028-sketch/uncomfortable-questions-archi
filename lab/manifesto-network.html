@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const angleTo = (a, b) => Math.atan2(b.y - a.y, b.x - a.x);
   const org = [
     [-65,-50],[30,-75],[75,-30],[70,30],[20,72],[-40,70],[-72,20],[-68,-10],
-    [26,-2.5,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[7,-53,'baskent'],[35,8,'atilim']
+    [45.3,-9.8,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[-32,-33.8,'baskent'],[35,8,'atilim']
   ];
   const coreR = u => u.hub ? 10 : 6;
   // The box a name takes above its core dot; dots that would sit under a name are left out
@@ -211,6 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const a = (i / 22) * Math.PI * 2 - 0.3, r = 38 + (i % 3) * 6;
     return [420 + Math.cos(a) * r, 310 + Math.sin(a) * r];
   });
+  // A few ARCH 571 dots step aside to make room for the Bilkent and Başkent members
+  Object.entries({ 0: [33.3, -9.2], 1: [46, 2.4], 15: [-31.8, -20.4] }).forEach(([i, [dx, dy]]) => { arch571[i] = [420 + dx, 310 + dy]; });
   // Point on a university's inner circle facing another point, so lines stop at the circle instead of crossing the name
   const edge = (u, toward) => { const a = angleTo(u, toward); return [u.x + Math.cos(a) * u.ri, u.y + Math.sin(a) * u.ri]; };
   // Loose clusters: dots scattered at random inside a disc, never on top of each other.
