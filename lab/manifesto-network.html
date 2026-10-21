@@ -188,7 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // One step per paragraph of the text.
   // h: universities the paragraph is about. Every university reached so far stays on, with a line from METU.
   // b: what blinks in that paragraph: 'org', 'students', 'workers', 'arch571', 'clusters' (the blue clusters at each university).
-  // Pulse: long bright phase, a short gradual dim, three times, then it settles; it starts again whenever a step is shown again.
+  // Pulse: one brighter flash first, then a long bright phase with a short gradual dim, three times.
+  // Then the step settles: everything goes back to the same look as the rest. It starts again whenever a step is shown again.
   // st / w / a: the students, workers and ARCH571 clusters appear from that step on.
   // only: just the universities themselves blink, not the people around them.
   const steps = [
@@ -212,9 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const WHITE = '#f2f0ea', DIM = 'rgba(242,240,234,0.35)', RED = '#e03a2f';
-  const BLINK_CSS = '@keyframes uqa-blink{0%,55%,100%{opacity:1}80%{opacity:.35}}' +
-    '.uqa-blink{animation:uqa-blink 2.4s ease-in-out 3}' +
+  const BLINK_CSS = '@keyframes uqa-flash{0%,100%{filter:brightness(1)}35%{filter:brightness(2)}}' +
+    '@keyframes uqa-blink{0%,55%,100%{opacity:1}80%{opacity:.35}}' +
+    '.uqa-blink{animation:uqa-flash .9s ease-out,uqa-blink 2.4s ease-in-out .9s 3}' +
     '@media (prefers-reduced-motion:reduce){.uqa-blink{animation:none}}';
+  const PULSE_MS = 900 + 3 * 2400; // flash + three pulses; after this the step settles
 
   // Draws whatever fn adds inside its own group; the group blinks when on is true
   const blinking = (on, fn) => {
@@ -224,8 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     parent = prev;
   };
 
-  function render(i) {
-    const s = steps[i];
+  // settled: drawn like the rest, nothing highlighted or blinking
+  function render(i, settled = false) {
+    const s = settled ? { ...steps[i], h: [], b: [] } : steps[i];
     if (dateEl) dateEl.textContent = s.d;
 
     svg.innerHTML = '';
@@ -314,11 +318,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const blocks = steps.map((_, i) => document.getElementById('uqa-step-' + i)).filter(Boolean);
-  let current = 0;
+  let current = 0, settleTimer = null;
   const show = (i) => {
     current = i;
     render(i);
     blocks.forEach((b, j) => b.classList.toggle('is-active', j === i));
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => { if (current === i) render(i, true); }, PULSE_MS);
   };
 
   // Steps follow the scroll on desktop and on phones alike
