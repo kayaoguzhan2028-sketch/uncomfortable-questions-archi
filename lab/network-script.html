@@ -79,13 +79,12 @@ body { background: var(--brand--background); color: #000; }
   // Not visited yet (hacked: false): no fill, and no ties to the other universities.
   const UNIVERSITIES = [
     { id: 'metu',     name: 'ODTÜ',                     hacked: true,  x: 700,  y: 450 },
-    { id: 'cankaya',  name: 'Çankaya Üniversitesi',     hacked: false, x: 816,  y: 215 },
-    { id: 'bilkent',  name: 'Bilkent Üniversitesi',     hacked: true,  x: 994,  y: 325 },
-    { id: 'gazi',     name: 'Gazi Üniversitesi',        hacked: true,  x: 919,  y: 642 },
-    { id: 'atilim',   name: 'Atılım Üniversitesi',      hacked: true,  x: 700,  y: 700 },
-    { id: 'ted',      name: 'TED Üniversitesi',         hacked: true,  x: 481,  y: 642 },
-    { id: 'tobb',     name: 'TOBB ETÜ',                 hacked: true,  x: 365,  y: 493 },
-    { id: 'baskent',  name: 'Başkent Üniversitesi',     hacked: true,  x: 406,  y: 325 },
+    { id: 'bilkent',  name: 'Bilkent Üniversitesi',     hacked: true,  x: 850,  y: 233 },
+    { id: 'gazi',     name: 'Gazi Üniversitesi',        hacked: true,  x: 1000, y: 450 },
+    { id: 'atilim',   name: 'Atılım Üniversitesi',      hacked: true,  x: 850,  y: 667 },
+    { id: 'ted',      name: 'TED Üniversitesi',         hacked: true,  x: 550,  y: 667 },
+    { id: 'tobb',     name: 'TOBB ETÜ',                 hacked: true,  x: 400,  y: 450 },
+    { id: 'baskent',  name: 'Başkent Üniversitesi',     hacked: true,  x: 550,  y: 233 },
     // Outside Ankara
     { id: 'itu',      name: 'İstanbul Teknik Üniversitesi',  hacked: true, x: 700,  y: 95 },
     { id: 'yeditepe', name: 'Yeditepe Üniversitesi',         hacked: true, x: 1271, y: 336 },
@@ -367,18 +366,24 @@ body { background: var(--brand--background); color: #000; }
 
   let hoveredNode = null;
 
-  // Rhythm: universities light up one by one, in the order we first went there,
-  // as if hovered. A real hover takes over and the rhythm picks up again after it.
+  // With a mouse: nothing runs on its own, only what the mouse is over lights up.
+  // On touch screens: universities light up one by one, in the order we first went there;
+  // tapping a node jumps the rhythm there and it carries on from that point.
+  const MOUSE = window.matchMedia('(hover: hover) and (pointer: fine)');
   const RHYTHM = ['metu', 'bilkent', 'gazi', 'ted', 'atilim', 'baskent', 'tobb', 'gtu', 'itu', 'yeditepe', 'msgsu', 'esogu'];
   const RHYTHM_MS = 2200;   // time each university stays lit
-  const RESUME_MS = 800;    // pause after a hover before the rhythm continues
+  const TAP_EXTRA_MS = 1000; // a tapped node stays lit this much longer
   let beat = -1, autoNode = null, nextBeat = 0;
 
   NODES.forEach(node => {
-    node.el.addEventListener('mouseenter', () => { hoveredNode = node; });
-    node.el.addEventListener('mouseleave', () => {
-      hoveredNode = null;
-      nextBeat = performance.now() + RESUME_MS;
+    node.el.addEventListener('mouseenter', () => { if (MOUSE.matches) hoveredNode = node; });
+    node.el.addEventListener('mouseleave', () => { hoveredNode = null; });
+    node.el.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse') return;
+      const at = RHYTHM.indexOf(node.homeUni || node.id);
+      if (at >= 0) beat = at;
+      autoNode = node;
+      nextBeat = performance.now() + RHYTHM_MS + TAP_EXTRA_MS;
     });
   });
 
@@ -387,14 +392,15 @@ body { background: var(--brand--background); color: #000; }
 
   // Animation
   function tick(now = 0) {
-    if (!hoveredNode && now >= nextBeat) {
+    const mouse = MOUSE.matches;
+    if (!mouse && now >= nextBeat) {
       beat = (beat + 1) % RHYTHM.length;
       autoNode = NODE_MAP[RHYTHM[beat]];
       nextBeat = now + RHYTHM_MS;
     }
-    const focus = hoveredNode || autoNode;
-    if (labelText.textContent !== focus.name) labelText.textContent = focus.name;
-    labelGroup.style.opacity = '1';
+    const focus = mouse ? hoveredNode : autoNode;
+    if (focus && labelText.textContent !== focus.name) labelText.textContent = focus.name;
+    labelGroup.style.opacity = focus ? '1' : '0';
 
     NODES.forEach(node => {
       if (node.type === 'university') node.glow += ((node === focus ? 1 : 0) - node.glow) * 0.08;
@@ -447,11 +453,13 @@ body { background: var(--brand--background); color: #000; }
       el.setAttribute('y2', to.y);
     });
 
-    const offset = (focus.type === 'university' ? UNI_RING.outerRadius * 1.1 : STYLE[focus.look || focus.type].radius) + 20;
-    // Keep long names inside the box near the edges
-    labelText.setAttribute('y', focus.y - offset);
-    const half = labelText.getBBox().width / 2 + 8;
-    labelText.setAttribute('x', Math.min(Math.max(focus.x, half), VIEWBOX_W - half));
+    if (focus) {
+      const offset = (focus.type === 'university' ? UNI_RING.outerRadius * 1.1 : STYLE[focus.look || focus.type].radius) + 20;
+      // Keep long names inside the box near the edges
+      labelText.setAttribute('y', focus.y - offset);
+      const half = labelText.getBBox().width / 2 + 8;
+      labelText.setAttribute('x', Math.min(Math.max(focus.x, half), VIEWBOX_W - half));
+    }
 
     requestAnimationFrame(tick);
   }
