@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const unis = {
     metu:    { x: 420, y: 310, label: 'ODTÜ', rx: 90, ri: 55, hub: true },
     bilkent: { x: 820, y: 155, label: 'BİLKENT', rx: 70, ri: 42 },
-    gazi:    { x: 820, y: 430, label: 'GAZİ', rx: 70, ri: 42 },
+    gazi:    { x: 780, y: 305, label: 'GAZİ', rx: 70, ri: 42 },
     ted:     { x: 175, y: 430, label: 'TED', rx: 65, ri: 40 },
     baskent: { x: 215, y: 195, label: 'BAŞKENT', rx: 65, ri: 40 },
     atilim:  { x: 500, y: 550, label: 'ATILIM', rx: 62, ri: 38 },
@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return pts;
   };
-  const workers = scatter(16, 780, 305, 32, 571);   // top dots stay below the label even while drifting
+  const workers = scatter(16, 820, 445, 32, 571);   // top dots stay below the label even while drifting
   // Students met on 17 May 2024, before any university event: a loose cluster of their own
   const students = scatter(12, 650, 480, 29, 1705);
 
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (s.w) blinking(s.b.includes('workers'), () => {
       workers.forEach(([x, y], j) => drifter('w' + j, x, y, { r: 3.5, fill: '#a9602b', opacity: 0.85 }));
-      label(780, 258, 'MİMARLIK İŞÇİLERİ', '#a9602b');
+      label(820, 396, 'MİMARLIK İŞÇİLERİ', '#a9602b');
     });
 
     // University names, drawn last
