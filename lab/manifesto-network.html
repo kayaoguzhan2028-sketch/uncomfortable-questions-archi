@@ -233,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // st / w / a: the students, workers and ARCH571 clusters appear from that step on.
   // only: just the universities themselves blink, not the people around them.
   // ring: the semester review brought people back to METU, so from then on the band around METU is filled.
+  // meet: the opening workshop; a few workers, students and METU people walk over to one spot and meet there.
   // flow: which way a pulse runs along the lines. By default it runs from METU out to the lit university;
   // 'in': from every university back to METU (the semester review); 'both': out and back (the full network).
   const steps = [
@@ -240,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { d: 'Mayıs 2024', h: ['abc'], b: ['org'] },
     { d: 'Mayıs–Temmuz 2024', h: [], st: 1, w: 1, b: ['students', 'workers'] },
     { d: 'Temmuz–Eylül 2024', h: ['metu'], b: [] },
-    { d: 'Ekim 2024', h: ['metu'], a: 1, b: ['arch571', 'students', 'workers'] },
+    { d: 'Ekim 2024', h: ['metu'], a: 1, b: ['arch571', 'students', 'workers'], meet: 1 },
     { d: 'Ekim 2024', h: ['bilkent'], b: [] },
     { d: 'Kasım 2024', h: ['gazi'], b: [] },
     { d: 'Kasım 2024', h: ['ted'], b: ['org', 'arch571', 'clusters'] },
@@ -286,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // settled: drawn like the rest, nothing highlighted or blinking
   function render(i, settled = false) {
     const s = settled ? { ...steps[i], h: [], b: [], flow: null } : steps[i];
+    meeting = !!s.meet;
     if (dateEl) dateEl.textContent = s.d;
 
     svg.innerHTML = '';
@@ -384,6 +386,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // The opening workshop (12 October 2024): two workers, two students, a free METU team member and an ARCH 571
+  // student leave their spots and meet below-right of METU, with no circle around them. Elsewhere they go home.
+  const MEET_AT = [493, 392];
+  const MEET_SLOTS = [[-14, -8], [0, -14], [14, -6], [18, 8], [6, 12], [-10, 10]];
+  let meeting = false;
+  const MEET = (() => {
+    const near = (pts, keyOf, n, ok = () => true) => pts.map((p, j) => [keyOf(j), p])
+      .filter(([, p], j) => ok(p, j) && !underName(p[0], p[1], 4.5))
+      .sort((a, b) => Math.hypot(a[1][0] - MEET_AT[0], a[1][1] - MEET_AT[1]) - Math.hypot(b[1][0] - MEET_AT[0], b[1][1] - MEET_AT[1]))
+      .slice(0, n).map(([k]) => k);
+    const keys = [
+      ...near(workers, j => 'w' + j, 2),
+      ...near(students, j => 's' + j, 2),
+      ...near(org.map(([dx, dy]) => [420 + dx, 310 + dy]), j => 'o' + j, 1, (p, j) => !org[j][2]),
+      ...near(arch571, j => 'a' + j, 1),
+    ];
+    return Object.fromEntries(keys.map((k, n) => [k, [MEET_AT[0] + MEET_SLOTS[n][0], MEET_AT[1] + MEET_SLOTS[n][1]]]));
+  })();
+
   // Dots wander a little around their own spot and drift back: students and workers freely, the rest barely
   const DRIFT_R = 8;            // how far a dot may stray from its spot
   const CORE_DRIFT = 0.25;      // inside the institutions: a quarter of that, barely a tremble
@@ -391,16 +412,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // scale shrinks the wander; dots inside the institutions barely move. line: a line whose start follows the dot.
   function drifter(key, x, y, attrs, scale = 1, line = null) {
-    const s = driftState[key] || (driftState[key] = { dx: 0, dy: 0, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 });
-    const c = el('circle', { ...attrs, cx: x + s.dx * scale, cy: y + s.dy * scale });
-    if (line) { line.setAttribute('x1', x + s.dx * scale); line.setAttribute('y1', y + s.dy * scale); }
+    const s = driftState[key] || (driftState[key] = { dx: 0, dy: 0, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, mx: 0, my: 0 });
+    // Where the dot is heading: the meeting spot during the workshop, its own spot otherwise
+    const goal = meeting && MEET[key];
+    s.gx = goal ? goal[0] - x : 0; s.gy = goal ? goal[1] - y : 0;
+    if (reducedMotion) { s.mx = s.gx; s.my = s.gy; }
+    const c = el('circle', { ...attrs, cx: x + s.mx + s.dx * scale, cy: y + s.my + s.dy * scale });
+    if (line) { line.setAttribute('x1', x + s.mx + s.dx * scale); line.setAttribute('y1', y + s.my + s.dy * scale); }
     drifters.push({ c, x, y, s, scale, line });
   }
   function drift() {
     const moved = new Set();
     drifters.forEach(({ c, x, y, s, scale, line }) => {
       if (!moved.has(s)) { moved.add(s); step(s); }
-      const px = x + s.dx * scale, py = y + s.dy * scale;
+      const px = x + s.mx + s.dx * scale, py = y + s.my + s.dy * scale;
       c.setAttribute('cx', px); c.setAttribute('cy', py);
       if (line) { line.setAttribute('x1', px); line.setAttribute('y1', py); }
     });
@@ -415,6 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
     s.vx *= 0.98; s.vy *= 0.98;
     const v = Math.hypot(s.vx, s.vy); if (v > 0.25) { s.vx *= 0.25 / v; s.vy *= 0.25 / v; }
     s.dx += s.vx; s.dy += s.vy;
+    // Walk towards the meeting spot or back home, easing in over about a second and a half
+    s.mx += (s.gx - s.mx) * 0.04; s.my += (s.gy - s.my) * 0.04;
   }
   if (!reducedMotion) requestAnimationFrame(drift);
 
