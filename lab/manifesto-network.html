@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const angleTo = (a, b) => Math.atan2(b.y - a.y, b.x - a.x);
   const org = [
     [-65,-50],[30,-75],[75,-30],[70,30],[20,72],[-40,70],[-72,20],[-68,-10],
-    [-8,-62,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[10,-55,'baskent'],[35,8,'atilim']
+    [40,-55,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[10,-55,'baskent'],[35,8,'atilim']
   ];
   const coreR = u => u.hub ? 10 : 6;
   // The box a name takes above its core dot; dots that would sit under a name are left out
@@ -186,15 +186,22 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   // Point on a university's inner circle facing another point, so lines stop at the circle instead of crossing the name
   const edge = (u, toward) => { const a = angleTo(u, toward); return [u.x + Math.cos(a) * u.ri, u.y + Math.sin(a) * u.ri]; };
-  const workers = Array.from({ length: 16 }, (_, i) => {
-    const a = (i / 16) * Math.PI * 2, r = 22 + (i % 3) * 7;
-    return [780 + Math.cos(a) * r, 295 + Math.sin(a) * r];
-  });
+  // Loose clusters: dots scattered at random inside a disc, never on top of each other.
+  // A fixed seed keeps the same scatter on every load.
+  const scatter = (count, cx, cy, R, seed) => {
+    let a = seed;
+    const rand = () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const pts = [];
+    for (let tries = 0; pts.length < count && tries < 5000; tries++) {
+      const r = R * Math.sqrt(rand()), t = rand() * Math.PI * 2;
+      const x = cx + Math.cos(t) * r, y = cy + Math.sin(t) * r;
+      if (pts.every(([px, py]) => Math.hypot(px - x, py - y) >= 9)) pts.push([x, y]);
+    }
+    return pts;
+  };
+  const workers = scatter(16, 780, 297, 32, 571);
   // Students met on 17 May 2024, before any university event: a loose cluster of their own
-  const students = Array.from({ length: 12 }, (_, i) => {
-    const a = (i / 12) * Math.PI * 2, r = 18 + (i % 3) * 7;
-    return [650 + Math.cos(a) * r, 475 + Math.sin(a) * r];
-  });
+  const students = scatter(12, 650, 476, 29, 1705);
 
   // One step per paragraph of the text.
   // h: universities the paragraph is about. Every university reached so far stays on, with a line from METU.
