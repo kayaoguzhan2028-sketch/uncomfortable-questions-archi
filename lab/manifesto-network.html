@@ -30,7 +30,7 @@ body { background: #ffffff; color: #0a0a0a; }
 .uqa-net, .uqa-net * { box-sizing: border-box; }
 .uqa-net { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 32px; max-width: 1400px; margin: 0 auto; padding: 0 16px; }
 .uqa-net__yapiskan { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
-.uqa-net #uqa-date { font-size: 14px; color: #e03a2f; margin-bottom: 12px; min-height: 1.4em; }
+.uqa-net #uqa-date { font-size: 14px; color: #b3362c; margin-bottom: 12px; min-height: 1.4em; }
 .uqa-net #uqa-network { width: 100%; height: 80vh; }
 .uqa-net__adim { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; opacity: .3; transition: opacity .3s; }
 .uqa-net__adim.is-active { opacity: 1; }
@@ -131,12 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Legend: sits on the graph on desktop, moves below it on phones as a compact wrapping row
   const legend = document.createElement('div');
   [
-    ['#e03a2f', 'organizasyon ekibi (ara pozisyondaki akademisyenler)'],
-    ['transparent', 'uluslararası ağ', '1px dashed #e03a2f'],
+    ['#b3362c', 'organizasyon ekibi (ara pozisyondaki akademisyenler)'],
+    ['transparent', 'uluslararası ağ', '1px dashed #b3362c'],
     ['#555', 'kurumsal çekirdek', '1px dashed #888'],
-    ['#4a7fc1', 'öğrenciler'],
-    ['#c96a1f', 'çalışan / işsiz mimarlar'],
-    ['#c9a227', 'ARCH 571 ekibi']
+    ['#3d6595', 'öğrenciler'],
+    ['#a9602b', 'çalışan / işsiz mimarlar'],
+    ['#a3852c', 'ARCH 571 ekibi']
   ].forEach(([color, text, border]) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:0.6rem';
@@ -213,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     s.st = sofar.some(t => t.st); s.w = sofar.some(t => t.w); s.a = sofar.some(t => t.a); s.ring = sofar.some(t => t.ring);
   });
 
-  const INK = '#111111', DIM = 'rgba(17,17,17,0.35)', RED = '#e03a2f', GOLD = '#c9a227';
-  const BLINK_CSS = '@keyframes uqa-flash{0%,100%{filter:brightness(1)}35%{filter:brightness(2)}}' +
+  const INK = '#111111', DIM = 'rgba(17,17,17,0.35)', RED = '#b3362c', GOLD = '#a3852c';
+  const BLINK_CSS = '@keyframes uqa-flash{0%,100%{filter:brightness(1)}35%{filter:brightness(1.35)}}' +
     '@keyframes uqa-blink{0%,55%,100%{opacity:1}80%{opacity:.35}}' +
     '.uqa-blink{animation:uqa-flash .9s ease-out,uqa-blink 2.4s ease-in-out .9s 3}' +
     '@media (prefers-reduced-motion:reduce){.uqa-blink{animation:none}}';
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
       blinking((s.h.includes(k) && !s.only) || s.b.includes('clusters'), () => {
         for (let j = 0; j < 8; j++) {
           const a = (j / 8) * Math.PI * 2 + 0.5, r = 16 + (j % 2) * 9;
-          el('circle', { cx: u.x + Math.cos(a) * r, cy: u.y + Math.sin(a) * r, r: 3.5, fill: '#4a7fc1', opacity: 0.85 });
+          el('circle', { cx: u.x + Math.cos(a) * r, cy: u.y + Math.sin(a) * r, r: 3.5, fill: '#3d6595', opacity: 0.85 });
         }
       });
     });
@@ -296,13 +296,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .textContent = text;
 
     if (s.st) blinking(s.b.includes('students'), () => {
-      students.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: '#4a7fc1', opacity: 0.85 }));
-      label(650, 437, 'ÖĞRENCİLER', '#4a7fc1');
+      students.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: '#3d6595', opacity: 0.85 }));
+      label(650, 437, 'ÖĞRENCİLER', '#3d6595');
     });
 
     if (s.w) blinking(s.b.includes('workers'), () => {
-      workers.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: '#c96a1f', opacity: 0.85 }));
-      label(780, 258, 'MİMARLIK İŞÇİLERİ', '#c96a1f');
+      workers.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: '#a9602b', opacity: 0.85 }));
+      label(780, 258, 'MİMARLIK İŞÇİLERİ', '#a9602b');
     });
 
     // University names, drawn last so dots never cover them; a dark outline keeps them readable over the red center dot and lines
