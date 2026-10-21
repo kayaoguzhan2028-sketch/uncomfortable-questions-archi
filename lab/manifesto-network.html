@@ -164,29 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
     abc:     { x: 500, y: 88,  label: 'ABC\nSCHOOL', rx: 60, ri: 38, far: true, ext: true }
   };
 
-  // Everything around a name stays inside its circles but clear of the name itself.
-  // Org team: in METU's band, between its inner circle and the dashed ring; a member tied to a university faces it.
   const angleTo = (a, b) => Math.atan2(b.y - a.y, b.x - a.x);
-  // 13 members on evenly spaced slots; each tied member takes the free slot nearest its university
-  const org = (() => {
-    const N = 13, slots = Array.from({ length: N }, (_, i) => (i / N) * Math.PI * 2);
-    const link = Array(N).fill(null);
-    const gap = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
-    ['bilkent', 'gazi', 'ted', 'baskent', 'atilim'].forEach(k => {
-      const a = angleTo(unis.metu, unis[k]);
-      const free = slots.map((s, i) => i).filter(i => !link[i]);
-      link[free.reduce((best, i) => gap(slots[i], a) < gap(slots[best], a) ? i : best)] = k;
-    });
-    return slots.map((a, i) => {
-      const r = i % 2 ? 68 : 80;
-      return link[i] ? [Math.cos(a) * r, Math.sin(a) * r, link[i]] : [Math.cos(a) * r, Math.sin(a) * r];
-    });
-  })();
+  const org = [
+    [-65,-50],[30,-75],[75,-30],[70,30],[20,72],[-40,70],[-72,20],[-68,-10],
+    [-5,-30,'bilkent'],[18,25,'gazi'],[-20,30,'ted'],[10,-55,'baskent'],[35,8,'atilim']
+  ];
   const coreR = u => u.hub ? 10 : 6;
-  // ARCH571: a ring inside METU's inner circle, open at the top where the name stands above the core
   const arch571 = Array.from({ length: 22 }, (_, i) => {
-    const from = -15 * Math.PI / 180, to = 195 * Math.PI / 180;
-    const a = from + (i / 21) * (to - from), r = 38 + (i % 2) * 9;
+    const a = (i / 22) * Math.PI * 2 - 0.3, r = 38 + (i % 3) * 6;
     return [420 + Math.cos(a) * r, 310 + Math.sin(a) * r];
   });
   // Point on a university's inner circle facing another point, so lines stop at the circle instead of crossing the name
@@ -299,13 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (s.a) blinking(s.b.includes('arch571'), () =>
       arch571.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 3.5, fill: GOLD, opacity: 0.9 })));
 
-    // Blue clusters at every university reached, in the band around the name
+    // Blue clusters at every university reached
     s.u.forEach(k => {
       const u = unis[k];
       if (u.hub || u.ext) return;
       blinking((s.h.includes(k) && !s.only) || s.b.includes('clusters'), () => {
         for (let j = 0; j < 8; j++) {
-          const a = (j / 8) * Math.PI * 2 + 0.5, r = u.ri + 8 + (j % 2) * 7;
+          const a = (j / 8) * Math.PI * 2 + 0.5, r = 16 + (j % 2) * 9;
           el('circle', { cx: u.x + Math.cos(a) * r, cy: u.y + Math.sin(a) * r, r: 3.5, fill: '#3d6595', opacity: 0.85 });
         }
       });
